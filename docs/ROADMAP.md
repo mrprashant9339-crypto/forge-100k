@@ -23,15 +23,15 @@
 - [x] Material-preserving static mesh merge worker (shape-key meshes protected); [x] Blender fixture integration test and GLB/report validation; [ ] texture atlas baking
 - [x] Measurable GLB structural/runtime-budget preflight in CI (prototype thresholds; target-engine profiling still required)
 
-## Phase 3 — Production character content (implementation started)
+## Phase 3 — Production character content (partially implemented)
 - [x] PBR material manifest contract, texture-reference validator and unit tests
 - [x] Deterministic Blender PBR texture authoring for base-color, metallic-roughness, normal and occlusion maps; CI generation/validation integrated (procedural, not high-to-low bake)
-- [ ] Original high-resolution base meshes and sculpt-to-game retopology
-- [ ] PBR texture baking, channel packing and material authoring
+- [ ] Original high-resolution sculpted basemeshes, artist-authored retopology and production UV/edge-flow review
+- [x] Blender high-to-low diffuse/normal/AO bake worker added; [ ] approved sculpt/retopo bake fixture, metallic-roughness channel bake/packing and target-engine material verification
 - [x] Procedural facial expression and five-viseme morph-target pack with Blender GLB integration test (starter quality; not ARKit/production animation certified)
-- [ ] Timed facial animation clips, eye rig/blink/gaze controls and production phoneme authoring
-- [ ] Game-ready clothing, hair and armour packs
-- [ ] Artist review and target-engine import certification
+- [x] Timed starter expression/viseme clips at 30 FPS with GLB export and CI structural validation; [ ] eye rig/blink/gaze, ARKit 52, audio-synchronized phonemes and artist facial approval
+- [ ] Artist-finished clothing, groomed hair and armour packs with cloth/pose/collision validation (current CC0 modules are blockout prototypes)
+- [x] Automated GLB container preflight added (explicitly not certification); [ ] signed artist review and Unity/Unreal/Godot import/performance certification
 
 ## Phase 4 — Scale and platform
 - [ ] Queue-backed batch workers and storage/CDN
