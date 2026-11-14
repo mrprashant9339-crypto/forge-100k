@@ -14,16 +14,20 @@
       "roughness_factor": 0.82,
       "textures": {
         "base_color": {
-          "path": "../textures/starter/basecolor.png",
+          "path": "../../artifacts/pbr/starter/basecolor.png",
           "color_space": "sRGB"
         },
         "metallic_roughness": {
-          "path": "../textures/starter/metallic_roughness.png",
+          "path": "../../artifacts/pbr/starter/metallic_roughness.png",
           "color_space": "linear",
           "channel_packing": "metallic=B,roughness=G"
         },
         "normal": {
-          "path": "../textures/starter/normal.png",
+          "path": "../../artifacts/pbr/starter/normal.png",
+          "color_space": "linear"
+        },
+        "occlusion": {
+          "path": "../../artifacts/pbr/starter/occlusion.png",
           "color_space": "linear"
         }
       },
