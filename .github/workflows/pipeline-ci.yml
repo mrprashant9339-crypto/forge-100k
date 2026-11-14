@@ -26,7 +26,8 @@ jobs:
           python -m json.tool pipeline/schemas/batch-manifest.schema.json >/dev/null
           python pipeline/scripts/validate_manifest.py pipeline/manifests/sample-batch.json
       - name: Compile Python workers
-        run: python -m compileall -q pipeline
+        run: |
+          python -m compileall -q pipeline
           python -m py_compile pipeline/blender/fit_garment.py pipeline/blender/merge_meshes.py
       - name: Run GLB validator tests
         run: |
