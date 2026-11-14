@@ -34,3 +34,10 @@ These are procedural starter facial shape keys, not a photorealistic face system
 ## Phase 2 completion gate
 
 Phase 2 is not considered production-complete while any of these remain open: continuous production basemesh deformation, sculpt-quality facial topology and ARKit/viseme mapping, garment pose/collision/cloth validation, species-specific retargeting and deformation certification, texture-atlas baking, and measured Unity/Unreal/Godot import/performance tests. The current repository supplies starter workers and structural gates, not artist-certified game assets.
+
+
+## Phase 2 automated integration coverage
+
+CI now exercises the garment proxy-fit worker and static mesh merge worker against generated GLB fixtures, validates their output containers/reports, and runs all four rig profiles through GLB skin/animation validation. These checks prove worker execution and structural output only. They do not certify cloth simulation, body-clipping under animation, species-accurate deformation, artist-approved topology, atlas baking or target-engine performance.
+
+The production basemesh, ARKit/viseme authoring, continuous deformation review, cloth/collision certification, atlas baking and Unity/Unreal/Godot profiling remain explicit acceptance gates. Phase 2 must not be labelled production-complete until those gates have evidence.
