@@ -15,11 +15,11 @@ Forge implements original versions of the data-contract and deterministic-genera
 - Deterministic morphology core with 10 face controls and 7 body controls, strict numeric ranges and stable per-asset seeds.
 - Data-only modular asset catalog with slots, species compatibility, sockets, layers, LOD declarations and per-item CC0 provenance.
 - Duplicate module and occupied-slot conflict validation.
-- Blender Phase 2 worker that adds 10 localized facial shape keys to the human head and attaches selected procedural hair, helmet, chest armour, backpack, shoulder and footwear modules.
+- Blender Phase 2 worker that adds 10 localized facial shape keys plus 7 body-part morphology shape keys, and attaches selected procedural hair, helmet, chest armour, backpack, shoulder and footwear modules.
 - GLB validator supports a required morph-target gate.
 - CI generates Phase 2 human GLB, validates morph targets, rigs the modular output and re-validates skin, animation and morph targets.
 - Unit tests cover deterministic controls, range errors, duplicate modules and slot conflicts.
 
 ## Honest limitations
 
-These are procedural starter facial shape keys, not a photorealistic face system, not 52 ARKit face units, and not a complete phoneme/viseme solution. Body-profile controls are data contracts for the next deformation stage; they do not yet deform a production basemesh. Current procedural modules are prototypes, not artist-finished clothing. Clothing fit, body-zone occlusion, cloth simulation, mesh retopology, PBR texture baking, creature-specific skeletons and Unity/Unreal/Godot import certification remain open.
+These are procedural starter facial shape keys, not a photorealistic face system, not 52 ARKit face units, and not a complete phoneme/viseme solution. Body-profile shape keys now deform the current separate blockout meshes. They are not yet calibrated against a continuous production basemesh. Current procedural modules are prototypes, not artist-finished clothing. Clothing fit, body-zone occlusion, cloth simulation, mesh retopology, PBR texture baking, creature-specific skeletons and Unity/Unreal/Godot import certification remain open.
