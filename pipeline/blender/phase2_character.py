@@ -51,7 +51,8 @@ def build_module(mid):
 def main():
  a=args()
  if len(a)!=3:raise SystemExit("Usage: phase2_character.py -- input.glb job.json output.glb")
- src,jp,out=map(os.path.abspath,a);job=json.load(open(jp,encoding="utf-8"))
+ src,jp,out=map(os.path.abspath,a);job_data=json.load(open(jp,encoding="utf-8"))
+ job=job_data["jobs"][0] if isinstance(job_data,dict) and "jobs" in job_data else job_data
  bpy.ops.object.select_all(action="SELECT");bpy.ops.object.delete(use_global=False);bpy.ops.import_scene.gltf(filepath=src)
  heads=[o for o in bpy.context.scene.objects if o.type=="MESH" and o.name.startswith("Head")]
  if job.get("species")=="human" and not heads:raise RuntimeError("Human asset missing Head mesh")
