@@ -16,8 +16,7 @@ def make_glb(path):
         "scenes": [{"nodes": [0]}],
         "nodes": [{"mesh": 0}],
         "meshes": [{"primitives": [{"attributes": {"POSITION": 0}}]}],
-        "accessors": [{"componentType": 5126, "count": 3, "type": "VEC3"}],
-        "buffers": [{"byteLength": 0}]
+        "accessors": [{"componentType": 5126, "count": 3, "type": "VEC3"}]
     }
     raw = json.dumps(doc, separators=(",", ":")).encode("utf-8")
     raw += b" " * ((4 - len(raw) % 4) % 4)
