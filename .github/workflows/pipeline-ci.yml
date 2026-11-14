@@ -37,7 +37,7 @@ jobs:
           python pipeline/tests/test_morphology.py
           python pipeline/tests/test_engine_budget.py
           python pipeline/tests/test_pbr_materials.py
-          python -m py_compile pipeline/blender/facial_morph_pack.py
+          python -m py_compile pipeline/blender/facial_morph_pack.py pipeline/blender/facial_animation_clips.py pipeline/blender/bake_pbr_textures.py
       - name: Install browser test runtime
         run: |
           npm install --no-save playwright@1.55.0
@@ -75,6 +75,9 @@ jobs:
           blender --background --python pipeline/blender/facial_morph_pack.py -- artifacts/phase2-tests/body.glb artifacts/phase2-tests/facial-pack.glb artifacts/phase2-tests/facial-pack-report.json
           python pipeline/scripts/validate_glb.py --require-morphs artifacts/phase2-tests/facial-pack.glb
           python -m json.tool artifacts/phase2-tests/facial-pack-report.json >/dev/null
+          blender --background --python pipeline/blender/facial_animation_clips.py -- artifacts/phase2-tests/facial-pack.glb artifacts/phase2-tests/facial-animated.glb artifacts/phase2-tests/facial-animation-report.json
+          python pipeline/scripts/validate_glb.py --require-morphs artifacts/phase2-tests/facial-animated.glb
+          python -m json.tool artifacts/phase2-tests/facial-animation-report.json >/dev/null
           blender --background --python pipeline/blender/generate_batch.py -- pipeline/manifests/sample-batch.json
           python pipeline/scripts/validate_glb.py artifacts/FG-HUM-000001.glb
           blender --background --python pipeline/blender/phase2_character.py -- artifacts/FG-HUM-000001.glb pipeline/manifests/sample-batch.json artifacts/FG-HUM-000001-phase2.glb
