@@ -28,7 +28,8 @@
 - [x] Deterministic Blender PBR texture authoring for base-color, metallic-roughness, normal and occlusion maps; CI generation/validation integrated (procedural, not high-to-low bake)
 - [ ] Original high-resolution base meshes and sculpt-to-game retopology
 - [ ] PBR texture baking, channel packing and material authoring
-- [ ] Facial expression and phoneme animation packs
+- [x] Procedural facial expression and five-viseme morph-target pack with Blender GLB integration test (starter quality; not ARKit/production animation certified)
+- [ ] Timed facial animation clips, eye rig/blink/gaze controls and production phoneme authoring
 - [ ] Game-ready clothing, hair and armour packs
 - [ ] Artist review and target-engine import certification
 
