@@ -36,7 +36,16 @@
         "backpack_field",
         "shoulder_guard",
         "boots_combat"
-      ]
+      ],
+      "body_profile": {
+        "height": 1.04,
+        "shoulder_width": 1.08,
+        "torso_ratio": 1.02,
+        "arm_length": 1,
+        "leg_length": 1.03,
+        "muscle": 0.72,
+        "mass": 0.42
+      }
     },
     {
       "asset_id": "FG-ROB-000001",
