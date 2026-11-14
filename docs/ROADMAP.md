@@ -19,11 +19,14 @@
 - [ ] Production facial sculpt, ARKit 52-unit and viseme mapping
 - [x] Prototype garment proxy fitting and semantic body-zone groups; [ ] runtime occlusion, pose-space collision and cloth integrity certification
 - [x] Prototype humanoid/mechanical/quadruped/avian skeleton profiles exercised in CI; [ ] species-specific mesh fitting, retargeting and deformation certification
-- [x] Automated Blender LOD0/LOD1/LOD2 decimation exports with GLB validation in CI (prototype; not performance-certified)\n- [x] Material-preserving static mesh merge worker (shape-key meshes protected); [ ] texture atlas baking\n- [x] Measurable GLB structural/runtime-budget preflight in CI (prototype thresholds; target-engine profiling still required)
+- [x] Automated Blender LOD0/LOD1/LOD2 decimation exports with GLB validation in CI (prototype; not performance-certified)
+- [x] Material-preserving static mesh merge worker (shape-key meshes protected); [ ] texture atlas baking
+- [x] Measurable GLB structural/runtime-budget preflight in CI (prototype thresholds; target-engine profiling still required)
 
-## Phase 3 — Production character content
+## Phase 3 — Production character content (implementation started)
+- [x] PBR material manifest contract, texture-reference validator and unit tests added; CI verification pending
 - [ ] Original high-resolution base meshes and sculpt-to-game retopology
-- [ ] PBR texture baking and material authoring
+- [ ] PBR texture baking, channel packing and material authoring
 - [ ] Facial expression and phoneme animation packs
 - [ ] Game-ready clothing, hair and armour packs
 - [ ] Artist review and target-engine import certification
@@ -37,6 +40,5 @@
 ## Quality policy
 Do not label an asset game-ready until geometry, UVs, PBR maps, LODs, rig, animation, bounds, collisions, licence provenance and target-engine import pass automated checks and artist review.
 
-
 ### Phase 2 acceptance status
-Code-level starter workers now include garment proxy fitting and material-preserving mesh merging, with CI syntax checks. Phase 2 remains **incomplete**: production basemesh deformation, ARKit/viseme facial system, cloth/collision validation, species retargeting certification, atlas baking and target-engine profiling require further implementation and/or artist/engine validation. Phase 3 remains blocked until these gates are met.
+Phase 2 remains incomplete: production basemesh deformation, ARKit/viseme facial system, cloth/collision validation, species retargeting certification, atlas baking and target-engine profiling require further implementation and/or artist/engine validation. Phase 3 implementation is proceeding in parallel at the user's explicit direction; this does not waive the Phase 2 gates.
