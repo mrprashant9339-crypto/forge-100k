@@ -19,7 +19,7 @@
 - [ ] Production facial sculpt, ARKit 52-unit and viseme mapping
 - [ ] Garment proxy fitting, body-zone hiding, collision and cloth integrity
 - [ ] Multi-species skeleton profiles and retargeting
-- [ ] Atlas/merge/LOD optimizer with measured performance budgets
+- [x] Automated Blender LOD0/LOD1/LOD2 decimation exports with GLB validation in CI (prototype; not performance-certified)\n- [ ] Texture atlas/mesh merge and measured engine performance budgets
 
 ## Phase 3 — Production character content
 - [ ] Original high-resolution base meshes and sculpt-to-game retopology
