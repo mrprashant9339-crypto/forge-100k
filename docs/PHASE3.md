@@ -1,25 +1,29 @@
 # Phase 3 — Production character content
 
-## Implemented foundation
-- Versioned metallic-roughness material manifest schema with bounded factors and provenance.
-- Texture-reference validator and unit tests.
-- Blender procedural PBR texture authoring worker: deterministic base-color, metallic-roughness, tangent-normal and occlusion PNG maps at power-of-two resolutions (64–2048).
-- Explicit channel packing: metallic-roughness G=roughness, B=metallic; normal map RGB=tangent normal; AO grayscale.
-- CI generates real PNG files, validates file references, and uploads texture/report artifacts.
+## Implemented pipeline foundations
 
-## Honest limitations
-The procedural map worker authors maps; it does not bake a production mesh's high-resolution sculpt into UV textures. The starter material is dielectric clay with metallic=0. The normal and AO maps are procedural approximations, not sculpt-derived detail or physically validated occlusion. UV seam, tangent basis, mipmap, compression, color-management and target-engine visual checks still need implementation/review. No output is labelled game-ready.
+- Versioned metallic-roughness material manifest schema, texture-reference validator and unit tests.
+- Deterministic procedural PBR texture authoring for base-color, metallic-roughness, tangent-normal and AO maps. These are starter maps, not sculpt-derived bakes.
+- `pipeline/blender/bake_pbr_textures.py`: Blender Cycles high-to-low selected-to-active baking worker for matching high/low mesh names and low-mesh UVs. It authors diffuse-color, tangent-normal and AO maps and emits a report. It does not synthesize metallic/roughness from a sculpt; those values remain authored material data. UV/cage quality still requires review.
+- `pipeline/blender/facial_morph_pack.py`: six expression morphs and five starter visemes.
+- `pipeline/blender/facial_animation_clips.py`: timed starter expression/viseme curves at 30 FPS, exported as GLB animation data. This is a procedural clip set, not audio-synchronized phoneme performance or ARKit 52.
+- `pipeline/scripts/validate_production_asset.py`: GLB container preflight that explicitly keeps artist approval and engine certification false unless external acceptance is supplied.
+- CI syntax-checks the baking/animation workers and runs the timed facial animation worker against the generated facial fixture, then validates the resulting GLB morph structure and report.
 
-## Remaining Phase 3
-1. Production high-resolution base meshes and sculpt-to-game retopology.
-2. High-to-low UV texture baking and verified channel packing.
-3. Facial expression/viseme animation packs.
-4. Original production clothing, hair and armour packs.
-5. Artist review and Unity/Unreal/Godot import certification.
+## Production gates that remain open
 
+1. **Production basemesh and retopology:** no sculpted high-resolution human/creature basemesh, artist-authored edge flow, deformation loops, production UV layout, or retopology result is present. A procedural blockout or voxel remesh is not an acceptable substitute.
+2. **High-to-low baking:** a real baking worker now exists, but it has not been validated against an approved sculpt/retopo pair. Metallic/roughness packing is not derived from the sculpt, and cage, skew, seam, tangent, mipmap and engine checks require evidence.
+3. **Facial animation:** timed starter curves are present. ARKit 52 mapping, phoneme/audio synchronization, eye blink/gaze controls, capture-quality performance and artist facial approval remain open.
+4. **Clothing, hair and armour:** existing CC0 procedural modules are blockout accessories. They are not production garments, groomed hair assets, cloth-simulated pieces or pose-tested armour packs.
+5. **Artist review and engine certification:** these require a qualified human reviewer and actual Unity, Unreal and/or Godot imports on target versions/devices. CI's GLB/container checks cannot certify visual quality, runtime materials, skinning, animation, memory or frame time.
 
-## Facial expression and viseme pack — first authoring increment
+## Required evidence before Phase 3 can be marked complete
 
-- Added `pipeline/blender/facial_morph_pack.py`, which imports a character GLB and authors six expression morph targets (smile, frown, brow raise, jaw open, cheek puff, squint) plus five starter visemes (A/E/I/O/U).
-- The worker exports a GLB and a JSON report. CI runs it against a generated head fixture, validates the GLB morph-target structure, and checks the report.
-- This is a procedural authoring starter, not an ARKit 52 mapping, timed animation clip library, performance-captured facial system, or artist-approved production face. Eye blink/gaze controls and production phoneme review remain open.
+- Approved source sculpt and retopologized low-poly mesh for each supported body/species.
+- UV inspection report and reproducible high-to-low bake report with approved cage settings and packed material channels.
+- Facial clip review with audio timing, eye rig and target-engine playback.
+- Original clothing/hair/armour source files, topology, UVs, PBR maps, LODs, rig/cloth/collision tests and provenance.
+- Signed artist review plus engine import/performance test reports for each claimed target engine.
+
+No asset is labelled game-ready until those gates have evidence. This phase is **partially implemented**, not production-complete.
