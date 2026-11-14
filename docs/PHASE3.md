@@ -1,20 +1,18 @@
 # Phase 3 — Production character content
 
-Phase 3 is now open for implementation in parallel with the explicitly outstanding Phase 2 production acceptance gates. Starting Phase 3 does not mark Phase 2 complete.
+## Implemented foundation
+- Versioned metallic-roughness material manifest schema with bounded factors and provenance.
+- Texture-reference validator and unit tests.
+- Blender procedural PBR texture authoring worker: deterministic base-color, metallic-roughness, tangent-normal and occlusion PNG maps at power-of-two resolutions (64–2048).
+- Explicit channel packing: metallic-roughness G=roughness, B=metallic; normal map RGB=tangent normal; AO grayscale.
+- CI generates real PNG files, validates file references, and uploads texture/report artifacts.
 
-## First implementation slice: PBR material contracts
-- A versioned metallic-roughness material manifest schema.
-- Explicit base-color (sRGB), metallic-roughness (linear) and normal (linear) texture declarations.
-- Numeric factor bounds, unique material IDs, required provenance and relative texture-path checks.
-- Unit tests and CI validation.
+## Honest limitations
+The procedural map worker authors maps; it does not bake a production mesh's high-resolution sculpt into UV textures. The starter material is dielectric clay with metallic=0. The normal and AO maps are procedural approximations, not sculpt-derived detail or physically validated occlusion. UV seam, tangent basis, mipmap, compression, color-management and target-engine visual checks still need implementation/review. No output is labelled game-ready.
 
-The starter material manifest is a contract fixture. Its texture references are intentionally not shipped as fabricated image assets. Run the validator with `--allow-missing-textures` to validate the contract only. A full validation requires the real referenced texture files.
-
-## Still required for production
-Texture baking, channel packing verification from image pixels, UV validation, tangent-space normal validation, resolution/mipmap checks, artist review and target-engine import/performance certification. Passing this manifest gate is not proof of game-ready quality.
-
-## Next Phase 3 slices
-1. Texture bake/packing worker with real image fixtures and deterministic outputs.
-2. Facial expression/viseme clip schema and animation validation.
-3. Original garment, hair and armour asset pack manifests with provenance and LOD requirements.
-4. Artist review checklist and Unity/Unreal/Godot import test harnesses.
+## Remaining Phase 3
+1. Production high-resolution base meshes and sculpt-to-game retopology.
+2. High-to-low UV texture baking and verified channel packing.
+3. Facial expression/viseme animation packs.
+4. Original production clothing, hair and armour packs.
+5. Artist review and Unity/Unreal/Godot import certification.
