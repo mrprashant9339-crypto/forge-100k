@@ -52,6 +52,19 @@ jobs:
         run: |
           sudo apt-get install -y blender python3-numpy
           blender --version
+      - name: Verify Phase 3 retopology and high-to-low baking
+        env:
+          PYTHONPATH: /usr/lib/python3/dist-packages
+        run: |
+          mkdir -p artifacts/phase3-mesh
+          blender --background --python pipeline/tests/blender_phase3_mesh_fixtures.py -- artifacts/phase3-mesh
+          blender --background --python pipeline/blender/retopologize.py -- artifacts/phase3-mesh/high.glb artifacts/phase3-mesh/retopo.glb 300
+          python pipeline/scripts/validate_glb.py artifacts/phase3-mesh/retopo.glb
+          python pipeline/scripts/validate_phase3_mesh_reports.py --retopo artifacts/phase3-mesh/retopo.glb.retopo.json
+          blender --background --python pipeline/blender/bake_pbr_textures.py -- artifacts/phase3-mesh/high.glb artifacts/phase3-mesh/low.glb artifacts/phase3-mesh/baked 256
+          python pipeline/scripts/validate_phase3_mesh_reports.py --bake artifacts/phase3-mesh/baked/bake-report.json --min-resolution 256
+          python -m json.tool artifacts/phase3-mesh/retopo.glb.retopo.json >/dev/null
+          python -m json.tool artifacts/phase3-mesh/baked/bake-report.json >/dev/null
       - name: Generate and validate sample production jobs
         env:
           PYTHONPATH: /usr/lib/python3/dist-packages
