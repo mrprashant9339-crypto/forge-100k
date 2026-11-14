@@ -42,8 +42,9 @@ def release_gates(data):
         failures.append("signed artist approval evidence is missing")
     engines = data.get("reviews", {}).get("engines", [])
     passed = {e.get("name") for e in engines if e.get("status") == "passed" and e.get("version") and e.get("evidence")}
-    if not {"unity", "unreal", "godot"}.issubset(passed):
-        failures.append("Unity, Unreal and Godot versioned import evidence is incomplete")
+    targets = set(data.get("target_engines", []))
+    if not targets or not targets.issubset(passed):
+        failures.append("versioned import evidence is incomplete for declared target engines")
     return failures
 
 def main():
