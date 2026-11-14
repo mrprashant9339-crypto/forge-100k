@@ -22,6 +22,7 @@ def main():
     if not meshes: issues.append("No mesh objects")
     if not armatures: issues.append("No armature object")
     mesh_stats=[]
+    character_meshes=[]
     weight_stats=[]
     mesh_diagnostics=[]
     for obj in meshes:
@@ -35,6 +36,7 @@ def main():
             mesh_stats.append({"name":obj.name,"role":"non-character-import-helper",
                 "excluded_from_render_qa":True,"signature":"unbound-42v-80f-helper"})
             continue
+        character_meshes.append(obj)
         mesh_diagnostics.append({"name":obj.name,"hidden_render":obj.hide_render,
             "hidden_viewport":obj.hide_viewport,"hidden_get":obj.hide_get(),
             "parent":obj.parent.name if obj.parent else None,
@@ -84,7 +86,7 @@ def main():
     scene.frame_set(1)
     depsgraph=bpy.context.evaluated_depsgraph_get()
     start_positions={}
-    for obj in meshes:
+    for obj in character_meshes:
         evaluated=obj.evaluated_get(depsgraph)
         mesh=evaluated.to_mesh()
         start_positions[obj.name]=[evaluated.matrix_world @ v.co for v in mesh.vertices]
@@ -92,7 +94,7 @@ def main():
     scene.frame_set(16)
     depsgraph=bpy.context.evaluated_depsgraph_get()
     moved=0
-    for obj in meshes:
+    for obj in character_meshes:
         evaluated=obj.evaluated_get(depsgraph)
         mesh=evaluated.to_mesh()
         before=start_positions.get(obj.name,[])
@@ -103,7 +105,7 @@ def main():
     if moved==0:
         issues.append("Animation did not deform any mesh vertices at test frame")
     result={"status":"pass" if not issues else "fail","source":source,
-        "mesh_count":len(meshes),"armature_count":len(armatures),
+        "mesh_count":len(character_meshes),"armature_count":len(armatures),
         "animated_mesh_vertices":moved,"meshes":mesh_stats,"weight_stats":weight_stats,
         "mesh_diagnostics":mesh_diagnostics,"issues":issues,
         "checks":["UV presence","Principled material nodes","armature modifiers",
