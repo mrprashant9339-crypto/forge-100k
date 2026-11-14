@@ -10,6 +10,7 @@ def main():
         raise SystemExit("Usage: validate_manifest.py path/to/manifest.json")
     manifest_path=Path(sys.argv[1]).resolve()
     root=Path(__file__).resolve().parents[1]
+    sys.path.insert(0,str(root))
     manifest_schema=json.loads((root/"schemas"/"batch-manifest.schema.json").read_text())
     job_schema=json.loads((root/"schemas"/"asset-job.schema.json").read_text())
     resolver=RefResolver.from_schema(manifest_schema, store={
@@ -35,7 +36,7 @@ def main():
     catalog={item["id"]:item for item in catalog_data["items"]}
     from core.morphology import validate_modules, clamp_controls, FACE_CONTROLS, BODY_CONTROLS
     for job in manifest["jobs"]:
-        validate_modules(job.get("modules",[]),catalog)
+        validate_modules(job.get("modules",[]),catalog,job.get("species"))
         clamp_controls(job.get("face_profile",{}),FACE_CONTROLS)
         clamp_controls(job.get("body_profile",{}),BODY_CONTROLS)
     print(json.dumps({"status":"pass","batch_id":manifest["batch_id"],
