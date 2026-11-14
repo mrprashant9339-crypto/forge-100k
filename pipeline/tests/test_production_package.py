@@ -12,7 +12,7 @@ class ProductionPackageTests(unittest.TestCase):
             with open(os.path.join(self.root, name), "wb") as f: f.write(content)
         digest = hashlib.sha256(b"source").hexdigest()
         self.data = {
-            "schema_version":"1.0","asset_id":"FG-HUM-0001","asset_type":"humanoid",
+            "schema_version":"1.0","asset_id":"FG-HUM-0001","asset_type":"humanoid","target_engines":["unity","unreal","godot"],
             "source":{"file":"source.blend","creator":"Forge team","license":"CC0",
                       "license_evidence":"Original source authored in-house","sha256":digest},
             "geometry":{"glb":"character.glb","retopology_review":"pending","uv_review":"pending","lod_files":[]},
