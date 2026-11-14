@@ -57,8 +57,7 @@ def add_beveled_cube(name, location, scale, mat, bevel=0.08):
         mod = obj.modifiers.new("SoftEdges", "BEVEL")
         mod.width = bevel
         mod.segments = 2
-        obj.modifiers.new("WeightedNormals", "WEIGHTED_NORMAL")
-    return obj
+        return obj
 
 def build_character(job):
     rng = random.Random(int(job["seed"]))
