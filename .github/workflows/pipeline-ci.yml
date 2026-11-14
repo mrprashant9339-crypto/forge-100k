@@ -50,3 +50,13 @@ jobs:
           python pipeline/scripts/validate_glb.py --require-rig artifacts/rigged/FG-HUM-000001-rigged.glb
           blender --background --python pipeline/blender/qa_character.py -- artifacts/rigged/FG-HUM-000001-rigged.glb artifacts/rigged/FG-HUM-000001-qa.json
           python -m json.tool artifacts/rigged/FG-HUM-000001-qa.json >/dev/null
+      - name: Upload verified GLB and QA reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: forge-phase1-character-build
+          path: |
+            artifacts/**/*.glb
+            artifacts/**/*.json
+          if-no-files-found: warn
+          retention-days: 14
