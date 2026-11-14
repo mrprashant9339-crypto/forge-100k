@@ -36,9 +36,11 @@ jobs:
       - name: Install Blender batch runtime
         run: |
           sudo apt-get update
-          sudo apt-get install -y blender
+          sudo apt-get install -y blender python3-numpy
           blender --version
       - name: Generate and validate sample production jobs
+        env:
+          PYTHONPATH: /usr/lib/python3/dist-packages
         run: |
           blender --background --python pipeline/blender/generate_batch.py -- pipeline/manifests/sample-batch.json
           python pipeline/scripts/validate_glb.py artifacts/FG-HUM-000001.glb
