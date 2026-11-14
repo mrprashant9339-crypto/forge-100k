@@ -12,6 +12,8 @@
 - `pipeline/blender/facial_animation_clips.py`: timed starter expression/viseme curves at 30 FPS, exported as GLB animation data. This is a procedural clip set, not audio-synchronized phoneme performance or ARKit 52.
 - `pipeline/scripts/validate_production_asset.py`: GLB container preflight that explicitly keeps artist approval and engine certification false unless external acceptance is supplied.
 - CI syntax-checks the baking/animation workers and runs the timed facial animation worker against the generated facial fixture, then validates the resulting GLB morph structure and report.
+- `pipeline/schemas/production-asset.schema.json` and `pipeline/scripts/validate_production_package.py` define a versioned asset-package contract, source-file SHA-256/provenance checks, path traversal protection and explicit release gates for artist review, geometry/UV/PBR approval, rigging/animation and declared target-engine import evidence. Draft packages can be checked without falsely claiming game-ready status.
+- `pipeline/tests/test_production_package.py` exercises valid draft packages, source hash mismatch, path traversal and blocked game-ready promotion. CI runs these tests.
 
 ## Production gates that remain open
 
