@@ -1,0 +1,25 @@
+name: Pipeline quality checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate JSON manifests and schema
+        run: |
+          python -m json.tool pipeline/manifests/sample-batch.json >/dev/null
+          python -m json.tool pipeline/schemas/asset-job.schema.json >/dev/null
+      - name: Compile Python workers
+        run: python -m compileall -q pipeline
+      - name: Run GLB validator tests
+        run: python pipeline/tests/test_glb_validator.py
