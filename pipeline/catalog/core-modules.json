@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0.0",
+  "pack_id": "forge-core-modules",
+  "pack_version": "1.0.0",
+  "license_policy": "Every item must declare its own SPDX license and evidence.",
+  "slots": ["headwear","hair","face","torso","back","shoulder","hands","legs","feet","accessory"],
+  "items": [
+    {"id":"hair_short","name":"Short Hair","slot":"hair","species":["human","fantasy"],"socket":"head","geometry":"hair_cap","layer":10,"license":"CC0-1.0","source":"Original Forge procedural geometry","lods":["high","medium","low"]},
+    {"id":"helmet_scout","name":"Scout Helmet","slot":"headwear","species":["human","robot","fantasy"],"socket":"head","geometry":"helmet_shell","layer":30,"license":"CC0-1.0","source":"Original Forge procedural geometry","lods":["high","medium","low"]},
+    {"id":"backpack_field","name":"Field Backpack","slot":"back","species":["human","robot"],"socket":"spine","geometry":"backpack","layer":20,"license":"CC0-1.0","source":"Original Forge procedural geometry","lods":["high","medium","low"]},
+    {"id":"armor_chest","name":"Chest Armor","slot":"torso","species":["human","fantasy"],"socket":"chest","geometry":"chest_plate","layer":20,"license":"CC0-1.0","source":"Original Forge procedural geometry","lods":["high","medium","low"]},
+    {"id":"shoulder_guard","name":"Shoulder Guard","slot":"shoulder","species":["human","fantasy","robot"],"socket":"shoulder","geometry":"shoulder_guard","layer":25,"license":"CC0-1.0","source":"Original Forge procedural geometry","lods":["high","medium","low"]},
+    {"id":"boots_combat","name":"Combat Boots","slot":"feet","species":["human","robot","fantasy"],"socket":"foot","geometry":"combat_boots","layer":20,"license":"CC0-1.0","source":"Original Forge procedural geometry","lods":["high","medium","low"]}
+  ]
+}
