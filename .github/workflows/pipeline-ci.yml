@@ -33,3 +33,13 @@ jobs:
           SERVER_PID=$!
           trap 'kill $SERVER_PID' EXIT
           node pipeline/tests/browser-smoke.mjs
+      - name: Install Blender batch runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender
+          blender --version
+      - name: Generate and validate sample production jobs
+        run: |
+          blender --background --python pipeline/blender/generate_batch.py -- pipeline/manifests/sample-batch.json
+          python pipeline/scripts/validate_glb.py artifacts/FG-HUM-000001.glb
+          python pipeline/scripts/validate_glb.py artifacts/FG-ROB-000001.glb
