@@ -16,3 +16,10 @@ The procedural map worker authors maps; it does not bake a production mesh's hig
 3. Facial expression/viseme animation packs.
 4. Original production clothing, hair and armour packs.
 5. Artist review and Unity/Unreal/Godot import certification.
+
+
+## Facial expression and viseme pack — first authoring increment
+
+- Added `pipeline/blender/facial_morph_pack.py`, which imports a character GLB and authors six expression morph targets (smile, frown, brow raise, jaw open, cheek puff, squint) plus five starter visemes (A/E/I/O/U).
+- The worker exports a GLB and a JSON report. CI runs it against a generated head fixture, validates the GLB morph-target structure, and checks the report.
+- This is a procedural authoring starter, not an ARKit 52 mapping, timed animation clip library, performance-captured facial system, or artist-approved production face. Eye blink/gaze controls and production phoneme review remain open.
