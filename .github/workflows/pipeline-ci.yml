@@ -7,6 +7,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: forge-pipeline-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   validate:
     runs-on: ubuntu-24.04
@@ -38,7 +41,6 @@ jobs:
           node pipeline/tests/browser-smoke.mjs
       - name: Install Blender batch runtime
         run: |
-          sudo apt-get update
           sudo apt-get install -y blender python3-numpy
           blender --version
       - name: Generate and validate sample production jobs
