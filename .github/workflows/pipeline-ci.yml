@@ -45,3 +45,6 @@ jobs:
           blender --background --python pipeline/blender/generate_batch.py -- pipeline/manifests/sample-batch.json
           python pipeline/scripts/validate_glb.py artifacts/FG-HUM-000001.glb
           python pipeline/scripts/validate_glb.py artifacts/FG-ROB-000001.glb
+          mkdir -p artifacts/rigged
+          blender --background --python pipeline/blender/rig_character.py -- artifacts/FG-HUM-000001.glb artifacts/rigged/FG-HUM-000001-rigged.glb
+          python pipeline/scripts/validate_glb.py --require-rig artifacts/rigged/FG-HUM-000001-rigged.glb
