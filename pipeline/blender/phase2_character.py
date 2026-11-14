@@ -37,6 +37,37 @@ def part(name,loc,dim,material,sphere=False):
  else:bpy.ops.mesh.primitive_cube_add(size=1,location=loc)
  o=bpy.context.object;o.name=name;o.dimensions=dim;bpy.ops.object.transform_apply(location=False,rotation=False,scale=True);o.data.materials.append(material)
  b=o.modifiers.new("ForgeSoftEdges","BEVEL");b.width=.035;b.segments=2;o["forge_module"]=name;return o
+def add_body_keys(objects,profile):
+ controls={
+  "height":float(profile.get("height",1.0)),
+  "shoulder_width":float(profile.get("shoulder_width",1.0)),
+  "torso_ratio":float(profile.get("torso_ratio",1.0)),
+  "arm_length":float(profile.get("arm_length",1.0)),
+  "leg_length":float(profile.get("leg_length",1.0)),
+  "muscle":float(profile.get("muscle",.5)),
+  "mass":float(profile.get("mass",.5))}
+ mapping={
+  "height":lambda n:(1,1,controls["height"]),
+  "shoulder_width":lambda n:((controls["shoulder_width"] if n in ("Torso","ChestPlate","Shoulder_L","Shoulder_R","Arm_L","Arm_R") else 1),1,1),
+  "torso_ratio":lambda n:((controls["torso_ratio"] if n in ("Torso","Pelvis","ChestPlate") else 1),1,(1+(controls["torso_ratio"]-1)*.5 if n in ("Torso","Pelvis") else 1)),
+  "arm_length":lambda n:(1,1,controls["arm_length"] if n.startswith("Arm_") else 1),
+  "leg_length":lambda n:(1,1,controls["leg_length"] if n.startswith(("Leg_","Boot_")) else 1),
+  "muscle":lambda n:((1+(controls["muscle"]-.5)*.28 if n.startswith(("Arm_","Leg_")) else 1),(1+(controls["muscle"]-.5)*.28 if n.startswith(("Arm_","Leg_")) else 1),1),
+  "mass":lambda n:((1+(controls["mass"]-.5)*.32 if n in ("Torso","Pelvis") else 1),(1+(controls["mass"]-.5)*.24 if n in ("Torso","Pelvis") else 1),1)}
+ made=[]
+ for obj in objects:
+  if obj.type!="MESH" or obj.name.startswith("Module_"):continue
+  if not obj.data.shape_keys:obj.shape_key_add(name="Basis",from_mix=False)
+  basis=obj.data.shape_keys.key_blocks["Basis"]
+  for key,fn in mapping.items():
+   block=obj.shape_key_add(name="ForgeBody_"+key,from_mix=False)
+   sx,sy,sz=fn(obj.name)
+   for i,v in enumerate(basis.data):
+    block.data[i].co=(v.co.x*sx,v.co.y*sy,v.co.z*sz)
+   block.value=1.0
+   made.append(block.name)
+ return sorted(set(made))
+
 def build_module(mid):
  steel=mat("M_Module_Steel",(.12,.19,.28),.72,.32);cloth=mat("M_Module_Cloth",(.18,.25,.31),.05,.78);gold=mat("M_Module_Accent",(.78,.52,.16),.65,.28)
  spec={
@@ -57,12 +88,13 @@ def main():
  heads=[o for o in bpy.context.scene.objects if o.type=="MESH" and o.name.startswith("Head")]
  if job.get("species")=="human" and not heads:raise RuntimeError("Human asset missing Head mesh")
  face=add_face_keys(heads[0],job.get("face_profile",{})) if heads else []
+ body=add_body_keys([o for o in bpy.context.scene.objects if o.type=="MESH"],job.get("body_profile",{}))
  mods=[build_module(x) for x in job.get("modules",[])]
  bpy.ops.object.select_all(action="DESELECT")
  for o in bpy.context.scene.objects:
   if o.type in {"MESH","EMPTY"}:o.select_set(True)
  os.makedirs(os.path.dirname(out) or ".",exist_ok=True)
  bpy.ops.export_scene.gltf(filepath=out,export_format="GLB",use_selection=True,export_apply=True,export_texcoords=True,export_normals=True,export_morph=True,export_materials="EXPORT",export_cameras=False,export_lights=False)
- report={"asset_id":job["asset_id"],"output":out,"face_morph_targets":face,"face_profile":job.get("face_profile",{}),"modules":job.get("modules",[]),"module_count":len(mods),"morph_standard":"Forge procedural controls v1 (not ARKit)","status":"phase2_generated","license":"CC0-1.0","artist_review_required":True}
+ report={"asset_id":job["asset_id"],"output":out,"face_morph_targets":face,"face_profile":job.get("face_profile",{}),"body_morph_targets":body,"body_profile":job.get("body_profile",{}),"modules":job.get("modules",[]),"module_count":len(mods),"morph_standard":"Forge procedural controls v1 (not ARKit)","status":"phase2_generated","license":"CC0-1.0","artist_review_required":True}
  json.dump(report,open(out+".phase2.json","w",encoding="utf-8"),indent=2);print("FORGE_PHASE2 "+json.dumps(report))
 if __name__=="__main__":main()
