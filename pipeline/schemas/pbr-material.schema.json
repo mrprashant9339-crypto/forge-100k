@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://forge100k.example/schemas/pbr-material.schema.json",
+  "title": "Forge 100K PBR Material Manifest",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "materials"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "materials": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "material_id",
+          "workflow",
+          "base_color_factor",
+          "metallic_factor",
+          "roughness_factor",
+          "textures",
+          "provenance"
+        ],
+        "properties": {
+          "material_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{2,63}$"
+          },
+          "workflow": {
+            "const": "metallic_roughness"
+          },
+          "base_color_factor": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "minItems": 4,
+            "maxItems": 4
+          },
+          "metallic_factor": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "roughness_factor": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "textures": {
+            "type": "object",
+            "required": [
+              "base_color",
+              "metallic_roughness",
+              "normal"
+            ],
+            "properties": {
+              "base_color": {
+                "$ref": "#/$defs/texture"
+              },
+              "metallic_roughness": {
+                "$ref": "#/$defs/texture"
+              },
+              "normal": {
+                "$ref": "#/$defs/texture"
+              },
+              "occlusion": {
+                "$ref": "#/$defs/texture"
+              },
+              "emissive": {
+                "$ref": "#/$defs/texture"
+              }
+            },
+            "additionalProperties": false
+          },
+          "provenance": {
+            "type": "object",
+            "required": [
+              "creator",
+              "license",
+              "evidence"
+            ],
+            "properties": {
+              "creator": {
+                "type": "string",
+                "minLength": 1
+              },
+              "license": {
+                "type": "string",
+                "minLength": 2
+              },
+              "evidence": {
+                "type": "string",
+                "minLength": 8
+              },
+              "source_url": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uri"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {
+    "texture": {
+      "type": "object",
+      "required": [
+        "path",
+        "color_space"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "color_space": {
+          "enum": [
+            "sRGB",
+            "linear"
+          ]
+        },
+        "channel_packing": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
