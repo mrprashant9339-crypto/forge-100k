@@ -37,7 +37,7 @@ jobs:
           python pipeline/tests/test_morphology.py
           python pipeline/tests/test_engine_budget.py
           python pipeline/tests/test_pbr_materials.py
-          python -m py_compile pipeline/blender/facial_morph_pack.py pipeline/tests/test_facial_morph_pack.py
+          python -m py_compile pipeline/blender/facial_morph_pack.py
       - name: Install browser test runtime
         run: |
           npm install --no-save playwright@1.55.0
