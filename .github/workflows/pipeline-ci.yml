@@ -55,6 +55,8 @@ jobs:
           blender --background --python pipeline/blender/phase2_character.py -- artifacts/FG-HUM-000001.glb pipeline/manifests/sample-batch.json artifacts/FG-HUM-000001-phase2.glb
           python pipeline/scripts/validate_glb.py --require-morphs artifacts/FG-HUM-000001-phase2.glb
           python pipeline/scripts/validate_glb.py artifacts/FG-ROB-000001.glb
+          blender --background --python pipeline/blender/rig_character.py -- artifacts/FG-ROB-000001.glb artifacts/rigged/FG-ROB-000001-mechanical.glb mechanical_v1
+          python pipeline/scripts/validate_glb.py --require-rig artifacts/rigged/FG-ROB-000001-mechanical.glb
           mkdir -p artifacts/rigged
           blender --background --python pipeline/blender/rig_character.py -- artifacts/FG-HUM-000001-phase2.glb artifacts/rigged/FG-HUM-000001-rigged.glb
           python pipeline/scripts/validate_glb.py --require-rig --require-morphs artifacts/rigged/FG-HUM-000001-rigged.glb
