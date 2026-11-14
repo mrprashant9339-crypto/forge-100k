@@ -51,6 +51,19 @@ def main():
         bpy.ops.object.select_all(action="DESELECT")
         low.select_set(True)
         bpy.context.view_layer.objects.active = low
+        # glTF may split vertices at UV/material seams. Weld coincident vertices
+        # before topology operations so closed surfaces are manifold again.
+        bm = bmesh.new()
+        bm.from_mesh(low.data)
+        if bm.verts:
+            bmesh.ops.remove_doubles(bm, verts=list(bm.verts), dist=0.0001)
+            bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
+        bm.to_mesh(low.data)
+        bm.free()
+        low.data.update()
+        welded_stats = mesh_stats(low)
+        if welded_stats["non_manifold_edges"] > 0:
+            raise RuntimeError("Input remains non-manifold after seam welding: " + src.name)
         # Quadriflow operator options vary slightly between Blender versions.
         props = bpy.ops.object.quadriflow_remesh.get_rna_type().properties
         kwargs = {"target_faces": max(100, target_faces // len(sources))}
