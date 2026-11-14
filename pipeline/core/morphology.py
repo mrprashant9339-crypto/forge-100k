@@ -37,13 +37,15 @@ def clamp_controls(values, controls):
 def stable_seed(asset_id, seed, namespace):
     raw=f"{asset_id}|{int(seed)}|{namespace}".encode()
     return int.from_bytes(hashlib.sha256(raw).digest()[:8],"big")
-def validate_modules(module_ids, catalog):
+def validate_modules(module_ids, catalog, species=None):
     seen=set(); occupied=set(); chosen=[]
     for module_id in module_ids:
         if module_id in seen: raise ValueError(f"Duplicate module: {module_id}")
         seen.add(module_id)
         item=catalog.get(module_id)
         if not item: raise ValueError(f"Unknown module: {module_id}")
+        if species and species not in item.get("species",[]):
+            raise ValueError(f"Module {module_id} is not compatible with species {species}")
         slot=item["slot"]
         if slot in occupied: raise ValueError(f"Slot conflict: {slot}")
         occupied.add(slot); chosen.append(item)
