@@ -18,7 +18,7 @@
 - [ ] Continuous body deformation on production basemesh topology
 - [ ] Production facial sculpt, ARKit 52-unit and viseme mapping
 - [ ] Garment proxy fitting, body-zone hiding, collision and cloth integrity
-- [x] Prototype humanoid/mechanical/quadruped/avian skeleton profiles; [ ] retargeting and deformation certification
+- [x] Prototype humanoid/mechanical/quadruped/avian skeleton profiles exercised in CI; [ ] species-specific mesh fitting, retargeting and deformation certification
 - [x] Automated Blender LOD0/LOD1/LOD2 decimation exports with GLB validation in CI (prototype; not performance-certified)\n- [ ] Texture atlas/mesh merge\n- [x] Measurable GLB structural/runtime-budget preflight in CI (prototype thresholds; target-engine profiling still required)
 
 ## Phase 3 — Production character content
