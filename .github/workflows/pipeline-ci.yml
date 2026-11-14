@@ -31,6 +31,7 @@ jobs:
         run: |
           python pipeline/tests/test_glb_validator.py
           python pipeline/tests/test_morphology.py
+          python pipeline/tests/test_engine_budget.py
       - name: Install browser test runtime
         run: |
           npm install --no-save playwright@1.55.0
@@ -64,6 +65,9 @@ jobs:
           python pipeline/scripts/validate_glb.py artifacts/lods/LOD1.glb
           python pipeline/scripts/validate_glb.py artifacts/lods/LOD2.glb
           python -m json.tool artifacts/lods/lod-report.json >/dev/null
+          python pipeline/scripts/validate_engine_budget.py artifacts/lods/LOD0.glb pipeline/budgets/stylized-character-prototype.json
+          python pipeline/scripts/validate_engine_budget.py artifacts/lods/LOD1.glb pipeline/budgets/stylized-character-prototype.json
+          python pipeline/scripts/validate_engine_budget.py artifacts/lods/LOD2.glb pipeline/budgets/stylized-character-prototype.json
       - name: Upload verified GLB and QA reports
         if: always()
         uses: actions/upload-artifact@v4
