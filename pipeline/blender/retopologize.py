@@ -49,7 +49,6 @@ def main():
         bpy.ops.object.select_all(action="DESELECT")
         low.select_set(True)
         bpy.context.view_layer.objects.active = low
-        bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
         # Quadriflow operator options vary slightly between Blender versions.
         props = bpy.ops.object.quadriflow_remesh.get_rna_type().properties
         kwargs = {"target_faces": max(100, target_faces // len(sources))}
