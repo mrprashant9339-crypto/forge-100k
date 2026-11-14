@@ -14,9 +14,11 @@ def fail(message):
     raise SystemExit(1)
 
 def main():
-    if len(sys.argv) != 2:
-        fail("Usage: python pipeline/scripts/validate_glb.py path/to/model.glb")
-    path = Path(sys.argv[1])
+    require_rig = "--require-rig" in sys.argv
+    paths = [arg for arg in sys.argv[1:] if arg != "--require-rig"]
+    if len(paths) != 1:
+        fail("Usage: python pipeline/scripts/validate_glb.py [--require-rig] path/to/model.glb")
+    path = Path(paths[0])
     if not path.is_file():
         fail("File does not exist: " + str(path))
     data = path.read_bytes()
@@ -82,6 +84,8 @@ def main():
     }
     print(json.dumps(summary, indent=2))
     if not gltf.get("skins") or not gltf.get("animations"):
+        if require_rig:
+            fail("Rigging gate requires at least one skin and one animation")
         print("WARN: Rigging/animation gate is not satisfied; do not mark as game-ready.")
 
 if __name__ == "__main__":
