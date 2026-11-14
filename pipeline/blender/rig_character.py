@@ -131,6 +131,16 @@ def main():
         raise FileNotFoundError(source)
     clear_scene()
     bpy.ops.import_scene.gltf(filepath=source)
+    # The Blender glTF importer can materialize an unbound default Icosphere
+    # helper. It is not character geometry: it has no material and no skin
+    # groups. Remove only this exact non-rendering helper signature and record it.
+    removed_helpers=[]
+    for obj in list(bpy.context.scene.objects):
+        if (obj.type=="MESH" and obj.name=="Icosphere" and
+            len(obj.data.vertices)==42 and len(obj.data.polygons)==80 and
+            len(obj.data.materials)==0 and len(obj.vertex_groups)==0):
+            removed_helpers.append(obj.name)
+            bpy.data.objects.remove(obj,do_unlink=True)
     arm=build_armature()
     mesh_count,vertex_count=bind_smooth_weights(arm)
     add_idle_animation(arm)
@@ -145,7 +155,8 @@ def main():
         export_animations=True,export_skins=True,export_texcoords=True,export_normals=True,
         export_materials="EXPORT",export_cameras=False,export_lights=False)
     report={"input":source,"output":output,"mesh_count":mesh_count,
-        "weighted_vertices":vertex_count,"rig":"ForgeHumanoidRig",
+        "weighted_vertices":vertex_count,"removed_import_helpers":removed_helpers,
+        "rig":"ForgeHumanoidRig",
         "skin_weights":"top-4 inverse-distance normalized",
         "animation":"Forge_Idle_Loop","quality_tier":"prototype_smooth_rig",
         "game_ready":False,"notes":"Requires deformation QA, retargeting and artist approval."}
