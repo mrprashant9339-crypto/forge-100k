@@ -23,3 +23,13 @@ jobs:
         run: python -m compileall -q pipeline
       - name: Run GLB validator tests
         run: python pipeline/tests/test_glb_validator.py
+      - name: Install browser test runtime
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install chromium
+      - name: Run interactive 3D and GLB browser smoke test
+        run: |
+          python -m http.server 4173 --bind 127.0.0.1 >/tmp/forge-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID' EXIT
+          node pipeline/tests/browser-smoke.mjs
