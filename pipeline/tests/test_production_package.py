@@ -71,6 +71,6 @@ class ProductionPackageTests(unittest.TestCase):
         self.data["release_status"]="game_ready"; self.write()
         result=self.run_validator()
         self.assertNotEqual(result.returncode,0)
-        self.assertIn("Godot",result.stderr)
+        self.assertIn("versioned import evidence is incomplete",result.stderr)
 
 if __name__=="__main__": unittest.main()
