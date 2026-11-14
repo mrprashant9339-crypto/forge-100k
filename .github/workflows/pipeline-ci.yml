@@ -70,6 +70,7 @@ jobs:
             blender --background --python pipeline/blender/rig_character.py -- artifacts/phase2-tests/body.glb artifacts/phase2-tests/rig-$profile.glb "$profile"
             python pipeline/scripts/validate_glb.py --require-rig artifacts/phase2-tests/rig-$profile.glb
           done
+          python pipeline/tests/validate_phase2_reports.py artifacts/phase2-tests
           blender --background --python pipeline/blender/generate_batch.py -- pipeline/manifests/sample-batch.json
           python pipeline/scripts/validate_glb.py artifacts/FG-HUM-000001.glb
           blender --background --python pipeline/blender/phase2_character.py -- artifacts/FG-HUM-000001.glb pipeline/manifests/sample-batch.json artifacts/FG-HUM-000001-phase2.glb
