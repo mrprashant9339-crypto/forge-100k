@@ -21,6 +21,8 @@ class MorphologyTests(unittest.TestCase):
   self.assertEqual(len(validate_modules(["hair_short","helmet_scout","backpack_field"],CATALOG)),3)
  def test_module_slot_conflict(self):
   with self.assertRaises(ValueError): validate_modules(["hair_short","helmet_scout","armor_chest"],CATALOG)
+ def test_species_compatibility(self):
+  with self.assertRaises(ValueError): validate_modules(["hair_short"],CATALOG,species="robot")
  def test_duplicate_module_rejected(self):
   with self.assertRaises(ValueError): validate_modules(["hair_short","hair_short"],CATALOG)
 if __name__=="__main__": unittest.main()
