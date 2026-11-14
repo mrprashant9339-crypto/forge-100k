@@ -50,10 +50,11 @@ def main():
     garment.data.materials.append(material("GarmentMat",(.6,.2,.1)))
     export(os.path.join(out,"garment.glb"),[garment])
     reset()
+    shared=material("SharedMaterial",(.2,.5,.3))
     for x in (-1,1):
         bpy.ops.mesh.primitive_cube_add(size=.5,location=(x*.4,0,1))
         bpy.context.object.name="StaticPart_"+str(x)
-        bpy.context.object.data.materials.append(material("SharedMaterial",(.2,.5,.3)))
+        bpy.context.object.data.materials.append(shared)
     bpy.ops.mesh.primitive_uv_sphere_add(segments=12,ring_count=8,location=(0,0,1))
     morph=bpy.context.object;morph.name="MorphProtected"
     morph.data.materials.append(bpy.data.objects["StaticPart_-1"].data.materials[0])
