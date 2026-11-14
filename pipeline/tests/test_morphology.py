@@ -3,7 +3,8 @@ from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from core.morphology import *
 CATALOG={
- "hair_short":{"slot":"hair","name":"Short Hair"},
+ "hair_short":{"slot":"hair","name":"Short Hair","species":["human"]},
+ "hair_long":{"slot":"hair","name":"Long Hair","species":["human"]},
  "helmet_scout":{"slot":"headwear","name":"Scout Helmet"},
  "backpack_field":{"slot":"back","name":"Field Backpack"},
  "armor_chest":{"slot":"torso","name":"Chest Armor"}
@@ -20,7 +21,7 @@ class MorphologyTests(unittest.TestCase):
  def test_modules_allow_distinct_slots(self):
   self.assertEqual(len(validate_modules(["hair_short","helmet_scout","backpack_field"],CATALOG)),3)
  def test_module_slot_conflict(self):
-  with self.assertRaises(ValueError): validate_modules(["hair_short","helmet_scout","armor_chest"],CATALOG)
+  with self.assertRaises(ValueError): validate_modules(["hair_short","hair_long"],CATALOG)
  def test_species_compatibility(self):
   with self.assertRaises(ValueError): validate_modules(["hair_short"],CATALOG,species="robot")
  def test_duplicate_module_rejected(self):
