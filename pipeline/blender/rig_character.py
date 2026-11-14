@@ -155,11 +155,15 @@ def add_idle_animation(arm):
 
 def main():
     args=args_after_separator()
-    if len(args)!=2:
-        raise SystemExit("Usage: rig_character.py -- input.glb output.glb")
-    source,output=map(os.path.abspath,args)
+    if len(args) not in (2, 3):
+        raise SystemExit("Usage: rig_character.py -- input.glb output.glb [humanoid_v1|quadruped_v1|avian_v1|mechanical_v1]")
+    source,output=map(os.path.abspath,args[:2])
+    rig_profile=args[2] if len(args)==3 else "humanoid_v1"
+    if rig_profile not in RIG_PROFILES:
+        raise SystemExit("Unsupported rig profile: "+rig_profile)
     if not os.path.isfile(source):
         raise FileNotFoundError(source)
+    os.makedirs(os.path.dirname(output) or ".",exist_ok=True)
     clear_scene()
     bpy.ops.import_scene.gltf(filepath=source)
     # The Blender glTF importer can materialize an unbound default Icosphere
