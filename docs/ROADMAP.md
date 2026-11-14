@@ -1,33 +1,38 @@
 # Forge 100K Roadmap
 
-## Phase 1 — Prototype
-- [x] 100K deterministic virtual catalogue
-- [x] 20 broad asset groups
-- [x] Search, category filters and pagination
-- [x] Three.js interactive preview
-- [x] Style/body/palette controls
-- [x] GLB import preview and export
-- [x] Local preset saving
+## Phase 1 — Character quality foundation
+- [x] Deterministic Blender blockout generation and UV/material creation
+- [x] Humanoid skeleton, top-four skinning and idle animation
+- [x] GLB structural validation and Blender deformation QA
+- [x] CI artifacts for generated GLBs and reports
 
-## Phase 2 — Production foundation
-- [ ] Add automated browser and WebGL smoke tests
-- [ ] Add robust model bounds, memory cleanup and export validation
-- [ ] Add backend API, authentication and database
-- [ ] Add object storage, signed URLs and resumable uploads
-- [ ] Add asset provenance and licence review workflow
+## Phase 2 — Modular character and morphology foundation
+- [x] Public competitor architecture research documented
+- [x] Deterministic face/body morphology contracts with strict ranges and stable seeds
+- [x] 10 localized facial shape-key controls on human head
+- [x] 7 body morphology shape-key controls on modular human body parts
+- [x] Data-driven modular part catalog with slots, sockets, species, LOD and provenance
+- [x] Duplicate module and occupied-slot conflict validation
+- [x] Blender modular assembly worker
+- [x] CI morph-target gate, rigging and animation verification
+- [ ] Continuous body deformation on production basemesh topology
+- [ ] Production facial sculpt, ARKit 52-unit and viseme mapping
+- [ ] Garment proxy fitting, body-zone hiding, collision and cloth integrity
+- [ ] Multi-species skeleton profiles and retargeting
+- [ ] Atlas/merge/LOD optimizer with measured performance budgets
 
-## Phase 3 — Real character production
-- [ ] Create original base meshes and modular parts
-- [ ] Add topology, UV, PBR texture and LOD standards
-- [ ] Add humanoid and creature skeletons
-- [ ] Add animation library and retargeting
-- [ ] Validate Unity, Unreal, Godot and web imports
+## Phase 3 — Production character content
+- [ ] Original high-resolution base meshes and sculpt-to-game retopology
+- [ ] PBR texture baking and material authoring
+- [ ] Facial expression and phoneme animation packs
+- [ ] Game-ready clothing, hair and armour packs
+- [ ] Artist review and target-engine import certification
 
-## Phase 4 — Scale
-- [ ] Blender batch workers and generation queue
-- [ ] AI 3D provider integration with human QA
-- [ ] Search indexing, CDN delivery and analytics
-- [ ] Creator uploads, moderation and versioning
+## Phase 4 — Scale and platform
+- [ ] Queue-backed batch workers and storage/CDN
+- [ ] Authenticated creator uploads, versioning and moderation
+- [ ] Search indexing, asset analytics and usage telemetry
+- [ ] AI generation backends with human QA and licence checks
 
-## Quality gates
-Do not label a preset as game-ready until mesh integrity, texture links, triangle budget, skeleton, animation, bounds, licence provenance and target-engine import have passed automated checks.
+## Quality policy
+Do not label an asset game-ready until geometry, UVs, PBR maps, LODs, rig, animation, bounds, collisions, licence provenance and target-engine import pass automated checks and artist review.
