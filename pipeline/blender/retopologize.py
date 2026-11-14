@@ -16,7 +16,9 @@ def cli():
 
 def mesh_stats(obj):
     mesh = obj.data
-    bm = bmesh.new()\n    bm.from_mesh(mesh)\n    non_manifold = sum(1 for e in bm.edges if not e.is_manifold)\n    bm.free()
+    bm = bmesh.new(); bm.from_mesh(mesh)
+    non_manifold = sum(1 for e in bm.edges if not e.is_manifold)
+    bm.free()
     return {
         "vertices": len(mesh.vertices),
         "edges": len(mesh.edges),
