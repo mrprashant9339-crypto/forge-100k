@@ -24,7 +24,7 @@
 - [x] Measurable GLB structural/runtime-budget preflight in CI (prototype thresholds; target-engine profiling still required)
 
 ## Phase 3 — Production character content (implementation started)
-- [x] PBR material manifest contract, texture-reference validator and unit tests added; CI verification pending
+- [x] PBR material manifest contract, texture-reference validator and unit tests\n- [x] Deterministic Blender PBR texture authoring for base-color, metallic-roughness, normal and occlusion maps; CI generation/validation integrated (procedural, not high-to-low bake)
 - [ ] Original high-resolution base meshes and sculpt-to-game retopology
 - [ ] PBR texture baking, channel packing and material authoring
 - [ ] Facial expression and phoneme animation packs
