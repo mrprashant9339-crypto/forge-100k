@@ -1,0 +1,266 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://forge100k.example/schemas/production-asset.schema.json",
+  "title": "Forge 100K Production Asset Package",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "asset_id",
+    "asset_type",
+    "source",
+    "geometry",
+    "materials",
+    "rigging",
+    "animation",
+    "reviews",
+    "release_status"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "asset_id": {
+      "type": "string",
+      "pattern": "^[A-Z0-9][A-Z0-9_-]{2,63}$"
+    },
+    "asset_type": {
+      "enum": [
+        "humanoid",
+        "creature",
+        "mechanical",
+        "prop",
+        "accessory"
+      ]
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "file",
+        "creator",
+        "license",
+        "license_evidence",
+        "sha256"
+      ],
+      "properties": {
+        "file": {
+          "type": "string",
+          "minLength": 1
+        },
+        "creator": {
+          "type": "string",
+          "minLength": 1
+        },
+        "license": {
+          "type": "string",
+          "minLength": 2
+        },
+        "license_evidence": {
+          "type": "string",
+          "minLength": 8
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "source_url": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        }
+      },
+      "additionalProperties": false
+    },
+    "geometry": {
+      "type": "object",
+      "required": [
+        "glb",
+        "retopology_review",
+        "uv_review"
+      ],
+      "properties": {
+        "glb": {
+          "type": "string",
+          "minLength": 1
+        },
+        "retopology_review": {
+          "enum": [
+            "pending",
+            "approved",
+            "rejected"
+          ]
+        },
+        "uv_review": {
+          "enum": [
+            "pending",
+            "approved",
+            "rejected"
+          ]
+        },
+        "lod_files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "materials": {
+      "type": "object",
+      "required": [
+        "pbr_manifest",
+        "bake_review"
+      ],
+      "properties": {
+        "pbr_manifest": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bake_review": {
+          "enum": [
+            "pending",
+            "approved",
+            "rejected"
+          ]
+        },
+        "texture_files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "rigging": {
+      "type": "object",
+      "required": [
+        "required",
+        "review"
+      ],
+      "properties": {
+        "required": {
+          "type": "boolean"
+        },
+        "review": {
+          "enum": [
+            "not_applicable",
+            "pending",
+            "approved",
+            "rejected"
+          ]
+        },
+        "skeleton_profile": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "animation": {
+      "type": "object",
+      "required": [
+        "required",
+        "review"
+      ],
+      "properties": {
+        "required": {
+          "type": "boolean"
+        },
+        "review": {
+          "enum": [
+            "not_applicable",
+            "pending",
+            "approved",
+            "rejected"
+          ]
+        },
+        "clips": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "reviews": {
+      "type": "object",
+      "required": [
+        "artist",
+        "engines"
+      ],
+      "properties": {
+        "artist": {
+          "type": "object",
+          "required": [
+            "status"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "pending",
+                "approved",
+                "rejected"
+              ]
+            },
+            "reviewer": {
+              "type": "string"
+            },
+            "reviewed_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "evidence": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "engines": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "status"
+            ],
+            "properties": {
+              "name": {
+                "enum": [
+                  "unity",
+                  "unreal",
+                  "godot"
+                ]
+              },
+              "status": {
+                "enum": [
+                  "not_tested",
+                  "passed",
+                  "failed"
+                ]
+              },
+              "version": {
+                "type": "string"
+              },
+              "evidence": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "release_status": {
+      "enum": [
+        "draft",
+        "review",
+        "game_ready"
+      ]
+    }
+  },
+  "additionalProperties": false
+}
