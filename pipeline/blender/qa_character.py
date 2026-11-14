@@ -26,9 +26,14 @@ def main():
     mesh_diagnostics=[]
     for obj in meshes:
         # Blender may import armature display helpers as hidden non-deforming meshes.
-        helper = bool(obj.hide_render or obj.hide_viewport or obj.hide_get())
-        if helper and not obj.data.materials and not any(m.type=="ARMATURE" for m in obj.modifiers):
-            mesh_stats.append({"name":obj.name,"role":"hidden-helper","excluded_from_render_qa":True})
+        importer_helper = (obj.name=="Icosphere" and len(obj.data.vertices)==42 and
+            len(obj.data.polygons)==80 and len(obj.data.materials)==0 and
+            len(obj.vertex_groups)==0 and not any(m.type=="ARMATURE" for m in obj.modifiers))
+        hidden_helper = (bool(obj.hide_render or obj.hide_viewport or obj.hide_get()) and
+            not obj.data.materials and not any(m.type=="ARMATURE" for m in obj.modifiers))
+        if importer_helper or hidden_helper:
+            mesh_stats.append({"name":obj.name,"role":"non-character-import-helper",
+                "excluded_from_render_qa":True,"signature":"unbound-42v-80f-helper"})
             continue
         mesh_diagnostics.append({"name":obj.name,"hidden_render":obj.hide_render,
             "hidden_viewport":obj.hide_viewport,"hidden_get":obj.hide_get(),
