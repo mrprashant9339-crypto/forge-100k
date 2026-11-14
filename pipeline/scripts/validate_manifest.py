@@ -30,6 +30,14 @@ def main():
     seeds=[job["seed"] for job in manifest["jobs"]]
     if len(seeds)!=len(set(seeds)):
         raise SystemExit("FAIL: duplicate seed values in batch")
+    catalog_path=root/"catalog"/"core-modules.json"
+    catalog_data=json.loads(catalog_path.read_text())
+    catalog={item["id"]:item for item in catalog_data["items"]}
+    from core.morphology import validate_modules, clamp_controls, FACE_CONTROLS, BODY_CONTROLS
+    for job in manifest["jobs"]:
+        validate_modules(job.get("modules",[]),catalog)
+        clamp_controls(job.get("face_profile",{}),FACE_CONTROLS)
+        clamp_controls(job.get("body_profile",{}),BODY_CONTROLS)
     print(json.dumps({"status":"pass","batch_id":manifest["batch_id"],
         "jobs":len(ids),"unique_asset_ids":len(set(ids)),
         "unique_seeds":len(set(seeds))},indent=2))
