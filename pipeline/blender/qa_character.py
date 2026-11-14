@@ -23,6 +23,11 @@ def main():
     if not armatures: issues.append("No armature object")
     mesh_stats=[]
     for obj in meshes:
+        # Blender may import armature display helpers as hidden non-deforming meshes.
+        helper = bool(obj.hide_render or obj.hide_viewport or obj.hide_get())
+        if helper and not obj.data.materials and not any(m.type=="ARMATURE" for m in obj.modifiers):
+            mesh_stats.append({"name":obj.name,"role":"hidden-helper","excluded_from_render_qa":True})
+            continue
         if not obj.data.uv_layers:
             issues.append(obj.name+": missing UV map")
         if not obj.data.materials:
