@@ -23,3 +23,14 @@ Forge implements original versions of the data-contract and deterministic-genera
 ## Honest limitations
 
 These are procedural starter facial shape keys, not a photorealistic face system, not 52 ARKit face units, and not a complete phoneme/viseme solution. Body-profile shape keys now deform the current separate blockout meshes. They are not yet calibrated against a continuous production basemesh. Current procedural modules are prototypes, not artist-finished clothing. Clothing fit, body-zone occlusion, cloth simulation, mesh retopology, PBR texture baking, creature-specific skeletons, texture atlasing/mesh merging, engine performance budgets and Unity/Unreal/Godot import certification remain open. Automated LOD decimation is now present, but it is not a substitute for silhouette review, animation deformation checks at each LOD or measured engine budgets.
+
+
+## Additional Phase 2 pipeline workers
+
+- `pipeline/blender/fit_garment.py` imports a body and garment GLB, applies a bounded nearest-surface Shrinkwrap proxy fit, and emits semantic body-zone vertex groups plus a machine-readable report. It explicitly does not claim cloth simulation, certified collision detection or runtime body occlusion.
+- `pipeline/blender/merge_meshes.py` merges static meshes that share a material signature while preserving UV/material slots. Meshes with shape keys are deliberately isolated to avoid breaking morph vertex correspondence. This is not texture-atlas baking.
+- CI now syntax-checks both workers. They remain prototype pipeline stages until fixture-based geometry tests and target-engine validation are added.
+
+## Phase 2 completion gate
+
+Phase 2 is not considered production-complete while any of these remain open: continuous production basemesh deformation, sculpt-quality facial topology and ARKit/viseme mapping, garment pose/collision/cloth validation, species-specific retargeting and deformation certification, texture-atlas baking, and measured Unity/Unreal/Godot import/performance tests. The current repository supplies starter workers and structural gates, not artist-certified game assets.
