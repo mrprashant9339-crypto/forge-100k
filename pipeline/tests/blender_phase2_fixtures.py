@@ -39,7 +39,7 @@ def main():
     bpy.ops.object.transform_apply(location=False,rotation=False,scale=True)
     body.data.materials.append(material("BodyMat",(.3,.4,.6)))
     bpy.ops.mesh.primitive_uv_sphere_add(segments=16,ring_count=12,location=(0,0,2.1))
-    head=bpy.context.object;head.name="HeadFixture";head.scale=(.25,.22,.3)
+    head=bpy.context.object;head.name="Head";head.scale=(.25,.22,.3)
     bpy.ops.object.transform_apply(location=False,rotation=False,scale=True)
     head.data.materials.append(body.data.materials[0])
     export(os.path.join(out,"body.glb"),[body,head])
