@@ -3,7 +3,9 @@ import struct
 import tempfile
 import unittest
 from pathlib import Path
+import sys
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from validate_engine_budget import load_gltf, triangle_total
 
 class EngineBudgetTests(unittest.TestCase):
