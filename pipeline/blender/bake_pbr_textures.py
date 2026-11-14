@@ -10,7 +10,7 @@ def cli():
     return [os.path.abspath(x) for x in a[:3]] + [int(a[3]) if len(a)==4 else 1024]
 
 def clear():
-    bpy.ops.object.select_all(action="SELECT); bpy.ops.object.delete(use_global=False)
+    bpy.ops.object.select_all(action="SELECT"); bpy.ops.object.delete(use_global=False)
 
 def save_image(name, size, path, colorspace="Non-Color"):
     img=bpy.data.images.new(name,width=size,height=size,alpha=True,float_buffer=False)
@@ -48,10 +48,13 @@ def main():
     if size<64 or size>4096 or size&(size-1): raise ValueError("resolution must be power of two 64..4096")
     os.makedirs(out,exist_ok=True); clear()
     bpy.ops.import_scene.gltf(filepath=high_path)
-    high={o.name:o for o in bpy.context.scene.objects if o.type=="MESH"}
+    def base_name(value):
+        parts=value.rsplit(".",1)
+        return parts[0] if len(parts)==2 and parts[1].isdigit() else value
+    high={base_name(o.name):o for o in bpy.context.scene.objects if o.type=="MESH"}
     bpy.ops.import_scene.gltf(filepath=low_path)
-    low={o.name:o for o in bpy.context.scene.objects if o.type=="MESH" and o.name in high}
-    if not low: raise RuntimeError("No matching high/low mesh object names")
+    low={base_name(o.name):o for o in bpy.context.scene.objects if o.type=="MESH" and base_name(o.name) in high and o not in high.values()}
+    if not low: raise RuntimeError("No matching high/low mesh object names; use matching source object names")
     report={"status":"baked","resolution":[size,size],"meshes":[],"maps":{},"limitations":[]}
     scene=bpy.context.scene; scene.render.engine="CYCLES"; scene.cycles.samples=16
     scene.render.bake.use_pass_color=True
