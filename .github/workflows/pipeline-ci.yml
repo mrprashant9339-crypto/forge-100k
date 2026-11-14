@@ -28,7 +28,9 @@ jobs:
       - name: Compile Python workers
         run: python -m compileall -q pipeline
       - name: Run GLB validator tests
-        run: python pipeline/tests/test_glb_validator.py
+        run: |
+          python pipeline/tests/test_glb_validator.py
+          python pipeline/tests/test_morphology.py
       - name: Install browser test runtime
         run: |
           npm install --no-save playwright@1.55.0
@@ -49,9 +51,11 @@ jobs:
         run: |
           blender --background --python pipeline/blender/generate_batch.py -- pipeline/manifests/sample-batch.json
           python pipeline/scripts/validate_glb.py artifacts/FG-HUM-000001.glb
+          blender --background --python pipeline/blender/phase2_character.py -- artifacts/FG-HUM-000001.glb pipeline/manifests/sample-batch.json artifacts/FG-HUM-000001-phase2.glb
+          python pipeline/scripts/validate_glb.py --require-morphs artifacts/FG-HUM-000001-phase2.glb
           python pipeline/scripts/validate_glb.py artifacts/FG-ROB-000001.glb
           mkdir -p artifacts/rigged
-          blender --background --python pipeline/blender/rig_character.py -- artifacts/FG-HUM-000001.glb artifacts/rigged/FG-HUM-000001-rigged.glb
+          blender --background --python pipeline/blender/rig_character.py -- artifacts/FG-HUM-000001-phase2.glb artifacts/rigged/FG-HUM-000001-rigged.glb
           python pipeline/scripts/validate_glb.py --require-rig artifacts/rigged/FG-HUM-000001-rigged.glb
           blender --background --python pipeline/blender/qa_character.py -- artifacts/rigged/FG-HUM-000001-rigged.glb artifacts/rigged/FG-HUM-000001-qa.json
           python -m json.tool artifacts/rigged/FG-HUM-000001-qa.json >/dev/null
