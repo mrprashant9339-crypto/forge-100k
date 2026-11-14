@@ -26,27 +26,58 @@ def make_bone(arm_data,name,head,tail,parent=None):
         bone.parent=arm_data.edit_bones[parent]
     return bone
 
-def build_armature():
-    data=bpy.data.armatures.new("ForgeHumanoidRig")
-    arm=bpy.data.objects.new("ForgeHumanoidRig",data)
+RIG_PROFILES = {"humanoid_v1", "quadruped_v1", "avian_v1", "mechanical_v1"}
+
+def build_armature(profile="humanoid_v1"):
+    if profile not in RIG_PROFILES:
+        raise ValueError("Unsupported rig profile: " + profile)
+    rig_name = "Forge" + profile.split("_")[0].title() + "Rig"
+    data=bpy.data.armatures.new(rig_name)
+    arm=bpy.data.objects.new(rig_name,data)
     bpy.context.collection.objects.link(arm)
     bpy.context.view_layer.objects.active=arm
     arm.select_set(True)
     bpy.ops.object.mode_set(mode="EDIT")
     make_bone(data,"root",(0,0,0),(0,0,0.25))
-    make_bone(data,"pelvis",(0,0,0.82),(0,0,1.08),"root")
-    make_bone(data,"spine",(0,0,1.08),(0,0,1.55),"pelvis")
-    make_bone(data,"chest",(0,0,1.55),(0,0,1.85),"spine")
-    make_bone(data,"neck",(0,0,1.85),(0,0,2.02),"chest")
-    make_bone(data,"head",(0,0,2.02),(0,0,2.42),"neck")
-    for side,label in [(-1,"L"),(1,"R")]:
-        x=side
-        make_bone(data,"upper_arm_"+label,(x*.35,0,1.78),(x*.66,0,1.48),"chest")
-        make_bone(data,"lower_arm_"+label,(x*.66,0,1.48),(x*.68,0,1.10),"upper_arm_"+label)
-        make_bone(data,"hand_"+label,(x*.68,0,1.10),(x*.68,-.02,.98),"lower_arm_"+label)
-        make_bone(data,"upper_leg_"+label,(x*.20,0,.94),(x*.22,0,.52),"pelvis")
-        make_bone(data,"lower_leg_"+label,(x*.22,0,.52),(x*.22,0,.16),"upper_leg_"+label)
-        make_bone(data,"foot_"+label,(x*.22,0,.16),(x*.22,-.32,.08),"lower_leg_"+label)
+    if profile in ("humanoid_v1", "mechanical_v1"):
+        make_bone(data,"pelvis",(0,0,.82),(0,0,1.08),"root")
+        make_bone(data,"spine",(0,0,1.08),(0,0,1.55),"pelvis")
+        make_bone(data,"chest",(0,0,1.55),(0,0,1.85),"spine")
+        make_bone(data,"neck",(0,0,1.85),(0,0,2.02),"chest")
+        make_bone(data,"head",(0,0,2.02),(0,0,2.42),"neck")
+        for side,label in [(-1,"L"),(1,"R")]:
+            x=side
+            make_bone(data,"upper_arm_"+label,(x*.35,0,1.78),(x*.66,0,1.48),"chest")
+            make_bone(data,"lower_arm_"+label,(x*.66,0,1.48),(x*.68,0,1.10),"upper_arm_"+label)
+            make_bone(data,"hand_"+label,(x*.68,0,1.10),(x*.68,-.02,.98),"lower_arm_"+label)
+            make_bone(data,"upper_leg_"+label,(x*.20,0,.94),(x*.22,0,.52),"pelvis")
+            make_bone(data,"lower_leg_"+label,(x*.22,0,.52),(x*.22,0,.16),"upper_leg_"+label)
+            make_bone(data,"foot_"+label,(x*.22,0,.16),(x*.22,-.32,.08),"lower_leg_"+label)
+    elif profile == "quadruped_v1":
+        make_bone(data,"pelvis",(0,.38,.78),(0,.12,.92),"root")
+        make_bone(data,"spine",(0,.12,.92),(0,-.30,1.02),"pelvis")
+        make_bone(data,"chest",(0,-.30,1.02),(0,-.55,1.02),"spine")
+        make_bone(data,"neck",(0,-.55,1.02),(0,-.78,1.22),"chest")
+        make_bone(data,"head",(0,-.78,1.22),(0,-1.02,1.28),"neck")
+        make_bone(data,"tail",(0,.38,.82),(0,.85,.70),"pelvis")
+        for side,label in [(-1,"L"),(1,"R")]:
+            x=side*.28
+            make_bone(data,"front_upper_"+label,(x,-.48,.92),(x,-.48,.50),"chest")
+            make_bone(data,"front_lower_"+label,(x,-.48,.50),(x,-.55,.12),"front_upper_"+label)
+            make_bone(data,"hind_upper_"+label,(x,.34,.82),(x,.34,.46),"pelvis")
+            make_bone(data,"hind_lower_"+label,(x,.34,.46),(x,.12,.12),"hind_upper_"+label)
+    else:  # avian: articulated wings and two legs
+        make_bone(data,"pelvis",(0,0,.72),(0,0,1.02),"root")
+        make_bone(data,"spine",(0,0,1.02),(0,0,1.55),"pelvis")
+        make_bone(data,"chest",(0,0,1.55),(0,0,1.82),"spine")
+        make_bone(data,"neck",(0,0,1.82),(0,-.10,2.12),"chest")
+        make_bone(data,"head",(0,-.10,2.12),(0,-.25,2.36),"neck")
+        for side,label in [(-1,"L"),(1,"R")]:
+            x=side
+            make_bone(data,"wing_"+label,(0,0,1.68),(x*.48,0,1.62),"chest")
+            make_bone(data,"wing_tip_"+label,(x*.48,0,1.62),(x*.88,0,1.48),"wing_"+label)
+            make_bone(data,"leg_"+label,(x*.16,0,.82),(x*.16,0,.28),"pelvis")
+            make_bone(data,"foot_"+label,(x*.16,0,.28),(x*.16,-.20,.08),"leg_"+label)
     bpy.ops.object.mode_set(mode="OBJECT")
     arm.show_in_front=True
     return arm
@@ -141,7 +172,7 @@ def main():
             len(obj.data.materials)==0 and len(obj.vertex_groups)==0):
             removed_helpers.append(obj.name)
             bpy.data.objects.remove(obj,do_unlink=True)
-    arm=build_armature()
+    arm=build_armature(rig_profile)
     mesh_count,vertex_count=bind_smooth_weights(arm)
     add_idle_animation(arm)
     bpy.ops.object.select_all(action="DESELECT")
@@ -156,7 +187,7 @@ def main():
         export_materials="EXPORT",export_cameras=False,export_lights=False)
     report={"input":source,"output":output,"mesh_count":mesh_count,
         "weighted_vertices":vertex_count,"removed_import_helpers":removed_helpers,
-        "rig":"ForgeHumanoidRig",
+        "rig":arm.name,"rig_profile":rig_profile,
         "skin_weights":"top-4 inverse-distance normalized",
         "animation":"Forge_Idle_Loop","quality_tier":"prototype_smooth_rig",
         "game_ready":False,"notes":"Requires deformation QA, retargeting and artist approval."}
