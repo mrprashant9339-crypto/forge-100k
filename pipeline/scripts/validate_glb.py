@@ -15,7 +15,8 @@ def fail(message):
 
 def main():
     require_rig = "--require-rig" in sys.argv
-    paths = [arg for arg in sys.argv[1:] if arg != "--require-rig"]
+    require_morphs = "--require-morphs" in sys.argv
+    paths = [arg for arg in sys.argv[1:] if arg not in ("--require-rig","--require-morphs")]
     if len(paths) != 1:
         fail("Usage: python pipeline/scripts/validate_glb.py [--require-rig] path/to/model.glb")
     path = Path(paths[0])
@@ -71,8 +72,12 @@ def main():
     for image in gltf.get("images", []):
         if "uri" in image:
             fail("External image URI found; production GLBs must be self-contained")
+    morph_targets = max((len(p.get("targets",[])) for m in gltf.get("meshes",[]) for p in m.get("primitives",[])),default=0)
+    if require_morphs and morph_targets < 1:
+        fail("Morphology gate requires at least one morph target")
     summary = {
         "status": "pass",
+        "max_morph_targets_per_primitive": morph_targets,
         "file": str(path),
         "bytes": len(data),
         "nodes": len(gltf.get("nodes", [])),
