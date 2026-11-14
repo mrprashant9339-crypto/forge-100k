@@ -40,11 +40,16 @@ def main():
     report = {"source": source, "output": output, "target_faces": target_faces, "meshes": [], "method": "Blender Quadriflow", "artist_review_required": True, "engine_certified": False}
     exported = []
     for index, src in enumerate(sources):
-        bpy.ops.object.select_all(action="DESELECT")
-        src.select_set(True)
-        bpy.context.view_layer.objects.active = src
-        bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
         before = mesh_stats(src)
+        low = src.copy()
+        low.data = src.data.copy()
+        low.name = src.name + "_Retopo"
+        bpy.context.collection.objects.link(low)
+        low.matrix_world = src.matrix_world.copy()
+        bpy.ops.object.select_all(action="DESELECT")
+        low.select_set(True)
+        bpy.context.view_layer.objects.active = low
+        bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
         # Quadriflow operator options vary slightly between Blender versions.
         props = bpy.ops.object.quadriflow_remesh.get_rna_type().properties
         kwargs = {"target_faces": max(100, target_faces // len(sources))}
@@ -60,7 +65,6 @@ def main():
         low.name = src.name + "_Retopo"
         low.data.name = low.name + "_Mesh"
         # Preserve object transform from the imported source and generate a usable UV set.
-        low.matrix_world = src.matrix_world.copy()
         if not low.data.uv_layers:
             low.data.uv_layers.new(name="UVMap")
         bpy.ops.object.mode_set(mode="EDIT")
@@ -74,7 +78,6 @@ def main():
             raise RuntimeError("Retopology output failed basic mesh/UV checks: " + src.name)
         report["meshes"].append({"name": src.name, "before": before, "after": after, "face_ratio": round(after["faces"] / max(1, before["faces"]), 4)})
         exported.append(low)
-        src.hide_set(True)
     bpy.ops.object.select_all(action="DESELECT")
     for obj in exported:
         obj.select_set(True)
