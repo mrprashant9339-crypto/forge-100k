@@ -6,7 +6,7 @@ Usage:
 This is an automated retopology draft. It preserves the source file, creates UVs,
 and reports topology metrics. It is NOT artist-approved production topology.
 """
-import bpy, json, os, sys
+import bpy, bmesh, json, os, sys
 
 def cli():
     a = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
@@ -16,7 +16,7 @@ def cli():
 
 def mesh_stats(obj):
     mesh = obj.data
-    non_manifold = sum(1 for e in mesh.edges if not e.is_manifold)
+    bm = bmesh.new()\n    bm.from_mesh(mesh)\n    non_manifold = sum(1 for e in bm.edges if not e.is_manifold)\n    bm.free()
     return {
         "vertices": len(mesh.vertices),
         "edges": len(mesh.edges),
