@@ -3,10 +3,12 @@
 ## Implemented pipeline gates
 
 - Deterministic Blender blockout generation with UV unwrap and Principled BSDF materials.
+- Draft 2020-12 JSON Schema validation for batch manifests and every asset job, including duplicate ID/seed rejection.
 - Humanoid armature generation and looping idle animation.
 - Top-four inverse-distance normalized vertex weights, replacing rigid per-part assignments.
 - GLB structural validator with strict skin + animation mode.
-- Blender-side QA for UV presence, Principled material nodes, armature modifiers, applied object scale, active animation and evaluated mesh deformation.
+- Blender-side QA for UV presence, Principled material nodes, armature modifiers, applied object scale, normalized top-four skin weights, active animation and evaluated mesh deformation.
+- CI artifact retention for generated GLBs and QA reports, allowing reviewers to download and inspect the exact build outputs.
 
 ## CI proof
 
