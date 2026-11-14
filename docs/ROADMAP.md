@@ -17,14 +17,15 @@
 - [x] CI morph-target gate, rigging and animation verification
 - [ ] Continuous body deformation on production basemesh topology
 - [ ] Production facial sculpt, ARKit 52-unit and viseme mapping
-- [x] Prototype garment proxy fitting and semantic body-zone groups; [ ] runtime occlusion, pose-space collision and cloth integrity certification
-- [x] Prototype humanoid/mechanical/quadruped/avian skeleton profiles exercised in CI; [ ] species-specific mesh fitting, retargeting and deformation certification
+- [x] Prototype garment proxy fitting and semantic body-zone groups; [x] Blender fixture integration test and GLB/report validation; [ ] runtime occlusion, pose-space collision and cloth integrity certification
+- [x] Prototype humanoid/mechanical/quadruped/avian skeleton profiles exercised in CI; [x] each profile exported and structurally validated in Blender CI; [ ] species-specific mesh fitting, retargeting and deformation certification
 - [x] Automated Blender LOD0/LOD1/LOD2 decimation exports with GLB validation in CI (prototype; not performance-certified)
-- [x] Material-preserving static mesh merge worker (shape-key meshes protected); [ ] texture atlas baking
+- [x] Material-preserving static mesh merge worker (shape-key meshes protected); [x] Blender fixture integration test and GLB/report validation; [ ] texture atlas baking
 - [x] Measurable GLB structural/runtime-budget preflight in CI (prototype thresholds; target-engine profiling still required)
 
 ## Phase 3 — Production character content (implementation started)
-- [x] PBR material manifest contract, texture-reference validator and unit tests\n- [x] Deterministic Blender PBR texture authoring for base-color, metallic-roughness, normal and occlusion maps; CI generation/validation integrated (procedural, not high-to-low bake)
+- [x] PBR material manifest contract, texture-reference validator and unit tests
+- [x] Deterministic Blender PBR texture authoring for base-color, metallic-roughness, normal and occlusion maps; CI generation/validation integrated (procedural, not high-to-low bake)
 - [ ] Original high-resolution base meshes and sculpt-to-game retopology
 - [ ] PBR texture baking, channel packing and material authoring
 - [ ] Facial expression and phoneme animation packs
