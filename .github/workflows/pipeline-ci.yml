@@ -24,6 +24,7 @@ jobs:
           python -m json.tool pipeline/manifests/sample-batch.json >/dev/null
           python -m json.tool pipeline/schemas/asset-job.schema.json >/dev/null
           python -m json.tool pipeline/schemas/batch-manifest.schema.json >/dev/null
+          python -m json.tool pipeline/schemas/pbr-material.schema.json >/dev/null
           python pipeline/scripts/validate_manifest.py pipeline/manifests/sample-batch.json
       - name: Compile Python workers
         run: |
@@ -34,6 +35,8 @@ jobs:
           python pipeline/tests/test_glb_validator.py
           python pipeline/tests/test_morphology.py
           python pipeline/tests/test_engine_budget.py
+          python pipeline/tests/test_pbr_materials.py
+          python pipeline/scripts/validate_pbr_materials.py pipeline/manifests/starter-pbr-materials.json --allow-missing-textures
       - name: Install browser test runtime
         run: |
           npm install --no-save playwright@1.55.0
