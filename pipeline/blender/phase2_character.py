@@ -28,9 +28,9 @@ def add_face_keys(head,controls):
  basis=head.data.shape_keys.key_blocks["Basis"]
  for name,fn in funcs.items():
   block=head.shape_key_add(name="ForgeFace_"+name,from_mix=False)
-        default=0.5 if name in ("cheek_fullness","brow_depth") else 1.0
-        value=float(controls.get(name,default))
-        amount=value if name in ("cheek_fullness","brow_depth") else value-1.0
+   default=0.5 if name in ("cheek_fullness","brow_depth") else 1.0
+   value=float(controls.get(name,default))
+   amount=value if name in ("cheek_fullness","brow_depth") else value-1.0
   for i,v in enumerate(head.data.vertices):
    local=basis.data[i].co.copy();world=head.matrix_world@local;p=world-Vector((0,0,2.15))
    block.data[i].co=local+head.matrix_world.inverted().to_3x3()@(fn(p)*amount)
