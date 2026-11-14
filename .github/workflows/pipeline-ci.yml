@@ -37,9 +37,6 @@ jobs:
           python pipeline/tests/test_morphology.py
           python pipeline/tests/test_engine_budget.py
           python pipeline/tests/test_pbr_materials.py
-          blender --background --python pipeline/blender/generate_pbr_textures.py -- artifacts/pbr/starter 512
-          python pipeline/scripts/validate_pbr_materials.py pipeline/manifests/starter-pbr-materials.json
-          python -m json.tool artifacts/pbr/starter/pbr-texture-report.json >/dev/null
       - name: Install browser test runtime
         run: |
           npm install --no-save playwright@1.55.0
@@ -58,6 +55,21 @@ jobs:
         env:
           PYTHONPATH: /usr/lib/python3/dist-packages
         run: |
+          blender --background --python pipeline/blender/generate_pbr_textures.py -- artifacts/pbr/starter 512
+          python pipeline/scripts/validate_pbr_materials.py pipeline/manifests/starter-pbr-materials.json
+          python -m json.tool artifacts/pbr/starter/pbr-texture-report.json >/dev/null
+          mkdir -p artifacts/phase2-tests
+          blender --background --python pipeline/tests/blender_phase2_fixtures.py -- artifacts/phase2-tests
+          blender --background --python pipeline/blender/fit_garment.py -- artifacts/phase2-tests/body.glb artifacts/phase2-tests/garment.glb artifacts/phase2-tests/fitted.glb artifacts/phase2-tests/fit-report.json
+          python pipeline/scripts/validate_glb.py artifacts/phase2-tests/fitted.glb
+          python -m json.tool artifacts/phase2-tests/fit-report.json >/dev/null
+          blender --background --python pipeline/blender/merge_meshes.py -- artifacts/phase2-tests/merge-input.glb artifacts/phase2-tests/merged.glb artifacts/phase2-tests/merge-report.json
+          python pipeline/scripts/validate_glb.py artifacts/phase2-tests/merged.glb
+          python -m json.tool artifacts/phase2-tests/merge-report.json >/dev/null
+          for profile in humanoid_v1 mechanical_v1 quadruped_v1 avian_v1; do
+            blender --background --python pipeline/blender/rig_character.py -- artifacts/phase2-tests/body.glb artifacts/phase2-tests/rig-$profile.glb "$profile"
+            python pipeline/scripts/validate_glb.py --require-rig artifacts/phase2-tests/rig-$profile.glb
+          done
           blender --background --python pipeline/blender/generate_batch.py -- pipeline/manifests/sample-batch.json
           python pipeline/scripts/validate_glb.py artifacts/FG-HUM-000001.glb
           blender --background --python pipeline/blender/phase2_character.py -- artifacts/FG-HUM-000001.glb pipeline/manifests/sample-batch.json artifacts/FG-HUM-000001-phase2.glb
@@ -90,5 +102,6 @@ jobs:
           path: |
             artifacts/**/*.glb
             artifacts/**/*.json
+            artifacts/**/*.png
           if-no-files-found: warn
           retention-days: 14
