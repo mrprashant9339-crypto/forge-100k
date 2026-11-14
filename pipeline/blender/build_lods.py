@@ -24,16 +24,18 @@ def triangle_count(objects):
     for obj in objects:
         if obj.type != "MESH":
             continue
-        mesh = obj.evaluated_get(bpy.context.evaluated_depsgraph_get()).to_mesh()
+        evaluated = obj.evaluated_get(bpy.context.evaluated_depsgraph_get())
+        mesh = evaluated.to_mesh()
         total += sum(max(0, len(poly.vertices) - 2) for poly in mesh.polygons)
-        obj.evaluated_get(bpy.context.evaluated_depsgraph_get()).to_mesh_clear()
+        evaluated.to_mesh_clear()
     return total
 
 def export_level(objects, output, level, ratio):
     bpy.ops.object.select_all(action="DESELECT")
     for obj in objects:
-        if obj.type == "MESH":
+        if obj.type in {"MESH", "ARMATURE", "EMPTY"}:
             obj.select_set(True)
+        if obj.type == "MESH":
             if ratio < 1.0 and len(obj.data.polygons) > 12:
                 modifier = obj.modifiers.new("ForgeLODDecimate", "DECIMATE")
                 modifier.ratio = ratio
@@ -61,13 +63,14 @@ def main():
     for level, ratio in enumerate(RATIOS):
         reset()
         bpy.ops.import_scene.gltf(filepath=source)
-        meshes = [o for o in bpy.context.scene.objects if o.type == "MESH"]
+        objects = [o for o in bpy.context.scene.objects if o.type in {"MESH", "ARMATURE", "EMPTY"}]
+        meshes = [o for o in objects if o.type == "MESH"]
         if not meshes:
             raise RuntimeError("Input GLB contains no meshes")
         before = triangle_count(meshes)
         # LOD levels are generated from the same source to avoid cumulative loss.
         out = os.path.join(output_dir, "LOD" + str(level) + ".glb")
-        export_level(meshes, out, level, ratio)
+        export_level(objects, out, level, ratio)
         after = triangle_count(meshes)
         reports.append({
             "level": level, "target_ratio": ratio, "source_triangles": before,
