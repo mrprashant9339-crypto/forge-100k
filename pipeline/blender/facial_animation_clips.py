@@ -4,9 +4,9 @@ Usage: blender -b --python facial_animation_clips.py -- input.glb output.glb rep
 import bpy,json,os,sys
 
 CLIPS={
- "ForgeFace_Smile":[(1,0.0),(8,0.8),(18,0.8),(26,0.0)],
- "ForgeFace_BrowRaise":[(1,0.0),(7,0.7),(15,0.7),(22,0.0)],
- "ForgeFace_JawOpen":[(1,0.0),(6,0.65),(14,0.65),(20,0.0)],
+ "ForgeExpr_smile":[(1,0.0),(8,0.8),(18,0.8),(26,0.0)],
+ "ForgeExpr_brow_raise":[(1,0.0),(7,0.7),(15,0.7),(22,0.0)],
+ "ForgeExpr_jaw_open":[(1,0.0),(6,0.65),(14,0.65),(20,0.0)],
  "ForgeViseme_A":[(1,0.0),(3,1.0),(7,0.0)],
  "ForgeViseme_E":[(1,0.0),(9,1.0),(13,0.0)],
  "ForgeViseme_I":[(1,0.0),(15,1.0),(19,0.0)],
