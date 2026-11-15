@@ -56,7 +56,7 @@ def validate_schema(data):
     artist = data.get("reviews", {}).get("artist", {})
     if artist.get("reviewed_at"):
         stamp = artist["reviewed_at"]
-        if not re.fullmatch(r"\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})", stamp):
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\\.\d+)?(?:Z|[+-]\d{2}:\d{2})", stamp):
             raise ValueError("reviews.artist.reviewed_at must be an RFC 3339 timestamp with timezone")
         try:
             parsed = datetime.fromisoformat(stamp.replace("Z", "+00:00"))
