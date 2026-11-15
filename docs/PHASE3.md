@@ -13,7 +13,7 @@
 - `pipeline/scripts/validate_production_asset.py`: GLB container preflight that explicitly keeps artist approval and engine certification false unless external acceptance is supplied.
 - CI syntax-checks the baking/animation workers and runs the timed facial animation worker against the generated facial fixture, then validates the resulting GLB morph structure and report.
 - `pipeline/schemas/production-asset.schema.json` and `pipeline/scripts/validate_production_package.py` define a versioned asset-package contract, source-file SHA-256/provenance checks, path traversal protection and explicit release gates for artist review, geometry/UV/PBR approval, rigging/animation and declared target-engine import evidence. Draft packages can be checked without falsely claiming game-ready status.
-- `pipeline/tests/test_production_package.py` exercises valid draft packages, source hash mismatch, path traversal and blocked game-ready promotion. CI runs these tests.
+- `pipeline/tests/test_production_package.py` exercises schema validity, invalid enums/timestamps, valid draft packages, source hash mismatch, path traversal, missing approval evidence and blocked game-ready promotion. The package validator now executes Draft 2020-12 JSON Schema validation (including date-time formats), verifies every referenced source/GLB/LOD/PBR/texture/clip/review-evidence file remains inside the package root, and checks source SHA-256.
 
 ## Production gates that remain open
 
