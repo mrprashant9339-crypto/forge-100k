@@ -8,6 +8,7 @@ The low mesh must have UVs. This worker bakes diffuse color, tangent normals and
 Metallic/roughness values remain authored material data; they are not sculpt-derived.
 """
 import bpy, json, os, re, sys
+from array import array
 
 def cli():
     a = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
@@ -86,7 +87,9 @@ def bake_metallic_roughness(target, directory, size):
                                 width=size, height=size, alpha=False, float_buffer=False)
     image.colorspace_settings.name = "Non-Color"
     pixel = (0.0, roughness, metallic, 1.0)
-    image.pixels[:] = list(pixel) * (size * size)
+    pixel_buffer = array("f", pixel) * (size * size)
+    image.pixels.foreach_set(pixel_buffer)
+    del pixel_buffer
     path = os.path.join(directory, safe_name(target.name) + "_metallic_roughness.png")
     image.filepath_raw = path
     image.file_format = "PNG"
