@@ -72,6 +72,29 @@ def bake_pass(low, high_objects, image, bake_type, directory, margin, cage_extru
     nodes.remove(target)
     return path
 
+def bake_metallic_roughness(target, directory, size):
+    """Write glTF metallic-roughness texture: G=roughness, B=metallic."""
+    material = target.active_material
+    metallic, roughness = 0.0, 0.5
+    if material and material.use_nodes and material.node_tree:
+        shader = next((node for node in material.node_tree.nodes
+                       if node.type == "BSDF_PRINCIPLED"), None)
+        if shader:
+            metallic = float(shader.inputs["Metallic"].default_value)
+            roughness = float(shader.inputs["Roughness"].default_value)
+    image = bpy.data.images.new("Forge_" + safe_name(target.name) + "_METALLIC_ROUGHNESS",
+                                width=size, height=size, alpha=False, float_buffer=False)
+    image.colorspace_settings.name = "Non-Color"
+    pixel = (0.0, roughness, metallic, 1.0)
+    image.pixels[:] = list(pixel) * (size * size)
+    path = os.path.join(directory, safe_name(target.name) + "_metallic_roughness.png")
+    image.filepath_raw = path
+    image.file_format = "PNG"
+    image.save()
+    bpy.data.images.remove(image)
+    return path, metallic, roughness
+
+
 def main():
     high_path, low_path, out, size = cli()
     if size < 64 or size > 4096 or size & (size - 1):
@@ -119,9 +142,14 @@ def main():
             bpy.data.images.remove(img)
             entry[bake_type.lower()] = path
             report["maps"].setdefault(bake_type.lower(), []).append(path)
+        mr_path, metallic, roughness = bake_metallic_roughness(target, out, size)
+        entry["metallic_roughness"] = mr_path
+        entry["metallic_factor"] = metallic
+        entry["roughness_factor"] = roughness
+        report["maps"].setdefault("metallic_roughness", []).append(mr_path)
         report["meshes"].append(entry)
     report["channel_packing"] = {
-        "metallic_roughness": "Not synthesized from high-poly geometry; retain authored material factors or supply a dedicated packed source map",
+        "metallic_roughness": "Authored Principled BSDF factors packed into glTF channels: G=roughness, B=metallic; not inferred from sculpt geometry",
         "normal": "Tangent-space normal bake",
         "ao": "Ambient occlusion bake",
         "diffuse": "Diffuse color-only bake (direct and indirect lighting disabled)"
@@ -130,7 +158,7 @@ def main():
         "High/low correspondence is name-based; verify transforms and object alignment",
         "Cage extrusion and ray distance are defaults; tune per asset to avoid projection misses/skew",
         "Inspect UV seams, cage intersections, tangent basis, mipmaps and target-engine appearance",
-        "Metallic/roughness packing is not inferred from sculpt geometry",
+        "Metallic/roughness texture is generated from authored low-poly material factors, not inferred from sculpt geometry",
         "This worker does not perform retopology"
     ]
     with open(os.path.join(out, "bake-report.json"), "w", encoding="utf-8") as f:
