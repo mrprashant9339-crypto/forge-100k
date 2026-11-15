@@ -4,6 +4,23 @@ ForgeFace controls are procedural sliders, not ARKit-certified expressions.
 """
 import bpy,json,math,os,sys
 from mathutils import Vector
+
+PIPELINE_ROOT=os.path.abspath(os.path.join(os.path.dirname(__file__),".."))
+if PIPELINE_ROOT not in sys.path: sys.path.insert(0,PIPELINE_ROOT)
+from core.morphology import FACE_CONTROLS,BODY_CONTROLS,clamp_controls,validate_modules
+
+with open(os.path.join(PIPELINE_ROOT,"catalog","core-modules.json"),encoding="utf-8") as _catalog_file:
+ _catalog_data=json.load(_catalog_file)
+MODULE_CATALOG={item["id"]:item for item in _catalog_data["items"]}
+
+def validate_job(job):
+ if not isinstance(job,dict) or not job.get("asset_id"): raise ValueError("job must contain asset_id")
+ species=job.get("species","human")
+ if species not in {"human","animal","fantasy","robot","object","mascot"}: raise ValueError("unsupported species: "+str(species))
+ job["face_profile"]=clamp_controls(job.get("face_profile",{}),FACE_CONTROLS)
+ job["body_profile"]=clamp_controls(job.get("body_profile",{}),BODY_CONTROLS)
+ validate_modules(job.get("modules",[]),MODULE_CATALOG,species=species)
+ return job
 def args():
  a=sys.argv
  return a[a.index("--")+1:] if "--" in a else []
@@ -87,6 +104,7 @@ def main():
  if len(a)!=3:raise SystemExit("Usage: phase2_character.py -- input.glb job.json output.glb")
  src,jp,out=map(os.path.abspath,a);job_data=json.load(open(jp,encoding="utf-8"))
  job=job_data["jobs"][0] if isinstance(job_data,dict) and "jobs" in job_data else job_data
+ job=validate_job(job)
  bpy.ops.object.select_all(action="SELECT");bpy.ops.object.delete(use_global=False);bpy.ops.import_scene.gltf(filepath=src)
  heads=[o for o in bpy.context.scene.objects if o.type=="MESH" and o.name.startswith("Head")]
  if job.get("species")=="human" and not heads:raise RuntimeError("Human asset missing Head mesh")
@@ -98,6 +116,6 @@ def main():
   if o.type in {"MESH","EMPTY"}:o.select_set(True)
  os.makedirs(os.path.dirname(out) or ".",exist_ok=True)
  bpy.ops.export_scene.gltf(filepath=out,export_format="GLB",use_selection=True,export_apply=True,export_texcoords=True,export_normals=True,export_morph=True,export_materials="EXPORT",export_cameras=False,export_lights=False)
- report={"asset_id":job["asset_id"],"output":out,"face_morph_targets":face,"face_profile":job.get("face_profile",{}),"body_morph_targets":body,"body_profile":job.get("body_profile",{}),"modules":job.get("modules",[]),"module_count":len(mods),"morph_standard":"Forge procedural controls v1 (not ARKit)","status":"phase2_generated","license":"CC0-1.0","artist_review_required":True}
+ report={"asset_id":job["asset_id"],"output":out,"face_morph_targets":face,"face_profile":job.get("face_profile",{}),"body_morph_targets":body,"body_profile":job.get("body_profile",{}),"modules":job.get("modules",[]),"module_count":len(mods),"morph_standard":"Forge procedural controls v1 (not ARKit)","status":"phase2_generated","license":"CC0-1.0","artist_review_required":True,"profile_validation":"strict_ranges_and_catalog_slots"
  json.dump(report,open(out+".phase2.json","w",encoding="utf-8"),indent=2);print("FORGE_PHASE2 "+json.dumps(report))
 if __name__=="__main__":main()
