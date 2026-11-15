@@ -20,6 +20,7 @@ EXPRESSIONS = {
     "jaw_open": "ForgeExpr_jaw_open",
     "cheek_puff": "ForgeExpr_cheek_puff",
     "squint": "ForgeExpr_squint",
+    "blink": "ForgeExpr_blink",
 }
 VISEME = {name: "ForgeViseme_" + name for name in ("A", "E", "I", "O", "U")}
 
@@ -57,6 +58,9 @@ def delta(name, p):
     if name=="ForgeExpr_squint":
         eyes=gaussian(abs(p.x),0.13,0.085)*gaussian(p.z,0.105,0.055)*front
         return (0.0,-0.012*eyes,-0.035*eyes)
+    if name=="ForgeExpr_blink":
+        eyes=gaussian(abs(p.x),0.13,0.085)*gaussian(p.z,0.105,0.075)*front
+        return (0.0,-0.006*eyes,-(p.z-0.105)*0.82*eyes)
     if name=="ForgeViseme_A":
         return (0.0,-0.045*mouth,-0.085*lower)
     if name=="ForgeViseme_E":
@@ -113,7 +117,7 @@ def main():
             "Procedural starter morphs require sculpt and phoneme review",
             "Not an ARKit 52 blendshape mapping",
             "No timed facial animation clips or performance capture included",
-            "Eye blink and gaze controls require a dedicated eye rig",
+            "Blink is a procedural head-surface morph; eye geometry, gaze and eyelid rigging require dedicated artist-authored controls",
             "Not validated against a production basemesh or target engine"
         ]
     }
