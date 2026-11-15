@@ -29,8 +29,26 @@ def main():
     bpy.ops.object.delete(use_global=False)
     bpy.ops.import_scene.gltf(filepath=source)
     scene = bpy.context.scene
-    meshes = [o for o in scene.objects if o.type == "MESH"]
+    imported_meshes = [o for o in scene.objects if o.type == "MESH"]
     armatures = [o for o in scene.objects if o.type == "ARMATURE"]
+    # Blender's glTF importer can add a non-deforming default Icosphere helper.
+    # Exclude only its exact structural signature; ordinary unweighted meshes
+    # remain in scope and correctly fail the skinning checks.
+    meshes = []
+    excluded_helpers = []
+    for obj in imported_meshes:
+        is_import_helper = (
+            obj.name == "Icosphere"
+            and len(obj.data.vertices) == 42
+            and len(obj.data.polygons) == 80
+            and len(obj.data.materials) == 0
+            and len(obj.vertex_groups) == 0
+            and not any(mod.type == "ARMATURE" for mod in obj.modifiers)
+        )
+        if is_import_helper:
+            excluded_helpers.append(obj.name)
+        else:
+            meshes.append(obj)
     issues = []
     if not meshes:
         issues.append("No mesh objects")
@@ -134,6 +152,7 @@ def main():
         "status": "pass" if not issues else "fail",
         "source": source,
         "armature_count": len(armatures),
+        "excluded_import_helpers": excluded_helpers,
         "bone_count": len(armatures[0].data.bones) if armatures else 0,
         "sampled_frames": frames,
         "weight_checks": weight_reports,
