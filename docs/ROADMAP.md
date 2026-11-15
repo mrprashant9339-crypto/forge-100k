@@ -8,12 +8,12 @@
 
 ## Phase 2 — Modular character and morphology foundation
 - [x] Public competitor architecture research documented
-- [x] Deterministic face/body morphology contracts with strict ranges and stable seeds
+- [x] Deterministic face/body morphology contracts with strict ranges and stable seeds; [x] Phase 2 Blender worker enforces canonical ranges and module species/slot compatibility at runtime
 - [x] 10 localized facial shape-key controls on human head
 - [x] 7 body morphology shape-key controls on modular human body parts
 - [x] Data-driven modular part catalog with slots, sockets, species, LOD and provenance
 - [x] Duplicate module and occupied-slot conflict validation
-- [x] Blender modular assembly worker
+- [x] Blender modular assembly worker; [x] CI executes Phase 2 character generation and validates exact face/body morph-target sets and module reports
 - [x] CI morph-target gate, rigging and animation verification
 - [ ] Continuous body deformation on production basemesh topology
 - [ ] Production facial sculpt, ARKit 52-unit and viseme mapping
@@ -27,7 +27,7 @@
 - [x] PBR material manifest contract, texture-reference validator and unit tests
 - [x] Deterministic Blender PBR texture authoring for base-color, metallic-roughness, normal and occlusion maps; CI generation/validation integrated (procedural, not high-to-low bake)
 - [ ] Original high-resolution sculpted basemeshes, artist-authored retopology and production UV/edge-flow review
-- [x] Blender high-to-low diffuse/normal/AO bake worker added; [ ] approved sculpt/retopo bake fixture, metallic-roughness channel bake/packing and target-engine material verification
+- [x] Blender high-to-low diffuse/normal/AO and packed metallic-roughness output worker added; [x] strict map/report validation and dedicated negative-case tests; [ ] approved sculpt/retopo bake fixture, metallic-roughness channel bake/packing and target-engine material verification
 - [x] Procedural facial expression and five-viseme morph-target pack with Blender GLB integration test (starter quality; not ARKit/production animation certified)
 - [x] Timed starter expression/viseme clips at 30 FPS with GLB export and CI structural validation; [ ] eye rig/blink/gaze, ARKit 52, audio-synchronized phonemes and artist facial approval
 - [ ] Artist-finished clothing, groomed hair and armour packs with cloth/pose/collision validation (current CC0 modules are blockout prototypes)
