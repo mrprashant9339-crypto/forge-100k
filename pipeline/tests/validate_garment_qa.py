@@ -13,7 +13,7 @@ for garment in report["garments"]:
     assert garment["status"] == "geometry_validated", garment
     assert garment["vertex_count"] >= 3, garment
     assert garment["triangle_count"] > 0, garment
-    assert garment["zone_groups"], garment
+    assert garment["body_zones"], garment
     assert garment["material_slot_count"] > 0, garment
     assert not garment["issues"], garment
 print("Garment fit geometry QA report passed")
