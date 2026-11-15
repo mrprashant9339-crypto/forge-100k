@@ -97,7 +97,8 @@ def main():
         garment["forge_fit_target"] = proxy_obj.name
         records.append({"mesh": garment.name, "body_zones": zones,
                         "fit_method": "nearest_surface_shrinkwrap",
-                        "offset_m": 0.012, "body_target_mesh_count": len(body_objects),\n                        "status": "proxy_fit_applied"})
+                        "offset_m": 0.012, "body_target_mesh_count": len(body_objects),
+                        "status": "proxy_fit_applied"})
     bpy.data.objects.remove(proxy_obj, do_unlink=True)
     bpy.ops.object.select_all(action="DESELECT")
     for obj in body_objects + garment_meshes:
