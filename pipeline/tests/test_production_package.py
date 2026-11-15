@@ -84,7 +84,7 @@ class ProductionPackageTests(unittest.TestCase):
         self.write()
         result = self.run_validator()
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("schema validation failed", result.stderr)
+        self.assertIn("RFC 3339 timestamp", result.stderr)
 
     def test_approved_review_evidence_must_exist(self):
         self.data["reviews"]["artist"] = {
