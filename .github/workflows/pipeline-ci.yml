@@ -26,6 +26,7 @@ jobs:
           python -m json.tool pipeline/schemas/batch-manifest.schema.json >/dev/null
           python -m json.tool pipeline/schemas/pbr-material.schema.json >/dev/null
           python -m json.tool pipeline/schemas/production-asset.schema.json >/dev/null
+          python -m json.tool pipeline/manifests/phase2-integration-job.json >/dev/null
           python -m py_compile pipeline/blender/generate_pbr_textures.py
           python pipeline/scripts/validate_manifest.py pipeline/manifests/sample-batch.json
       - name: Compile Python workers
