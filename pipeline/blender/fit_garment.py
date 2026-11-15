@@ -8,6 +8,7 @@ offset and assigns semantic body-zone groups. It is a proxy workflow: cloth
 simulation, production collision resolution and artist review remain required.
 """
 import bpy
+import bmesh
 import json
 import os
 import sys
@@ -61,6 +62,25 @@ def main():
     if not body_meshes:
         raise RuntimeError("Body GLB contains no mesh objects")
     body_objects = list(body_meshes)
+    # Build one world-space proxy from every body mesh. Using only body_meshes[0]
+    # silently misses separate head/limb meshes during garment fitting.
+    proxy_bm = bmesh.new()
+    for body_obj in body_objects:
+        part = bmesh.new()
+        part.from_mesh(body_obj.data)
+        part.transform(body_obj.matrix_world)
+        part.normal_update()
+        bmesh.ops.duplicate_geom(part, geom=list(part.verts) + list(part.edges) + list(part.faces))
+        bmesh.ops.join_meshes(proxy_bm, meshes=[part])
+        part.free()
+    proxy_mesh = bpy.data.meshes.new("ForgeBodyFitProxyMesh")
+    proxy_bm.to_mesh(proxy_mesh)
+    proxy_bm.free()
+    proxy_obj = bpy.data.objects.new("ForgeBodyFitProxy", proxy_mesh)
+    bpy.context.collection.objects.link(proxy_obj)
+    proxy_obj.matrix_world.identity()
+    if len(proxy_mesh.polygons) == 0:
+        raise RuntimeError("Combined body fit proxy contains no polygons")
     bpy.ops.import_scene.gltf(filepath=garment_path)
     garment_meshes = [o for o in bpy.context.scene.objects
                       if o.type == "MESH" and o not in body_objects]
@@ -70,16 +90,17 @@ def main():
     for garment in garment_meshes:
         zones = assign_zone_groups(garment)
         modifier = garment.modifiers.new("ForgeGarmentProxyFit", "SHRINKWRAP")
-        modifier.target = body_meshes[0]
+        modifier.target = proxy_obj
         modifier.wrap_method = "NEAREST_SURFACEPOINT"
         modifier.offset = 0.012
         bpy.context.view_layer.objects.active = garment
         bpy.ops.object.modifier_apply(modifier=modifier.name)
         garment["forge_fit_stage"] = "shrinkwrap_proxy_v1"
-        garment["forge_fit_target"] = body_meshes[0].name
+        garment["forge_fit_target"] = proxy_obj.name
         records.append({"mesh": garment.name, "body_zones": zones,
                         "fit_method": "nearest_surface_shrinkwrap",
-                        "offset_m": 0.012, "status": "proxy_fit_applied"})
+                        "offset_m": 0.012, "body_target_mesh_count": len(body_objects),\n                        "status": "proxy_fit_applied"})
+    bpy.data.objects.remove(proxy_obj, do_unlink=True)
     bpy.ops.object.select_all(action="DESELECT")
     for obj in body_objects + garment_meshes:
         obj.select_set(True)
