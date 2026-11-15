@@ -15,7 +15,7 @@ Forge implements original versions of the data-contract and deterministic-genera
 - Deterministic morphology core with 10 face controls and 7 body controls, strict numeric ranges and stable per-asset seeds.
 - Data-only modular asset catalog with slots, species compatibility, sockets, layers, LOD declarations and per-item CC0 provenance.
 - Duplicate module and occupied-slot conflict validation.
-- Blender Phase 2 worker that adds 10 localized facial shape keys plus 7 body-part morphology shape keys, and attaches selected procedural hair, helmet, chest armour, backpack, shoulder and footwear modules.
+- Blender Phase 2 worker that adds 10 localized facial shape keys plus 7 body-part morphology shape keys, and attaches selected procedural hair, helmet, chest armour, backpack, shoulder and footwear modules. Runtime validation now enforces the canonical face/body ranges, rejects unknown controls, duplicate modules, occupied slots and species-incompatible modules before geometry generation.
 - GLB validator supports a required morph-target gate.
 - CI generates Phase 2 human GLB, validates morph targets, rigs the modular output and re-validates skin, animation and morph targets.
 - Unit tests cover deterministic controls, range errors, duplicate modules and slot conflicts.\n- Blender LOD worker creates independent LOD0/LOD1/LOD2 GLBs from a common source, preserves selected armature/empty hierarchy, reports measured triangle counts and is exercised by CI GLB validation.
