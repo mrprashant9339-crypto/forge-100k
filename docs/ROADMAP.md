@@ -28,8 +28,8 @@
 - [x] Deterministic Blender PBR texture authoring for base-color, metallic-roughness, normal and occlusion maps; CI generation/validation integrated (procedural, not high-to-low bake)
 - [ ] Original high-resolution sculpted basemeshes, artist-authored retopology and production UV/edge-flow review
 - [x] Blender high-to-low diffuse/normal/AO and packed metallic-roughness output worker added; [x] strict map/report validation and dedicated negative-case tests; [ ] approved sculpt/retopo bake fixture, metallic-roughness channel bake/packing and target-engine material verification
-- [x] Procedural facial expression and five-viseme morph-target pack with Blender GLB integration test (starter quality; not ARKit/production animation certified)
-- [x] Timed starter expression/viseme clips at 30 FPS with GLB export and CI structural validation; [ ] eye rig/blink/gaze, ARKit 52, audio-synchronized phonemes and artist facial approval
+- [x] Procedural facial expression, blink morph and five-viseme morph-target pack with Blender GLB integration test (starter quality; not ARKit/production animation certified)
+- [x] Timed starter expression/viseme clips and double-blink animation at 30 FPS with GLB export and CI structural validation; [ ] dedicated eye rig/gaze, ARKit 52, audio-synchronized phonemes and artist facial approval
 - [ ] Artist-finished clothing, groomed hair and armour packs with cloth/pose/collision validation (current CC0 modules are blockout prototypes)
 - [x] Automated GLB container preflight added (explicitly not certification); [ ] signed artist review and Unity/Unreal/Godot import/performance certification
 - [x] Production asset package schema, runtime Draft 2020-12 validation, provenance hash verification, safe package-path checks, referenced evidence-file checks and release-gate validator; [x] CI tests prevent game-ready promotion without review and declared-engine evidence
