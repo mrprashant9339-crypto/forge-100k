@@ -32,7 +32,7 @@
 - [x] Timed starter expression/viseme clips at 30 FPS with GLB export and CI structural validation; [ ] eye rig/blink/gaze, ARKit 52, audio-synchronized phonemes and artist facial approval
 - [ ] Artist-finished clothing, groomed hair and armour packs with cloth/pose/collision validation (current CC0 modules are blockout prototypes)
 - [x] Automated GLB container preflight added (explicitly not certification); [ ] signed artist review and Unity/Unreal/Godot import/performance certification
-- [x] Production asset package schema, provenance hash verification, safe package-path checks and release-gate validator; [x] CI tests prevent game-ready promotion without review and declared-engine evidence
+- [x] Production asset package schema, runtime Draft 2020-12 validation, provenance hash verification, safe package-path checks, referenced evidence-file checks and release-gate validator; [x] CI tests prevent game-ready promotion without review and declared-engine evidence
 
 ## Phase 4 — Scale and platform
 - [ ] Queue-backed batch workers and storage/CDN
