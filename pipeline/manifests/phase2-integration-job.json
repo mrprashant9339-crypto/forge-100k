@@ -1,0 +1,15 @@
+{
+  "asset_id": "FG-HUM-900001",
+  "species": "human",
+  "face_profile": {
+    "jaw_width": 1.08, "jaw_height": 1.0, "cheek_fullness": 0.62,
+    "eye_scale": 1.04, "eye_spacing": 1.0, "nose_width": 0.96,
+    "nose_length": 1.03, "mouth_width": 1.02, "brow_depth": 0.35,
+    "chin_projection": 1.05
+  },
+  "body_profile": {
+    "height": 1.04, "shoulder_width": 1.08, "torso_ratio": 1.02,
+    "arm_length": 1.0, "leg_length": 1.03, "muscle": 0.72, "mass": 0.42
+  },
+  "modules": ["hair_short", "armor_chest", "backpack_field", "shoulder_guard", "boots_combat"]
+}
