@@ -7,7 +7,9 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import sys
+from datetime import datetime
 
 try:
     from jsonschema import Draft202012Validator, FormatChecker
@@ -51,6 +53,17 @@ def validate_schema(data):
             location = ".".join(str(part) for part in error.absolute_path) or "<root>"
             details.append(location + ": " + error.message)
         raise ValueError("production package schema validation failed: " + "; ".join(details))
+    artist = data.get("reviews", {}).get("artist", {})
+    if artist.get("reviewed_at"):
+        stamp = artist["reviewed_at"]
+        if not re.fullmatch(r"\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})", stamp):
+            raise ValueError("reviews.artist.reviewed_at must be an RFC 3339 timestamp with timezone")
+        try:
+            parsed = datetime.fromisoformat(stamp.replace("Z", "+00:00"))
+        except ValueError as exc:
+            raise ValueError("reviews.artist.reviewed_at is not a valid calendar timestamp") from exc
+        if parsed.tzinfo is None:
+            raise ValueError("reviews.artist.reviewed_at must include a timezone")
 
 
 def package_files(data):
