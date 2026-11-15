@@ -3,9 +3,8 @@
 Usage:
   blender -b --python pipeline/blender/fit_garment.py -- body.glb garment.glb output.glb report.json
 
-The worker fits garment meshes to the imported body with a bounded Shrinkwrap
-offset and assigns semantic body-zone groups. It is a proxy workflow: cloth
-simulation, production collision resolution and artist review remain required.
+The worker fits garment meshes to a combined body proxy. Cloth simulation,
+production collision resolution and artist review remain required.
 """
 import bpy
 import json
@@ -21,17 +20,34 @@ ZONES = {
     "feet": (0.0, 0.22),
 }
 
+
 def args_after_separator():
     argv = sys.argv
     return argv[argv.index("--") + 1:] if "--" in argv else []
 
+
 def reset_scene():
     bpy.ops.object.select_all(action="SELECT")
     bpy.ops.object.delete(use_global=False)
+    for scene in list(bpy.data.scenes):
+        if scene.name != bpy.context.scene.name:
+            bpy.data.scenes.remove(scene)
+
+
+def import_into_scene(path, scene_name):
+    scene = bpy.data.scenes.new(scene_name)
+    bpy.context.window.scene = scene
+    bpy.ops.import_scene.gltf(filepath=path)
+    meshes = [obj for obj in scene.objects if obj.type == "MESH"]
+    if not meshes:
+        raise RuntimeError(f"{scene_name} GLB contains no mesh objects")
+    return scene, meshes
+
 
 def world_z_bounds(obj):
-    values = [(obj.matrix_world @ v.co).z for v in obj.data.vertices]
+    values = [(obj.matrix_world @ vertex.co).z for vertex in obj.data.vertices]
     return (min(values), max(values)) if values else (0.0, 0.0)
+
 
 def assign_zone_groups(obj):
     low, high = world_z_bounds(obj)
@@ -40,13 +56,14 @@ def assign_zone_groups(obj):
         if high < z0 or low > z1:
             continue
         group = obj.vertex_groups.new(name="ForgeZone_" + zone)
-        indices = [v.index for v in obj.data.vertices
-                   if z0 <= (obj.matrix_world @ v.co).z <= z1]
+        indices = [vertex.index for vertex in obj.data.vertices
+                   if z0 <= (obj.matrix_world @ vertex.co).z <= z1]
         if indices:
             group.add(indices, 1.0, "REPLACE")
             groups[zone] = len(indices)
     obj["forge_body_zone_groups"] = json.dumps(groups, sort_keys=True)
     return groups
+
 
 def main():
     args = args_after_separator()
@@ -56,17 +73,16 @@ def main():
     for path in (body_path, garment_path):
         if not os.path.isfile(path):
             raise FileNotFoundError(path)
+
     reset_scene()
-    bpy.ops.import_scene.gltf(filepath=body_path)
-    body_meshes = [o for o in bpy.context.scene.objects if o.type == "MESH"]
-    if not body_meshes:
-        raise RuntimeError("Body GLB contains no mesh objects")
-    body_objects = list(body_meshes)
-    # Build one world-space proxy from every body mesh. Using only body_meshes[0]
-    # silently misses separate head/limb meshes during garment fitting.
+    body_scene, body_meshes = import_into_scene(body_path, "ForgeBodyImport")
+    garment_scene, garment_meshes = import_into_scene(garment_path, "ForgeGarmentImport")
+
+    # Keep both imports in separate scenes because Blender's glTF importer may
+    # replace objects in its active scene. Build a combined world-space proxy.
     proxy_vertices = []
     proxy_faces = []
-    for body_obj in body_objects:
+    for body_obj in body_meshes:
         offset = len(proxy_vertices)
         proxy_vertices.extend([tuple(body_obj.matrix_world @ vertex.co)
                                for vertex in body_obj.data.vertices])
@@ -75,45 +91,43 @@ def main():
     proxy_mesh = bpy.data.meshes.new("ForgeBodyFitProxyMesh")
     proxy_mesh.from_pydata(proxy_vertices, [], proxy_faces)
     proxy_mesh.update()
+    fit_scene = bpy.data.scenes.new("ForgeGarmentFit")
+    bpy.context.window.scene = fit_scene
     proxy_obj = bpy.data.objects.new("ForgeBodyFitProxy", proxy_mesh)
-    bpy.context.collection.objects.link(proxy_obj)
-    proxy_obj.matrix_world.identity()
-    if len(proxy_mesh.polygons) == 0:
+    fit_scene.collection.objects.link(proxy_obj)
+    if not proxy_mesh.polygons:
         raise RuntimeError("Combined body fit proxy contains no polygons")
-    bpy.ops.import_scene.gltf(filepath=garment_path)
-    garment_meshes = [o for o in bpy.context.scene.objects
-                      if o.type == "MESH" and o not in body_objects]
-    if not garment_meshes:
-        raise RuntimeError("Garment GLB contains no mesh objects")
+
+    # Link imported objects into the output scene without invalidating their
+    # source-scene datablocks.
+    for obj in body_meshes + garment_meshes:
+        fit_scene.collection.objects.link(obj)
+
     records = []
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    body_bvh = BVHTree.FromObject(proxy_obj, depsgraph, epsilon=0.0)
+    if body_bvh is None:
+        raise RuntimeError("Could not build BVH for combined body fit proxy")
     for garment in garment_meshes:
         zones = assign_zone_groups(garment)
-        # Use Blender's BVH nearest-surface query instead of assigning a
-        # Shrinkwrap target: this is deterministic and works across Blender
-        # builds where modifier target assignment can fail for linked IDs.
-        depsgraph = bpy.context.evaluated_depsgraph_get()
-        body_bvh = BVHTree.FromObject(proxy_obj, depsgraph, epsilon=0.0)
-        if body_bvh is None:
-            raise RuntimeError("Could not build BVH for combined body fit proxy")
         inverse_world = garment.matrix_world.inverted_safe()
         for vertex in garment.data.vertices:
             world_position = garment.matrix_world @ vertex.co
             nearest = body_bvh.find_nearest(world_position)
             if nearest is None or nearest[0] is None or nearest[1] is None:
                 raise RuntimeError("No nearest body surface found for garment vertex")
-            nearest_location, nearest_normal = nearest[0], nearest[1]
-            fitted_world = nearest_location + nearest_normal.normalized() * 0.012
+            fitted_world = nearest[0] + nearest[1].normalized() * 0.012
             vertex.co = inverse_world @ fitted_world
         garment.data.update()
         garment["forge_fit_stage"] = "shrinkwrap_proxy_v1"
         garment["forge_fit_target"] = proxy_obj.name
         records.append({"mesh": garment.name, "body_zones": zones,
                         "fit_method": "nearest_surface_shrinkwrap",
-                        "offset_m": 0.012, "body_target_mesh_count": len(body_objects),
+                        "offset_m": 0.012, "body_target_mesh_count": len(body_meshes),
                         "status": "proxy_fit_applied"})
-    bpy.data.objects.remove(proxy_obj, do_unlink=True)
+
     bpy.ops.object.select_all(action="DESELECT")
-    for obj in body_objects + garment_meshes:
+    for obj in body_meshes + garment_meshes:
         obj.select_set(True)
     bpy.context.view_layer.objects.active = garment_meshes[0]
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
@@ -122,6 +136,7 @@ def main():
         export_normals=True, export_materials="EXPORT", export_skins=True,
         export_animations=True, export_morph=True, export_cameras=False,
         export_lights=False)
+
     report = {
         "status": "proxy_fit_complete", "body": body_path,
         "garment": garment_path, "output": output_path,
@@ -137,6 +152,7 @@ def main():
     with open(report_path, "w", encoding="utf-8") as handle:
         json.dump(report, handle, indent=2)
     print("FORGE_GARMENT_FIT " + json.dumps(report))
+
 
 if __name__ == "__main__":
     main()
