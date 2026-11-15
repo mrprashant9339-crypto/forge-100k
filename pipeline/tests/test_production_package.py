@@ -32,6 +32,10 @@ class ProductionPackageTests(unittest.TestCase):
             "reviews": {"artist": {"status": "pending"}, "engines": []},
             "release_status": "draft"
         }
+        for name, content in (("review.pdf", b"artist review evidence"),
+                              ("import-report.json", b'{"import":"passed"}')):
+            with open(os.path.join(self.root, name), "wb") as stream:
+                stream.write(content)
         self.manifest = os.path.join(self.root, "package.json")
         self.write()
 
