@@ -8,7 +8,6 @@ offset and assigns semantic body-zone groups. It is a proxy workflow: cloth
 simulation, production collision resolution and artist review remain required.
 """
 import bpy
-import bmesh
 import json
 import os
 import sys
@@ -64,18 +63,17 @@ def main():
     body_objects = list(body_meshes)
     # Build one world-space proxy from every body mesh. Using only body_meshes[0]
     # silently misses separate head/limb meshes during garment fitting.
-    proxy_bm = bmesh.new()
+    proxy_vertices = []
+    proxy_faces = []
     for body_obj in body_objects:
-        part = bmesh.new()
-        part.from_mesh(body_obj.data)
-        part.transform(body_obj.matrix_world)
-        part.normal_update()
-        bmesh.ops.duplicate_geom(part, geom=list(part.verts) + list(part.edges) + list(part.faces))
-        bmesh.ops.join_meshes(proxy_bm, meshes=[part])
-        part.free()
+        offset = len(proxy_vertices)
+        proxy_vertices.extend([tuple(body_obj.matrix_world @ vertex.co)
+                               for vertex in body_obj.data.vertices])
+        proxy_faces.extend([tuple(offset + index for index in polygon.vertices)
+                            for polygon in body_obj.data.polygons if len(polygon.vertices) >= 3])
     proxy_mesh = bpy.data.meshes.new("ForgeBodyFitProxyMesh")
-    proxy_bm.to_mesh(proxy_mesh)
-    proxy_bm.free()
+    proxy_mesh.from_pydata(proxy_vertices, [], proxy_faces)
+    proxy_mesh.update()
     proxy_obj = bpy.data.objects.new("ForgeBodyFitProxy", proxy_mesh)
     bpy.context.collection.objects.link(proxy_obj)
     proxy_obj.matrix_world.identity()
