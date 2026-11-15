@@ -116,6 +116,6 @@ def main():
   if o.type in {"MESH","EMPTY"}:o.select_set(True)
  os.makedirs(os.path.dirname(out) or ".",exist_ok=True)
  bpy.ops.export_scene.gltf(filepath=out,export_format="GLB",use_selection=True,export_apply=True,export_texcoords=True,export_normals=True,export_morph=True,export_materials="EXPORT",export_cameras=False,export_lights=False)
- report={"asset_id":job["asset_id"],"output":out,"face_morph_targets":face,"face_profile":job.get("face_profile",{}),"body_morph_targets":body,"body_profile":job.get("body_profile",{}),"modules":job.get("modules",[]),"module_count":len(mods),"morph_standard":"Forge procedural controls v1 (not ARKit)","status":"phase2_generated","license":"CC0-1.0","artist_review_required":True,"profile_validation":"strict_ranges_and_catalog_slots"
+ report={"asset_id":job["asset_id"],"output":out,"face_morph_targets":face,"face_profile":job.get("face_profile",{}),"body_morph_targets":body,"body_profile":job.get("body_profile",{}),"modules":job.get("modules",[]),"module_count":len(mods),"morph_standard":"Forge procedural controls v1 (not ARKit)","status":"phase2_generated","license":"CC0-1.0","artist_review_required":True,"profile_validation":"strict_ranges_and_catalog_slots"}
  json.dump(report,open(out+".phase2.json","w",encoding="utf-8"),indent=2);print("FORGE_PHASE2 "+json.dumps(report))
 if __name__=="__main__":main()
