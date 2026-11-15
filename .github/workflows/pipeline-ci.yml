@@ -32,7 +32,7 @@ jobs:
       - name: Compile Python workers
         run: |
           python -m compileall -q pipeline
-          python -m py_compile pipeline/blender/fit_garment.py pipeline/blender/merge_meshes.py
+          python -m py_compile pipeline/blender/fit_garment.py pipeline/blender/qa_garment_fit.py pipeline/blender/merge_meshes.py
       - name: Run GLB validator tests
         run: |
           python pipeline/tests/test_glb_validator.py
@@ -86,6 +86,9 @@ jobs:
           blender --background --python pipeline/blender/fit_garment.py -- artifacts/phase2-tests/body.glb artifacts/phase2-tests/garment.glb artifacts/phase2-tests/fitted.glb artifacts/phase2-tests/fit-report.json
           python pipeline/scripts/validate_glb.py artifacts/phase2-tests/fitted.glb
           python -m json.tool artifacts/phase2-tests/fit-report.json >/dev/null
+          blender --background --python pipeline/blender/qa_garment_fit.py -- artifacts/phase2-tests/fitted.glb artifacts/phase2-tests/fit-report.json artifacts/phase2-tests/garment-qa.json
+          python pipeline/tests/validate_garment_qa.py artifacts/phase2-tests/garment-qa.json
+          python -m json.tool artifacts/phase2-tests/garment-qa.json >/dev/null
           blender --background --python pipeline/blender/merge_meshes.py -- artifacts/phase2-tests/merge-input.glb artifacts/phase2-tests/merged.glb artifacts/phase2-tests/merge-report.json
           python pipeline/scripts/validate_glb.py artifacts/phase2-tests/merged.glb
           python -m json.tool artifacts/phase2-tests/merge-report.json >/dev/null
