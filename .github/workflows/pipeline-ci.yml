@@ -76,6 +76,9 @@ jobs:
           python -m json.tool artifacts/pbr/starter/pbr-texture-report.json >/dev/null
           mkdir -p artifacts/phase2-tests
           blender --background --python pipeline/tests/blender_phase2_fixtures.py -- artifacts/phase2-tests
+          blender --background --python pipeline/blender/phase2_character.py -- artifacts/phase2-tests/body.glb pipeline/manifests/phase2-integration-job.json artifacts/phase2-tests/phase2-character.glb
+          python pipeline/scripts/validate_glb.py --require-morphs artifacts/phase2-tests/phase2-character.glb
+          python pipeline/scripts/validate_phase2_report.py artifacts/phase2-tests/phase2-character.glb.phase2.json
           blender --background --python pipeline/blender/fit_garment.py -- artifacts/phase2-tests/body.glb artifacts/phase2-tests/garment.glb artifacts/phase2-tests/fitted.glb artifacts/phase2-tests/fit-report.json
           python pipeline/scripts/validate_glb.py artifacts/phase2-tests/fitted.glb
           python -m json.tool artifacts/phase2-tests/fit-report.json >/dev/null
