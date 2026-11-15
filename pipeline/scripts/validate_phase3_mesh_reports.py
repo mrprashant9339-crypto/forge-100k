@@ -29,7 +29,7 @@ def main():
         data = json.load(open(a.bake, encoding="utf-8"))
         if data.get("status") != "baked" or not data.get("meshes"):
             raise SystemExit("Bake report is incomplete")
-        required = ("diffuse", "normal", "ao")
+        required = ("diffuse", "normal", "ao", "metallic_roughness")
         for kind in required:
             paths = data.get("maps", {}).get(kind, [])
             if len(paths) != len(data["meshes"]):
