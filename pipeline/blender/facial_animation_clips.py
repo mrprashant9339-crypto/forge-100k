@@ -7,6 +7,7 @@ CLIPS={
  "ForgeExpr_smile":[(1,0.0),(8,0.8),(18,0.8),(26,0.0)],
  "ForgeExpr_brow_raise":[(1,0.0),(7,0.7),(15,0.7),(22,0.0)],
  "ForgeExpr_jaw_open":[(1,0.0),(6,0.65),(14,0.65),(20,0.0)],
+ "ForgeExpr_blink":[(1,0.0),(4,1.0),(7,0.0),(24,0.0),(27,1.0),(30,0.0)],
  "ForgeViseme_A":[(1,0.0),(3,1.0),(7,0.0)],
  "ForgeViseme_E":[(1,0.0),(9,1.0),(13,0.0)],
  "ForgeViseme_I":[(1,0.0),(15,1.0),(19,0.0)],
@@ -48,7 +49,7 @@ def main():
  bpy.context.view_layer.objects.active=meshes[0]
  os.makedirs(os.path.dirname(out) or ".",exist_ok=True)
  bpy.ops.export_scene.gltf(filepath=out,export_format="GLB",use_selection=True,export_animations=True,export_skins=True,export_morph=True,export_texcoords=True,export_normals=True,export_materials="EXPORT",export_cameras=False,export_lights=False)
- data={"status":"timed_clips_authored","fps":30,"frame_range":[1,31],"duration_seconds":31/30,"clips":{k:{"keyframes":v,"meshes":found.get(k,[])} for k,v in CLIPS.items() if k in found},"actions":actions,"limitations":["Starter procedural curves only; phoneme timing must be synchronized to audio","No ARKit 52 mapping, eye blink/gaze rig, performance capture or artist facial review","Review interpolation and neutral pose in each target engine"],"artist_review_required":True,"engine_certified":False}
+ data={"status":"timed_clips_authored","fps":30,"frame_range":[1,31],"duration_seconds":31/30,"clips":{k:{"keyframes":v,"meshes":found.get(k,[])} for k,v in CLIPS.items() if k in found},"actions":actions,"limitations":["Starter procedural curves only; phoneme timing must be synchronized to audio","No ARKit 52 mapping, gaze rig, performance capture or artist facial review; blink is a starter head-surface morph","Review interpolation and neutral pose in each target engine"],"artist_review_required":True,"engine_certified":False}
  with open(report_path,"w",encoding="utf-8") as f:json.dump(data,f,indent=2)
  print("FORGE_FACIAL_CLIPS "+json.dumps(data))
 if __name__=="__main__":main()
