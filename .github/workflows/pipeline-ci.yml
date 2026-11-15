@@ -92,6 +92,8 @@ jobs:
           for profile in humanoid_v1 mechanical_v1 quadruped_v1 avian_v1; do
             blender --background --python pipeline/blender/rig_character.py -- artifacts/phase2-tests/body.glb artifacts/phase2-tests/rig-$profile.glb "$profile"
             python pipeline/scripts/validate_glb.py --require-rig artifacts/phase2-tests/rig-$profile.glb
+            blender --background --python pipeline/blender/rig_deformation_qa.py -- artifacts/phase2-tests/rig-$profile.glb artifacts/phase2-tests/rig-$profile-deformation-qa.json
+            python -m json.tool artifacts/phase2-tests/rig-$profile-deformation-qa.json >/dev/null
           done
           python pipeline/tests/validate_phase2_reports.py artifacts/phase2-tests
           blender --background --python pipeline/blender/facial_morph_pack.py -- artifacts/phase2-tests/body.glb artifacts/phase2-tests/facial-pack.glb artifacts/phase2-tests/facial-pack-report.json
