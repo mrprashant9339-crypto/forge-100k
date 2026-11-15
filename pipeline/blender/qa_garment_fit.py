@@ -65,10 +65,12 @@ def main():
                 degenerate += 1
         if degenerate:
             issues.append("degenerate_triangles")
-        zone_groups = sorted(group.name for group in obj.vertex_groups
-                             if group.name.startswith("ForgeZone_"))
-        if not zone_groups:
-            issues.append("missing_semantic_body_zone_groups")
+        # glTF 2.0 does not preserve Blender vertex-group definitions as
+        # editable groups. Validate semantic zones against the fit-report
+        # sidecar, which is authoritative for this prototype stage.
+        body_zones = item.get("body_zones", {})
+        if not isinstance(body_zones, dict) or not body_zones:
+            issues.append("missing_semantic_body_zone_metadata")
         if not mesh.materials:
             issues.append("missing_material_slots")
         if item.get("fit_method") != "nearest_surface_shrinkwrap":
@@ -80,7 +82,7 @@ def main():
             "triangle_count": len(mesh.loop_triangles),
             "degenerate_triangle_count": degenerate,
             "bounds_world": bounds,
-            "zone_groups": zone_groups,
+            "body_zones": body_zones,
             "material_slot_count": len(mesh.materials),
             "issues": issues,
             "status": "failed" if issues else "geometry_validated"
