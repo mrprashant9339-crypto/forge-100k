@@ -9,6 +9,7 @@ simulation, production collision resolution and artist review remain required.
 """
 import bpy
 import json
+from mathutils.bvhtree import BVHTree
 import os
 import sys
 
@@ -87,12 +88,23 @@ def main():
     records = []
     for garment in garment_meshes:
         zones = assign_zone_groups(garment)
-        modifier = garment.modifiers.new("ForgeGarmentProxyFit", "SHRINKWRAP")
-        modifier.target = proxy_obj
-        modifier.wrap_method = "NEAREST_SURFACEPOINT"
-        modifier.offset = 0.012
-        bpy.context.view_layer.objects.active = garment
-        bpy.ops.object.modifier_apply(modifier=modifier.name)
+        # Use Blender's BVH nearest-surface query instead of assigning a
+        # Shrinkwrap target: this is deterministic and works across Blender
+        # builds where modifier target assignment can fail for linked IDs.
+        depsgraph = bpy.context.evaluated_depsgraph_get()
+        body_bvh = BVHTree.FromObject(proxy_obj, depsgraph, epsilon=0.0)
+        if body_bvh is None:
+            raise RuntimeError("Could not build BVH for combined body fit proxy")
+        inverse_world = garment.matrix_world.inverted_safe()
+        for vertex in garment.data.vertices:
+            world_position = garment.matrix_world @ vertex.co
+            nearest = body_bvh.find_nearest(world_position)
+            if nearest is None or nearest[0] is None or nearest[1] is None:
+                raise RuntimeError("No nearest body surface found for garment vertex")
+            nearest_location, nearest_normal = nearest[0], nearest[1]
+            fitted_world = nearest_location + nearest_normal.normalized() * 0.012
+            vertex.co = inverse_world @ fitted_world
+        garment.data.update()
         garment["forge_fit_stage"] = "shrinkwrap_proxy_v1"
         garment["forge_fit_target"] = proxy_obj.name
         records.append({"mesh": garment.name, "body_zones": zones,
