@@ -45,6 +45,10 @@ def main():
             raise SystemExit("Promotion blocked: walk/run/jump/combat action coverage is incomplete")
         if any(not row.get("is_baked") for row in report["cache_checks"]):
             raise SystemExit("Promotion blocked: one or more cloth caches are not baked")
+        if any(row.get("status") != "range_validated" for row in report["pin_weight_checks"]):
+            raise SystemExit("Promotion blocked: every garment needs a configured, range-validated pin group")
+        if report.get("tearing_detection", {}).get("physical_fabric_tear_solver_available") is not True:
+            raise SystemExit("Promotion blocked: no tear-capable cloth workflow is configured")
     print("CLOTH_INTEGRITY_REPORT_VALID status=%s frames=%d issues=%d pose_coverage=%s" % (
         report["status"], len(report["frame_checks"]), len(report["issues"]),
         report["pose_coverage_complete"]))
