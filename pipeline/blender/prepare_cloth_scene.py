@@ -96,6 +96,7 @@ def main():
         cloth.collision_settings.impulse_clamp = 0.5
         pin = next((g.name for g in garment.vertex_groups if g.name.lower() in ("forge_cloth_pin", "cloth_pin", "pin")), None)
         fixture_pin_count = 0
+        fixture_pin_report = {"weighted_vertices": 0, "boundary_vertices": 0}
         if pin is None and garment.name == "GarmentFixture":
             pin_group = garment.vertex_groups.new(name="Forge_Cloth_Pin")
             fixture_pin_report = fixture_pin_weights(garment, pin_group)
