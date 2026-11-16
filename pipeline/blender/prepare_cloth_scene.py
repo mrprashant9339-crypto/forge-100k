@@ -68,7 +68,7 @@ def main():
             body.modifiers.new("Forge_Body_Collision", "COLLISION")
         settings = body.collision
         settings.damping = 0.1
-        settings.thickness_outer = 0.005
+        settings.thickness_outer = 0.008
         settings.thickness_inner = 0.003
         body_rows.append({"mesh": body.name, "collision_modifier": True})
     garment_rows = []
@@ -89,15 +89,17 @@ def main():
         cloth.collision_settings.use_collision = True
         cloth.collision_settings.use_self_collision = True
         collision_quality = 6
+        collision_distance_min = 0.004
         self_distance_min = 0.008
         if garment.name == "GarmentFixture":
             # The open synthetic torso shell needs a wider self-contact margin
             # to remain a stable CI solver fixture; production cloth keeps the
             # lower artist-tunable defaults above.
             collision_quality = 10
+            collision_distance_min = 0.008
             self_distance_min = 0.02
         cloth.collision_settings.collision_quality = collision_quality
-        cloth.collision_settings.distance_min = 0.004
+        cloth.collision_settings.distance_min = collision_distance_min
         cloth.collision_settings.self_distance_min = self_distance_min
         cloth.collision_settings.friction = 2.0
         cloth.collision_settings.self_friction = 2.0
@@ -118,7 +120,7 @@ def main():
             "fixture_pinned_boundary_vertices": fixture_pin_count or None,
             "fixture_weighted_vertices": fixture_pin_report["weighted_vertices"] if garment.name == "GarmentFixture" and pin == "Forge_Cloth_Pin" else None,
             "uv_layer": garment.data.uv_layers.active.name,
-            "settings": {"quality": 8, "collision_quality": collision_quality, "distance_min": 0.004,
+            "settings": {"quality": 8, "collision_quality": collision_quality, "distance_min": collision_distance_min,
                          "self_distance_min": self_distance_min, "mass": 0.3}
         })
     scene.frame_set(1)
