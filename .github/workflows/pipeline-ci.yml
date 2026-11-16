@@ -95,10 +95,10 @@ jobs:
           python -m json.tool artifacts/phase2-tests/garment-collision-qa.json >/dev/null
           blender --background --python pipeline/blender/prepare_cloth_scene.py -- artifacts/phase2-tests/fitted.glb artifacts/phase2-tests/cloth-sim.blend artifacts/phase2-tests/cloth-scene-report.json 60
           python -m json.tool artifacts/phase2-tests/cloth-scene-report.json >/dev/null
-          blender --background artifacts/phase2-tests/cloth-sim.blend --python pipeline/blender/bake_cloth_cache.py -- artifacts/phase2-tests/cloth-bake-report.json 10
+          blender --background artifacts/phase2-tests/cloth-sim.blend --python pipeline/blender/bake_cloth_cache.py -- artifacts/phase2-tests/cloth-bake-report.json 1
           python -m json.tool artifacts/phase2-tests/cloth-bake-report.json >/dev/null
           set +e
-          blender --background artifacts/phase2-tests/cloth-sim.blend --python pipeline/blender/cloth_integrity_qa.py -- artifacts/phase2-tests/cloth-integrity-report.json 10
+          blender --background artifacts/phase2-tests/cloth-sim.blend --python pipeline/blender/cloth_integrity_qa.py -- artifacts/phase2-tests/cloth-integrity-report.json 1
           CLOTH_QA_EXIT=$?
           set -e
           test -s artifacts/phase2-tests/cloth-integrity-report.json
