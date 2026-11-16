@@ -33,24 +33,26 @@ def main():
     garments=[o for o in all_meshes if o.name in garment_names]
     bodies=[o for o in all_meshes if o.name not in garment_names]
     if not garments or not bodies: raise RuntimeError("Need body and garment meshes in fitted GLB")
-    verts=[]; faces=[]
+    # Keep body parts as independent BVHs. A parity test against one merged
+    # BVH incorrectly cancels intersections where body parts overlap.
+    depsgraph=bpy.context.evaluated_depsgraph_get()
+    body_trees=[]
     for body in bodies:
-        offset=len(verts)
-        verts.extend([tuple(body.matrix_world@v.co) for v in body.data.vertices])
-        faces.extend([tuple(offset+i for i in p.vertices) for p in body.data.polygons if len(p.vertices)>=3])
-    mesh=bpy.data.meshes.new("ForgeCollisionBody"); mesh.from_pydata(verts,[],faces); mesh.update()
-    proxy=bpy.data.objects.new("ForgeCollisionBody",mesh); bpy.context.collection.objects.link(proxy)
-    tree=BVHTree.FromObject(proxy,bpy.context.evaluated_depsgraph_get(),epsilon=0.0)
-    if tree is None: raise RuntimeError("Could not build collision BVH")
+        tree=BVHTree.FromObject(body,depsgraph,epsilon=0.0)
+        if tree is not None: body_trees.append((body.name,tree))
+    if not body_trees: raise RuntimeError("Could not build per-part body BVHs")
+    def inside_any(point):
+        return any(ray_parity(tree,point) for _,tree in body_trees)
     results=[]; hard_failures=[]
     for garment in garments:
         coords=[garment.matrix_world@v.co for v in garment.data.vertices]
         # Rest-pose signed-inside test with parity ray casting.
-        inside=[i for i,p in enumerate(coords) if ray_parity(tree,p)]
+        inside=[i for i,p in enumerate(coords) if inside_any(p)]
         distances=[]
         for p in coords:
-            nearest=tree.find_nearest(p)
-            if nearest and nearest[0] is not None: distances.append(float(nearest[3]))
+            nearest_hits=[tree.find_nearest(p) for _,tree in body_trees]
+            nearest_hits=[hit for hit in nearest_hits if hit and hit[0] is not None]
+            if nearest_hits: distances.append(min(float(hit[3]) for hit in nearest_hits))
         # Sample simple shoulder/hip articulation transforms without changing source data.
         pose_samples=[]
         original=garment.matrix_world.copy()
@@ -59,7 +61,7 @@ def main():
             from mathutils import Matrix
             rot=Matrix.Translation(center) @ Matrix.Rotation(angle,4,'X') @ Matrix.Translation(-center)
             transformed=[rot@p for p in coords]
-            penetrations=sum(1 for p in transformed if ray_parity(tree,p))
+            penetrations=sum(1 for p in transformed if inside_any(p))
             pose_samples.append({"rotation_x_radians":angle,"inside_body_vertices":penetrations})
         # BVH self-overlap candidates; exclude face pairs sharing vertices.
         bm=bmesh.new(); bm.from_mesh(garment.data); bm.verts.ensure_lookup_table(); bm.faces.ensure_lookup_table()
@@ -82,10 +84,9 @@ def main():
             "status":"collision_candidates_found" if issue else "sampled_clearance_preflight_passed"}
         results.append(row)
         if issue: hard_failures.append(garment.name)
-    bpy.data.objects.remove(proxy,do_unlink=True)
     report={"status":"collision_candidates_found" if hard_failures else "sampled_clearance_preflight_passed",
         "input":src,"garment_count":len(garments),"results":results,"failed_meshes":hard_failures,
-        "pose_sampling":"rest plus rigid X-axis rotations -0.25, 0, +0.25 rad",
+        "body_parts_tested":[name for name,_ in body_trees],"pose_sampling":"rest plus rigid X-axis rotations -0.25, 0, +0.25 rad",
         "collision_free_pose_certified":False,"cloth_simulation_certified":False,
         "artist_review_required":True,"engine_certified":False,
         "limitations":["Pose samples are synthetic rigid rotations, not a full skeletal animation sweep",
