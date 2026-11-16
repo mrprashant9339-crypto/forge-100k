@@ -1,11 +1,14 @@
-"""Validate the structure and conservative claims of a cloth integrity report."""
+"""Validate cloth QA report structure; optionally enforce promotion gates."""
+import argparse
 import json
-import sys
 
 def main():
-    if len(sys.argv) != 2:
-        raise SystemExit("Usage: validate_cloth_integrity_report.py report.json")
-    with open(sys.argv[1], encoding="utf-8") as handle:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("report")
+    parser.add_argument("--require-clean", action="store_true",
+                        help="fail if geometric issues or required pose coverage is incomplete")
+    args = parser.parse_args()
+    with open(args.report, encoding="utf-8") as handle:
         report = json.load(handle)
     required = {
         "schema", "status", "frame_range", "sampled_frames", "cache_checks",
@@ -35,8 +38,16 @@ def main():
     coverage = report["named_pose_coverage"]
     if set(coverage) != {"walking", "running", "jumping", "combat"}:
         raise SystemExit("Named pose coverage must report walk/run/jump/combat")
-    print("CLOTH_INTEGRITY_REPORT_VALID status=%s frames=%d issues=%d" % (
-        report["status"], len(report["frame_checks"]), len(report["issues"])))
+    if args.require_clean:
+        if report["status"] != "cloth_integrity_preflight_passed" or report["issues"]:
+            raise SystemExit("Promotion blocked: cloth integrity findings remain")
+        if not report["pose_coverage_complete"]:
+            raise SystemExit("Promotion blocked: walk/run/jump/combat action coverage is incomplete")
+        if any(not row.get("is_baked") for row in report["cache_checks"]):
+            raise SystemExit("Promotion blocked: one or more cloth caches are not baked")
+    print("CLOTH_INTEGRITY_REPORT_VALID status=%s frames=%d issues=%d pose_coverage=%s" % (
+        report["status"], len(report["frame_checks"]), len(report["issues"]),
+        report["pose_coverage_complete"]))
 
 if __name__ == "__main__":
     main()
