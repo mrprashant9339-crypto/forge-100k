@@ -41,7 +41,7 @@ jobs:
           python pipeline/tests/test_pbr_materials.py
           python pipeline/tests/test_production_package.py
           python pipeline/tests/test_phase3_reports.py
-          python -m py_compile pipeline/blender/facial_morph_pack.py pipeline/blender/facial_animation_clips.py pipeline/blender/bake_pbr_textures.py
+          python -m py_compile pipeline/blender/facial_morph_pack.py pipeline/blender/facial_animation_clips.py pipeline/blender/bake_pbr_textures.py pipeline/blender/prepare_cloth_scene.py
       - name: Install browser test runtime
         run: |
           npm install --no-save playwright@1.55.0
@@ -93,6 +93,8 @@ jobs:
           python -m json.tool artifacts/phase2-tests/garment-qa.json >/dev/null
           blender --background --python pipeline/blender/garment_collision_qa.py -- artifacts/phase2-tests/fitted.glb artifacts/phase2-tests/fit-report.json artifacts/phase2-tests/garment-collision-qa.json
           python -m json.tool artifacts/phase2-tests/garment-collision-qa.json >/dev/null
+          blender --background --python pipeline/blender/prepare_cloth_scene.py -- artifacts/phase2-tests/fitted.glb artifacts/phase2-tests/cloth-sim.blend artifacts/phase2-tests/cloth-scene-report.json 60
+          python -m json.tool artifacts/phase2-tests/cloth-scene-report.json >/dev/null
           blender --background --python pipeline/blender/merge_meshes.py -- artifacts/phase2-tests/merge-input.glb artifacts/phase2-tests/merged.glb artifacts/phase2-tests/merge-report.json
           python pipeline/scripts/validate_glb.py artifacts/phase2-tests/merged.glb
           python -m json.tool artifacts/phase2-tests/merge-report.json >/dev/null
