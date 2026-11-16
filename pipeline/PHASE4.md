@@ -18,7 +18,7 @@ After scene preparation, bake the actual Blender point cache and run sampled eva
 ```bash
 blender -b cloth-sim.blend --python pipeline/blender/bake_cloth_cache.py -- cloth-bake-report.json 1
 ```
-This worker invokes Blender's point-cache bake for every garment cloth modifier and records frame samples, finite geometry, bounds and pin-weight ranges. A passing report means the cache baked and sampled geometry is structurally valid; it does **not** prove collision-free motion, tearing resistance or self-intersection-free animation. The CI fixture runs a reduced sample interval to keep the pipeline bounded.
+This worker invokes Blender's point-cache bake for every garment cloth modifier and records frame samples, finite geometry, bounds and pin-weight ranges. A passing report means the cache baked and sampled geometry is structurally valid; it does **not** prove collision-free motion, tearing resistance or self-intersection-free animation. The CI fixture uses a graded pin field and conservative collision tolerances to keep its open torso shell stable; production garments still require authored pin weights. The CI fixture is sampled at every frame.
 
 Run world-space integrity QA on the saved, baked scene:
 ```bash
@@ -27,7 +27,7 @@ python pipeline/scripts/validate_cloth_integrity_report.py cloth-integrity-repor
 # Release gate: fail if collision findings or required pose clips remain
 python pipeline/scripts/validate_cloth_integrity_report.py cloth-integrity-report.json --require-clean
 ```
-The integrity worker samples every frame when the step is `1`. It builds world-space BVHs and reports triangle-overlap candidates for visual review, tests garment vertices inside closed body colliders, monitors evaluated topology stability and validates pin-weight ranges. A missing pin group is an issue, not a passing validation. It inventories named walk/run/jump/combat actions and reports which are present. A missing action is reported as a warning; a real pose suite must include those actions in the input scene. CI runs the worker at a reduced sample interval and preserves findings as an artifact rather than treating a structurally valid report as proof of clean geometry. The optional `--require-clean` release gate rejects geometry findings, unbaked caches, missing pose clips, unconfigured pin groups, and reports without a tear-capable workflow.
+The integrity worker samples every frame when the step is `1`. It builds world-space BVHs, filters broad-phase overlaps with segment/triangle and coplanar 2D narrow-phase tests, tests garment vertices inside closed body colliders, monitors evaluated topology stability and validates pin-weight ranges. A missing pin group is an issue, not a passing validation. It inventories named walk/run/jump/combat actions and reports which are present. A missing action is reported as a warning; a real pose suite must include those actions in the input scene. CI runs the worker at a reduced sample interval and preserves findings as an artifact rather than treating a structurally valid report as proof of clean geometry. The optional `--require-clean` release gate rejects geometry findings, unbaked caches, missing pose clips, unconfigured pin groups, and reports without a tear-capable workflow.
 
 ### 2. Rigging and animation
 ```bash
