@@ -42,7 +42,9 @@
 - [x] Blender cloth-scene preparation worker adds body collision modifiers, garment cloth/self-collision settings and a reusable simulation scene; CI validates its report
 - [x] Real Blender point-cache bake worker with evaluated frame sampling, geometry integrity and pin-weight preflight; CI fixture invokes the bake (not a continuous collision/tear certification)
 - [x] Existing Quadriflow retopology candidate, topology metrics, UV-based Cycles diffuse/normal/AO baking and strict report validation
-- [ ] Full animation-range cloth cache bake, evaluated skeletal-pose collision sweep and artist-approved garment fit
+- [x] Full-scene-range Blender cloth point-cache bake worker; persisted cache and evaluated frame integrity report
+- [x] World-space garment/body triangle collision, inside-body, non-adjacent self-overlap, topology-stability and pin-weight QA workers with CI report validation
+- [ ] Run full-frame QA on real walk/run/jump/combat skeletal actions, resolve all findings, validate tear-capable workflow and obtain artist-approved garment fit
 - [ ] Production IK/FK snapping and control-rig export/retarget validation in Unity, Unreal and Godot
 - [ ] Full ARKit 52 sculpted facial target set, audio-derived phoneme timing and reviewed eye/eyelid performance
 - [ ] Motion-capture quality clips, foot locking, root-motion extraction and target-engine loop/contact review
