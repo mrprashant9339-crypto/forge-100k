@@ -93,6 +93,10 @@ jobs:
           python -m json.tool artifacts/phase2-tests/garment-qa.json >/dev/null
           blender --background --python pipeline/blender/garment_collision_qa.py -- artifacts/phase2-tests/fitted.glb artifacts/phase2-tests/fit-report.json artifacts/phase2-tests/garment-collision-qa.json
           python -m json.tool artifacts/phase2-tests/garment-collision-qa.json >/dev/null
+      - name: Bake and validate cloth simulation
+        env:
+          PYTHONPATH: /usr/lib/python3/dist-packages
+        run: |
           blender --background --python pipeline/blender/prepare_cloth_scene.py -- artifacts/phase2-tests/fitted.glb artifacts/phase2-tests/cloth-sim.blend artifacts/phase2-tests/cloth-scene-report.json 60
           python -m json.tool artifacts/phase2-tests/cloth-scene-report.json >/dev/null
           blender --background artifacts/phase2-tests/cloth-sim.blend --python pipeline/blender/bake_cloth_cache.py -- artifacts/phase2-tests/cloth-bake-report.json 1
@@ -105,7 +109,11 @@ jobs:
           python -m json.tool artifacts/phase2-tests/cloth-integrity-report.json >/dev/null
           python pipeline/scripts/validate_cloth_integrity_report.py artifacts/phase2-tests/cloth-integrity-report.json
           echo "Cloth QA exit code: $CLOTH_QA_EXIT (candidate findings are retained as an artifact; inspect before promotion)"
-          blender --background --python pipeline/blender/merge_meshes.py -- artifacts/phase2-tests/merge-input.glb artifacts/phase2-tests/merged.glb artifacts/phase2-tests/merge-report.json
+      - name: Validate rigging, facial animation and LOD outputs
+        env:
+          PYTHONPATH: /usr/lib/python3/dist-packages
+        run: |
+blender --background --python pipeline/blender/merge_meshes.py -- artifacts/phase2-tests/merge-input.glb artifacts/phase2-tests/merged.glb artifacts/phase2-tests/merge-report.json
           python pipeline/scripts/validate_glb.py artifacts/phase2-tests/merged.glb
           python -m json.tool artifacts/phase2-tests/merge-report.json >/dev/null
           for profile in humanoid_v1 mechanical_v1 quadruped_v1 avian_v1; do
