@@ -72,6 +72,12 @@ def main():
     }
     armature = armatures[0]
     armature.animation_data_create()
+    cloth_visibility = []
+    for garment in garments:
+        for modifier in garment.modifiers:
+            if modifier.type == "CLOTH":
+                cloth_visibility.append((modifier, modifier.show_viewport))
+                modifier.show_viewport = False
 
     for kind, action in action_by_kind.items():
         if action is None:
@@ -146,6 +152,9 @@ def main():
             "frame_checks": frame_records,
         })
 
+    for modifier, was_visible in cloth_visibility:
+        modifier.show_viewport = was_visible
+
     coverage = {kind: action is not None for kind, action in action_by_kind.items()}
     report = {
         "schema": "forge.pose-cloth-qa.v1",
@@ -159,6 +168,7 @@ def main():
         "aggregate": aggregate,
         "issues": issues,
         "sampled_skeletal_actions": True,
+        "cloth_modifier_disabled_during_skinning_preflight": True,
         "continuous_collision_detection": False,
         "collision_free_certified": False,
         "artist_review_required": True,
