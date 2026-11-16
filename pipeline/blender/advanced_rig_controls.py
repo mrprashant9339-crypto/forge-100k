@@ -12,6 +12,14 @@ def args():
     if len(a) != 3: raise SystemExit("Usage: -- input.glb output.glb report.json")
     return [os.path.abspath(x) for x in a]
 
+def point_segment_distance(point, start, end):
+    segment = end - start
+    length_squared = segment.length_squared
+    if length_squared <= 1e-12:
+        return (point - start).length
+    factor = max(0.0, min(1.0, (point - start).dot(segment) / length_squared))
+    return (point - (start + factor * segment)).length
+
 def main():
     src, out, report_path = args()
     if not os.path.isfile(src): raise FileNotFoundError(src)
@@ -115,8 +123,33 @@ def main():
             p = mesh.matrix_world @ v.co
             d = ((p.x) ** 2 + (p.y + 0.16) ** 2 + (p.z - 1.98) ** 2) ** 0.5
             if d < 0.15: jaw.add([v.index], max(0.05, 1.0 - d / 0.15), "REPLACE"); assigned += 1
+    # Seed the new finger chains with proximity weights. The generated
+    # blockout may not contain individually modeled fingers, so record coverage
+    # rather than pretending every character has production hand topology.
+    finger_bones = [bone for bone in arm.data.bones if bone.name.startswith("finger_")]
+    finger_weight_assignments = 0
+    finger_weighted_vertices = set()
+    for mesh in [o for o in bpy.context.scene.objects if o.type == "MESH"]:
+        inverse_arm = arm.matrix_world.inverted()
+        finger_groups = {
+            bone.name: mesh.vertex_groups.get(bone.name) or mesh.vertex_groups.new(name=bone.name)
+            for bone in finger_bones
+        }
+        for vertex in mesh.data.vertices:
+            point = inverse_arm @ (mesh.matrix_world @ vertex.co)
+            nearest = None
+            for bone in finger_bones:
+                distance = point_segment_distance(point, bone.head_local, bone.tail_local)
+                if nearest is None or distance < nearest[0]:
+                    nearest = (distance, bone.name)
+            if nearest and nearest[0] < 0.045:
+                weight = max(0.05, 1.0 - nearest[0] / 0.045)
+                finger_groups[nearest[1]].add([vertex.index], weight, "REPLACE")
+                finger_weight_assignments += 1
+                finger_weighted_vertices.add((mesh.name, vertex.index))
+
     # Re-normalize all skin weights and enforce the glTF four-influence limit
-    # after adding facial groups. This avoids invalid >4 influence vertices.
+    # after adding facial and finger groups. This avoids invalid >4 influence vertices.
     for mesh in [o for o in bpy.context.scene.objects if o.type == "MESH"]:
         group_by_index = {g.index: g for g in mesh.vertex_groups}
         for vertex in mesh.data.vertices:
@@ -147,7 +180,7 @@ def main():
         "bone_count":len(arm.data.bones),"finger_bones":sum(1 for b in arm.data.bones if b.name.startswith("finger_")),
         "facial_bones":[n for n in arm.data.bones.keys() if n.startswith("FAC_")],
         "ik_constraints":ik_count,"ik_pole_targets":ik_pole_targets,"eye_tracking_constraints":eye_tracking_constraints,"ik_fk_switch_property":"forge_ik_fk_switch",
-        "facial_group_vertex_assignments":assigned,"artist_review_required":True,
+        "facial_group_vertex_assignments":assigned,"finger_weight_assignments":finger_weight_assignments,\n        "finger_weighted_vertices":len(finger_weighted_vertices),"artist_review_required":True,
         "engine_certified":False,"limitations":["IK/FK switching and pole placement require animator calibration",
         "Facial bone weights are proximity-seeded and require sculpt/weight-paint review",
         "glTF does not preserve Blender custom control widgets or constraint UI; bake constraints for runtime export"]}
