@@ -30,8 +30,9 @@ def main():
     bpy.ops.import_scene.gltf(filepath=src)
     all_meshes=[o for o in bpy.context.scene.objects if o.type=="MESH"]
     garment_names={x.get("mesh") for x in fit.get("garments",[])}
+    body_names=set(fit.get("body_meshes",[]))
     garments=[o for o in all_meshes if o.name in garment_names]
-    bodies=[o for o in all_meshes if o.name not in garment_names]
+    bodies=[o for o in all_meshes if o.name in body_names] if body_names else [o for o in all_meshes if o.name not in garment_names]
     if not garments or not bodies: raise RuntimeError("Need body and garment meshes in fitted GLB")
     # Keep body parts as independent BVHs. A parity test against one merged
     # BVH incorrectly cancels intersections where body parts overlap.
