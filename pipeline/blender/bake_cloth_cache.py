@@ -39,7 +39,11 @@ def evaluated_snapshot(obj, depsgraph):
                 [min(v.co[i] for v in mesh.vertices) for i in range(3)],
                 [max(v.co[i] for v in mesh.vertices) for i in range(3)]
             ] if mesh.vertices else None,
-            "bvh": BVHTree.FromMesh(mesh) if mesh.polygons else None
+            "bvh": BVHTree.FromPolygons(
+                [vertex.co.copy() for vertex in mesh.vertices],
+                [tuple(poly.vertices) for poly in mesh.polygons if len(poly.vertices) >= 3],
+                all_triangles=False
+            ) if mesh.polygons else None
         }
     finally:
         evaluated.to_mesh_clear()
