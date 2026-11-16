@@ -87,6 +87,10 @@ def main():
             })
             obj.select_set(False)
 
+    # Persist baked point caches into the working .blend before downstream QA.
+    if bpy.data.filepath:
+        bpy.ops.wm.save_as_mainfile(filepath=bpy.data.filepath)
+
     # Evaluate baked cloth at each sampled frame; detect invalid geometry and
     # non-adjacent triangle overlap candidates. Body proximity is measured with
     # nearest-surface distances, not represented as a certified penetration test.
