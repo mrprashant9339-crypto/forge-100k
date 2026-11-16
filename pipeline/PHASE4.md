@@ -23,9 +23,9 @@ This worker invokes Blender's point-cache bake for every garment cloth modifier 
 Run world-space integrity QA on the saved, baked scene:
 ```bash
 blender -b cloth-sim.blend --python pipeline/blender/cloth_integrity_qa.py -- cloth-integrity-report.json 1
-python pipeline/scripts/validate_cloth_integrity_report.py cloth-integrity-report.json
+python pipeline/scripts/validate_cloth_integrity_report.py cloth-integrity-report.json\n# Release gate: fail if collision findings or required pose clips remain\npython pipeline/scripts/validate_cloth_integrity_report.py cloth-integrity-report.json --require-clean
 ```
-The integrity worker samples every frame when the step is `1`. It builds world-space BVHs, checks garment/body triangle intersections, tests garment vertices inside closed body colliders, checks non-adjacent garment triangle overlaps, monitors evaluated topology stability and validates pin-weight ranges. It inventories named walk/run/jump/combat actions and reports which are present. A missing action is reported as a warning; a real pose suite must include those actions in the input scene. CI runs the worker at a reduced sample interval and preserves collision findings as an artifact rather than treating a structurally valid report as proof of clean geometry.
+The integrity worker samples every frame when the step is `1`. It builds world-space BVHs, checks garment/body triangle intersections, tests garment vertices inside closed body colliders, checks non-adjacent garment triangle overlaps, monitors evaluated topology stability and validates pin-weight ranges. It inventories named walk/run/jump/combat actions and reports which are present. A missing action is reported as a warning; a real pose suite must include those actions in the input scene. CI runs the worker at a reduced sample interval and preserves collision findings as an artifact rather than treating a structurally valid report as proof of clean geometry. The optional `--require-clean` release gate rejects any geometry issue, unbaked cache or missing walk/run/jump/combat clip.
 
 ### 2. Rigging and animation
 ```bash
