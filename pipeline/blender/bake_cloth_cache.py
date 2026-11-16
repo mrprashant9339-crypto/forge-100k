@@ -31,22 +31,23 @@ def evaluated_snapshot(obj, depsgraph):
     mesh = evaluated.to_mesh()
     try:
         mesh.calc_loop_triangles()
+        matrix = evaluated.matrix_world.copy()
+        vertices = [matrix @ vertex.co for vertex in mesh.vertices]
+        triangles = [tuple(tri.vertices) for tri in mesh.loop_triangles]
         return {
-            "vertices": len(mesh.vertices),
-            "triangles": len(mesh.loop_triangles),
-            "finite": finite_mesh(mesh),
+            "vertices": len(vertices),
+            "triangles": len(triangles),
+            "finite": all(math.isfinite(float(component)) for point in vertices for component in point),
             "bounds": [
-                [min(v.co[i] for v in mesh.vertices) for i in range(3)],
-                [max(v.co[i] for v in mesh.vertices) for i in range(3)]
-            ] if mesh.vertices else None,
-            "bvh": BVHTree.FromPolygons(
-                [vertex.co.copy() for vertex in mesh.vertices],
-                [tuple(poly.vertices) for poly in mesh.polygons if len(poly.vertices) >= 3],
-                all_triangles=False
-            ) if mesh.polygons else None
+                [min(point[axis] for point in vertices) for axis in range(3)],
+                [max(point[axis] for point in vertices) for axis in range(3)]
+            ] if vertices else None,
+            "world_vertices": vertices,
+            "bvh": BVHTree.FromPolygons(vertices, triangles, all_triangles=True) if triangles else None
         }
     finally:
         evaluated.to_mesh_clear()
+
 
 def main():
     report_path, step = cli()
@@ -123,10 +124,10 @@ def main():
             for body in body_objects:
                 body_snap = evaluated_snapshot(body, depsgraph)
                 if body_snap["bvh"] is not None:
-                    # Blender BVH nearest query returns distance in object-local
-                    # space; this is a conservative diagnostic for unit-scale rigs.
-                    for vertex in garment.evaluated_get(depsgraph).data.vertices[:]:
-                        hit = body_snap["bvh"].find_nearest(vertex.co)
+                    # Both snapshots are transformed to world space, so nearest
+                    # distances remain meaningful for scaled/rotated character rigs.
+                    for point in snap["world_vertices"]:
+                        hit = body_snap["bvh"].find_nearest(point)
                         if hit and hit[3] is not None:
                             clearance.append(float(hit[3]))
             if clearance:
@@ -138,9 +139,9 @@ def main():
                 "frame": frame, "garment": garment.name,
                 "vertices": snap["vertices"], "triangles": snap["triangles"],
                 "finite": snap["finite"], "bounds": snap["bounds"],
-                "bounding_diagonal_local_units": diagonal,
+                "bounding_diagonal_world_units": diagonal,
                 "deformation_ratio_from_first_sample": deformation_ratio,
-                "minimum_body_surface_distance_local_units": min(clearance) if clearance else None
+                "minimum_body_surface_distance_world_units": min(clearance) if clearance else None
             })
 
     pin_rows = []
@@ -177,7 +178,7 @@ def main():
         "cache_results": cache_rows,
         "pin_weight_checks": pin_rows,
         "evaluated_frame_samples": frame_rows,
-        "minimum_body_clearance_by_garment_local_units": min_body_clearance,
+        "minimum_body_clearance_by_garment_world_units": min_body_clearance,
         "issues": issues,
         "body_penetration_certified": False,
         "self_intersection_certified": False,
@@ -187,7 +188,7 @@ def main():
         "engine_certified": False,
         "limitations": [
             "Sampled evaluated geometry does not prove continuous collision-free motion",
-            "Nearest-surface clearance is a local-space diagnostic and assumes compatible object transforms",
+            "Nearest-surface clearance is measured in world space using evaluated object transforms",
             "Blender cloth does not provide a universal tear solver; seam and pin failure need authored tests",
             "Walking, running, jumping and combat must be supplied as actual skeletal animation actions and reviewed"
         ]
