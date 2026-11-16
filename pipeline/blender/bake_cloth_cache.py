@@ -16,12 +16,14 @@ from mathutils.bvhtree import BVHTree
 def cli():
     argv = sys.argv
     values = argv[argv.index("--") + 1:] if "--" in argv else []
-    if len(values) not in (1, 2):
-        raise SystemExit("Usage: bake_cloth_cache.py -- report.json [sample_step]")
-    step = int(values[1]) if len(values) == 2 else 1
+    if len(values) not in (1, 2, 3, 4):
+        raise SystemExit("Usage: bake_cloth_cache.py -- report.json [sample_step] [action_name] [output.blend]")
+    step = int(values[1]) if len(values) >= 2 else 1
+    action_name = values[2] if len(values) >= 3 else None
+    output_blend = os.path.abspath(values[3]) if len(values) == 4 else None
     if step < 1 or step > 30:
         raise ValueError("sample_step must be in 1..30")
-    return os.path.abspath(values[0]), step
+    return os.path.abspath(values[0]), step, action_name, output_blend
 
 def finite_mesh(mesh):
     return all(math.isfinite(float(c)) for vertex in mesh.vertices for c in vertex.co)
@@ -50,8 +52,18 @@ def evaluated_snapshot(obj, depsgraph):
 
 
 def main():
-    report_path, step = cli()
+    report_path, step, action_name, output_blend = cli()
     scene = bpy.context.scene
+    if action_name:
+        action = bpy.data.actions.get(action_name)
+        if action is None:
+            raise RuntimeError("Requested cloth bake action not found: " + action_name)
+        armatures = [obj for obj in scene.objects if obj.type == "ARMATURE"]
+        if not armatures:
+            raise RuntimeError("Action-specific cloth bake requires an armature")
+        armatures[0].animation_data_create()
+        armatures[0].animation_data.action = action
+        scene.frame_set(int(math.floor(action.frame_range[0])))
     cloth_objects = [
         obj for obj in scene.objects if obj.type == "MESH"
         and any(mod.type == "CLOTH" for mod in obj.modifiers)
@@ -93,8 +105,10 @@ def main():
             obj.select_set(False)
 
     # Persist baked point caches into the working .blend before downstream QA.
-    if bpy.data.filepath:
-        bpy.ops.wm.save_as_mainfile(filepath=bpy.data.filepath)
+    save_path = output_blend or bpy.data.filepath
+    if save_path:
+        os.makedirs(os.path.dirname(save_path) or ".", exist_ok=True)
+        bpy.ops.wm.save_as_mainfile(filepath=save_path)
 
     # Evaluate baked cloth at each sampled frame; detect invalid geometry and
     # non-adjacent triangle overlap candidates. Body proximity is measured with
@@ -175,6 +189,8 @@ def main():
         "blend_file": bpy.data.filepath,
         "frame_range": [scene.frame_start, scene.frame_end],
         "sample_step": step,
+        "active_action": action_name,
+        "saved_blend_file": output_blend or bpy.data.filepath,
         "cache_results": cache_rows,
         "pin_weight_checks": pin_rows,
         "evaluated_frame_samples": frame_rows,
