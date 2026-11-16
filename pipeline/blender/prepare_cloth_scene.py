@@ -20,23 +20,30 @@ def cli():
 
 
 def fixture_pin_weights(garment, pin_group):
-    """Pin both shoulder and waist boundaries on the static CI torso fixture.
+    """Build a deterministic, graded pin field for the unrigged CI garment.
 
-    A top-only pin lets the unrigged test shell fall under gravity. Production
-    garments must supply their own authored pin group and skeletal animation.
+    Boundary loops are fully pinned; interior rings retain partial pinning so
+    the fixture exercises cloth deformation without allowing the open shell to
+    collapse under gravity. Production garments must provide authored weights.
     """
     world_z = [(garment.matrix_world @ vertex.co).z for vertex in garment.data.vertices]
     if not world_z:
-        return 0
+        return {"weighted_vertices": 0, "boundary_vertices": 0}
     low_z, high_z = min(world_z), max(world_z)
-    tolerance = max(0.005, (high_z - low_z) * 0.012)
-    pinned = [
-        vertex.index for vertex, z in zip(garment.data.vertices, world_z)
-        if z <= low_z + tolerance or z >= high_z - tolerance
-    ]
-    if pinned:
-        pin_group.add(pinned, 1.0, "REPLACE")
-    return len(pinned)
+    span = max(high_z - low_z, 1e-8)
+    tolerance = max(0.005, span * 0.012)
+    boundary = []
+    for vertex, z in zip(garment.data.vertices, world_z):
+        distance_to_boundary = min(z - low_z, high_z - z)
+        if distance_to_boundary <= tolerance:
+            weight = 1.0
+            boundary.append(vertex.index)
+        else:
+            # A soft interior pin prevents this deliberately open CI shell from
+            # behaving like an unanchored cape; real garment weights are authored.
+            weight = 0.65
+        pin_group.add([vertex.index], weight, "REPLACE")
+    return {"weighted_vertices": len(world_z), "boundary_vertices": len(boundary)}
 
 
 def main():
@@ -61,8 +68,8 @@ def main():
             body.modifiers.new("Forge_Body_Collision", "COLLISION")
         settings = body.collision
         settings.damping = 0.1
-        settings.thickness_outer = 0.015
-        settings.thickness_inner = 0.005
+        settings.thickness_outer = 0.005
+        settings.thickness_inner = 0.003
         body_rows.append({"mesh": body.name, "collision_modifier": True})
     garment_rows = []
     for garment in garments:
@@ -82,26 +89,28 @@ def main():
         cloth.collision_settings.use_collision = True
         cloth.collision_settings.use_self_collision = True
         cloth.collision_settings.collision_quality = 6
-        cloth.collision_settings.distance_min = 0.012
-        cloth.collision_settings.self_distance_min = 0.008
-        cloth.collision_settings.friction = 5.0
-        cloth.collision_settings.self_friction = 5.0
-        cloth.collision_settings.impulse_clamp = 1.0
+        cloth.collision_settings.distance_min = 0.004
+        cloth.collision_settings.self_distance_min = 0.004
+        cloth.collision_settings.friction = 2.0
+        cloth.collision_settings.self_friction = 2.0
+        cloth.collision_settings.impulse_clamp = 0.5
         pin = next((g.name for g in garment.vertex_groups if g.name.lower() in ("forge_cloth_pin", "cloth_pin", "pin")), None)
         fixture_pin_count = 0
         if pin is None and garment.name == "GarmentFixture":
             pin_group = garment.vertex_groups.new(name="Forge_Cloth_Pin")
-            fixture_pin_count = fixture_pin_weights(garment, pin_group)
-            pin = pin_group.name if fixture_pin_count else None
+            fixture_pin_report = fixture_pin_weights(garment, pin_group)
+            fixture_pin_count = fixture_pin_report["boundary_vertices"]
+            pin = pin_group.name if fixture_pin_report["weighted_vertices"] else None
         if pin:
             cloth.settings.vertex_group_mass = pin
         garment_rows.append({
             "mesh": garment.name, "cloth_modifier": True, "self_collision": True,
             "body_collision": True, "pin_group": pin,
             "fixture_pinned_boundary_vertices": fixture_pin_count or None,
+            "fixture_weighted_vertices": fixture_pin_report["weighted_vertices"] if garment.name == "GarmentFixture" and pin == "Forge_Cloth_Pin" else None,
             "uv_layer": garment.data.uv_layers.active.name,
-            "settings": {"quality": 8, "collision_quality": 6, "distance_min": 0.012,
-                         "self_distance_min": 0.008, "mass": 0.3}
+            "settings": {"quality": 8, "collision_quality": 6, "distance_min": 0.004,
+                         "self_distance_min": 0.004, "mass": 0.3}
         })
     scene.frame_set(1)
     for obj in garments:
