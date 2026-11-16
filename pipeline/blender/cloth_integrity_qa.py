@@ -215,12 +215,14 @@ def main():
             group_name = modifier.settings.vertex_group_mass
             group = garment.vertex_groups.get(group_name) if group_name else None
             weights = []
+            unweighted_vertices = len(garment.data.vertices)
             if group:
+                weights = []
                 for vertex in garment.data.vertices:
-                    try:
-                        weights.append(float(group.weight(vertex.index)))
-                    except RuntimeError:
-                        pass
+                    membership = next((item for item in vertex.groups if item.group == group.index), None)
+                    if membership is not None:
+                        weights.append(float(membership.weight))
+                unweighted_vertices -= len(weights)
                 if not weights:
                     issues.append("%s: configured pin group has no weighted vertices" % garment.name)
                 elif any(not math.isfinite(w) or w < 0.0 or w > 1.0 for w in weights):
@@ -230,6 +232,7 @@ def main():
             pin_checks.append({
                 "garment": garment.name, "group": group_name or None,
                 "weighted_vertices": len(weights),
+                "unweighted_vertices": unweighted_vertices,
                 "minimum": min(weights) if weights else None,
                 "maximum": max(weights) if weights else None,
                 "status": "range_validated" if weights else "not_configured"
