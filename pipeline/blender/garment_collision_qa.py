@@ -44,7 +44,7 @@ def main():
     if not body_trees: raise RuntimeError("Could not build per-part body BVHs")
     def inside_any(point):
         return any(ray_parity(tree,point) for _,tree in body_trees)
-    results=[]; hard_failures=[]
+    results=[]; hard_failures=[]; review_meshes=[]
     for garment in garments:
         coords=[garment.matrix_world@v.co for v in garment.data.vertices]
         # Rest-pose signed-inside test with parity ray casting.
@@ -75,27 +75,36 @@ def main():
                     self_pairs.append([a,b])
         bm.free()
         issue=[]
-        if inside: issue.append("body_penetration_candidates")
-        if any(x["inside_body_vertices"] for x in pose_samples): issue.append("pose_body_penetration_candidates")
-        if self_pairs: issue.append("self_intersection_candidates")
+        blocking=[]
+        if inside:
+            issue.append("rest_pose_body_penetration_candidates")
+            blocking.append("rest_pose_body_penetration_candidates")
+        if any(x["inside_body_vertices"] for x in pose_samples):
+            issue.append("synthetic_garment_only_rotation_candidates")
+        if self_pairs:
+            issue.append("bvh_self_overlap_candidates")
         row={"mesh":garment.name,"vertex_count":len(coords),"rest_inside_body_vertices":len(inside),
             "minimum_body_surface_distance":min(distances) if distances else None,
             "pose_samples":pose_samples,"self_intersection_triangle_pairs":len(self_pairs),
             "self_intersection_pairs_sample":self_pairs[:100],"issues":issue,
-            "status":"collision_candidates_found" if issue else "sampled_clearance_preflight_passed"}
+            "blocking_issues":blocking,
+            "status":"blocking_rest_penetration" if blocking else ("review_candidates_found" if issue else "sampled_clearance_preflight_passed")}
         results.append(row)
-        if issue: hard_failures.append(garment.name)
-    report={"status":"collision_candidates_found" if hard_failures else "sampled_clearance_preflight_passed",
+        if issue: review_meshes.append(garment.name)
+        if blocking: hard_failures.append(garment.name)
+    report={"status":"blocking_rest_penetration" if hard_failures else ("review_candidates_found" if review_meshes else "sampled_clearance_preflight_passed"),
         "input":src,"garment_count":len(garments),"results":results,"failed_meshes":hard_failures,
-        "body_parts_tested":[name for name,_ in body_trees],"pose_sampling":"rest plus rigid X-axis rotations -0.25, 0, +0.25 rad",
+        "review_required_meshes":review_meshes,
+        "body_parts_tested":[name for name,_ in body_trees],"pose_sampling":"synthetic garment-only rigid X-axis rotations -0.25, 0, +0.25 rad; diagnostic only, not articulated body poses",
+        "candidate_policy":"Only rest-pose body-inside vertices block this fixture preflight. Synthetic garment-only rotations and BVH AABB overlap pairs are review candidates, not exact triangle-intersection proofs.",
         "collision_free_pose_certified":False,"cloth_simulation_certified":False,
         "artist_review_required":True,"engine_certified":False,
-        "limitations":["Pose samples are synthetic rigid rotations, not a full skeletal animation sweep",
+        "limitations":["Pose samples move the garment without a skeletal body rig and are diagnostic only",
         "Parity tests are approximate for open/non-manifold body meshes",
-        "BVH overlap flags are candidates and require visual confirmation",
+        "BVH overlap flags are conservative candidates and require visual confirmation",
         "No cloth simulation, continuous collision detection or runtime physics test"]}
     os.makedirs(os.path.dirname(out) or ".",exist_ok=True)
     with open(out,"w",encoding="utf-8") as f: json.dump(report,f,indent=2)
     print("FORGE_GARMENT_COLLISION_QA "+json.dumps(report))
-    if hard_failures: raise SystemExit("Garment collision candidates detected")
+    if hard_failures: raise SystemExit("Rest-pose garment/body penetration candidates detected")
 if __name__=="__main__": main()
