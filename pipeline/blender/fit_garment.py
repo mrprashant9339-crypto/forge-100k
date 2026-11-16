@@ -90,10 +90,14 @@ def main():
             if missing:
                 raise RuntimeError("Garment rig has bones absent from body rig: " + ", ".join(missing))
         for garment in garment_meshes:
+            world_matrix = garment.matrix_world.copy()
+            if garment.parent in garment_armatures:
+                garment.parent = target_armature
+                garment.matrix_world = world_matrix
             for modifier in garment.modifiers:
                 if modifier.type == "ARMATURE":
                     modifier.object = target_armature
-        rig_warnings.append("Garment armature modifiers remapped to the body deformation rig by bone name")
+        rig_warnings.append("Garment parent and armature modifiers remapped to the body deformation rig by bone name")
     elif target_armature and not garment_armatures:
         rig_warnings.append("Body rig preserved, but garment has no source armature; pose deformation is not available")
     elif garment_armatures and not target_armature:
@@ -123,7 +127,7 @@ def main():
 
     # Move imported objects into the output scene (unlink from source scenes
     # first). Linking them into multiple scenes makes glTF export duplicate nodes.
-    rig_objects = body_armatures + [obj for obj in garment_armatures if obj not in body_armatures]
+    rig_objects = body_armatures if target_armature else garment_armatures
     for obj in body_meshes + garment_meshes + rig_objects:
         for collection in list(obj.users_collection):
             collection.objects.unlink(obj)
