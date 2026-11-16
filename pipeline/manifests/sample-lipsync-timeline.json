@@ -1,0 +1,35 @@
+{
+  "fps": 30,
+  "cues": [
+    {
+      "start": 0,
+      "duration": 0.12,
+      "viseme": "MBP"
+    },
+    {
+      "start": 0.12,
+      "duration": 0.18,
+      "viseme": "A"
+    },
+    {
+      "start": 0.3,
+      "duration": 0.12,
+      "viseme": "FV"
+    },
+    {
+      "start": 0.42,
+      "duration": 0.16,
+      "viseme": "E"
+    },
+    {
+      "start": 0.58,
+      "duration": 0.18,
+      "viseme": "O"
+    },
+    {
+      "start": 0.76,
+      "duration": 0.12,
+      "viseme": "L"
+    }
+  ]
+}
