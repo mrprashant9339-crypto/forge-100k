@@ -14,12 +14,18 @@ blender -b --python pipeline/blender/prepare_cloth_scene.py -- fitted.glb cloth-
 ```
 The fit worker remains a proxy shrinkwrap. Collision QA is a sampled geometric preflight. The new cloth worker adds Blender Collision modifiers to body parts and Cloth modifiers with self-collision to garment meshes, saves a reusable .blend scene, and reports the cache range. The simulation is deliberately reported as unbaked until a Blender simulation cache has actually been baked and reviewed.
 
+After scene preparation, bake the actual Blender point cache and run sampled evaluated-mesh/pin-weight preflight:
+```bash
+blender -b cloth-sim.blend --python pipeline/blender/bake_cloth_cache.py -- cloth-bake-report.json 1
+```
+This worker invokes Blender's point-cache bake for every garment cloth modifier and records frame samples, finite geometry, bounds and pin-weight ranges. A passing report means the cache baked and sampled geometry is structurally valid; it does **not** prove collision-free motion, tearing resistance or self-intersection-free animation. The CI fixture runs a reduced sample interval to keep the pipeline bounded.
+
 ### 2. Rigging and animation
 ```bash
 blender -b --python pipeline/blender/advanced_rig_controls.py -- rigged.glb advanced-rig.glb rig-report.json
 blender -b --python pipeline/blender/animation_library.py -- advanced-rig.glb animated.glb animation-report.json
 ```
-The current humanoid worker adds finger chains, IK targets/poles, IK influence property, eye aim constraints and jaw/eye joints. It is a Blender DCC control rig; glTF export cannot preserve every Blender constraint or animator control. Exported runtime clips must be baked and verified in the target engine. The animation library provides procedural walk, run, jump, combat-ready, idle/interaction and reach clips; it is not motion capture or combat choreography certification.
+The current humanoid worker adds finger chains, IK targets/poles, an IK influence property, eye aim constraints and jaw/eye joints. The existing setup is a starter DCC rig, not a complete animator-facing IK/FK snapping, advanced spine/shoulder, corrective-shape or production retargeting system. It is a Blender DCC control rig; glTF export cannot preserve every Blender constraint or animator control. Exported runtime clips must be baked and verified in the target engine. The animation library provides procedural walk, run, jump, combat-ready, idle/interaction and reach clips; it is not motion capture or combat choreography certification.
 
 ### 3. Facial animation
 ```bash
