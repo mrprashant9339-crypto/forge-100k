@@ -85,6 +85,17 @@ def main():
                 var.targets[0].data_path = '["forge_ik_fk_switch"]'
                 driver.expression = "min(1.0,max(0.0,ik))"
                 ik_count += 1
+    # Eye aim controls: move CTRL/FAC_eye_target in Blender to drive both eyes.
+    eye_tracking_constraints = 0
+    for side in ("L", "R"):
+        eye = arm.pose.bones.get("FAC_eye_" + side)
+        if eye:
+            constraint = eye.constraints.new("DAMPED_TRACK")
+            constraint.name = "Forge_Eye_Gaze_" + side
+            constraint.target = arm
+            constraint.subtarget = "FAC_eye_target"
+            constraint.track_axis = "TRACK_NEGATIVE_Y"
+            eye_tracking_constraints += 1
     # Facial groups bias existing head mesh vertices toward the new facial joints.
     face_meshes = [o for o in bpy.context.scene.objects if o.type == "MESH" and o.name.lower().startswith("head")]
     assigned = 0
@@ -131,7 +142,7 @@ def main():
     report = {"status":"advanced_rig_controls_added","input":src,"output":out,
         "bone_count":len(arm.data.bones),"finger_bones":sum(1 for b in arm.data.bones if b.name.startswith("finger_")),
         "facial_bones":[n for n in arm.data.bones.keys() if n.startswith("FAC_")],
-        "ik_constraints":ik_count,"ik_fk_switch_property":"forge_ik_fk_switch",
+        "ik_constraints":ik_count,"eye_tracking_constraints":eye_tracking_constraints,"ik_fk_switch_property":"forge_ik_fk_switch",
         "facial_group_vertex_assignments":assigned,"artist_review_required":True,
         "engine_certified":False,"limitations":["IK/FK switching and pole placement require animator calibration",
         "Facial bone weights are proximity-seeded and require sculpt/weight-paint review",
