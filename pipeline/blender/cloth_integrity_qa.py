@@ -76,7 +76,104 @@ def inside_closed_mesh(point, bvh):
         origin = location + direction * 1.0e-5
     return hits % 2 == 1
 
+def _vsub(a, b):
+    return tuple(float(a[i]) - float(b[i]) for i in range(3))
+
+def _dot(a, b):
+    return sum(float(a[i]) * float(b[i]) for i in range(3))
+
+def _cross(a, b):
+    return (
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0]
+    )
+
+def _length(v):
+    return math.sqrt(_dot(v, v))
+
+def _segment_hits_triangle(p0, p1, triangle, epsilon=1e-8):
+    """Moller-Trumbore segment/triangle test with a finite segment parameter."""
+    a, b, c = triangle
+    direction = _vsub(p1, p0)
+    edge1, edge2 = _vsub(b, a), _vsub(c, a)
+    h = _cross(direction, edge2)
+    determinant = _dot(edge1, h)
+    if abs(determinant) <= epsilon:
+        return False
+    inverse = 1.0 / determinant
+    offset = _vsub(p0, a)
+    u = inverse * _dot(offset, h)
+    if u < -epsilon or u > 1.0 + epsilon:
+        return False
+    q = _cross(offset, edge1)
+    v = inverse * _dot(direction, q)
+    if v < -epsilon or u + v > 1.0 + epsilon:
+        return False
+    t = inverse * _dot(edge2, q)
+    return -epsilon <= t <= 1.0 + epsilon
+
+def _orient2(a, b, c):
+    return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+
+def _point_on_segment2(point, a, b, epsilon):
+    return (
+        min(a[0], b[0]) - epsilon <= point[0] <= max(a[0], b[0]) + epsilon
+        and min(a[1], b[1]) - epsilon <= point[1] <= max(a[1], b[1]) + epsilon
+    )
+
+def _segments_intersect2(a, b, c, d, epsilon):
+    o1, o2 = _orient2(a, b, c), _orient2(a, b, d)
+    o3, o4 = _orient2(c, d, a), _orient2(c, d, b)
+    if ((o1 > epsilon and o2 < -epsilon) or (o1 < -epsilon and o2 > epsilon)) and (
+        (o3 > epsilon and o4 < -epsilon) or (o3 < -epsilon and o4 > epsilon)
+    ):
+        return True
+    return (
+        (abs(o1) <= epsilon and _point_on_segment2(c, a, b, epsilon))
+        or (abs(o2) <= epsilon and _point_on_segment2(d, a, b, epsilon))
+        or (abs(o3) <= epsilon and _point_on_segment2(a, c, d, epsilon))
+        or (abs(o4) <= epsilon and _point_on_segment2(b, c, d, epsilon))
+    )
+
+def _point_in_triangle2(point, triangle, epsilon):
+    a, b, c = triangle
+    values = (_orient2(a, b, point), _orient2(b, c, point), _orient2(c, a, point))
+    return not (any(value > epsilon for value in values) and any(value < -epsilon for value in values))
+
+def _coplanar_triangles_intersect(a, b, normal, epsilon):
+    drop_axis = max(range(3), key=lambda axis: abs(normal[axis]))
+    axes = [axis for axis in range(3) if axis != drop_axis]
+    project = lambda point: (point[axes[0]], point[axes[1]])
+    ta, tb = [project(point) for point in a], [project(point) for point in b]
+    for i in range(3):
+        for j in range(3):
+            if _segments_intersect2(ta[i], ta[(i + 1) % 3], tb[j], tb[(j + 1) % 3], epsilon):
+                return True
+    return _point_in_triangle2(ta[0], tb, epsilon) or _point_in_triangle2(tb[0], ta, epsilon)
+
+def triangles_intersect(triangle_a, triangle_b, epsilon=1e-7):
+    """Narrow-phase triangle intersection test, including coplanar overlap."""
+    a = [tuple(float(point[i]) for i in range(3)) for point in triangle_a]
+    b = [tuple(float(point[i]) for i in range(3)) for point in triangle_b]
+    normal_a = _cross(_vsub(a[1], a[0]), _vsub(a[2], a[0]))
+    normal_b = _cross(_vsub(b[1], b[0]), _vsub(b[2], b[0]))
+    length_a, length_b = _length(normal_a), _length(normal_b)
+    if length_a <= epsilon or length_b <= epsilon:
+        return False
+    parallel_error = _length(_cross(normal_a, normal_b)) / (length_a * length_b)
+    plane_distance = max(abs(_dot(_vsub(point, a[0]), normal_a) / length_a) for point in b)
+    if parallel_error <= epsilon and plane_distance <= epsilon:
+        return _coplanar_triangles_intersect(a, b, normal_a, epsilon)
+    for index in range(3):
+        if _segment_hits_triangle(a[index], a[(index + 1) % 3], b, epsilon):
+            return True
+        if _segment_hits_triangle(b[index], b[(index + 1) % 3], a, epsilon):
+            return True
+    return False
+
 def overlap_pairs(a, b, same_mesh=False):
+    """Use BVH for broad phase and triangle tests for geometric confirmation."""
     if a["bvh"] is None or b["bvh"] is None:
         return []
     pairs = []
@@ -88,10 +185,10 @@ def overlap_pairs(a, b, same_mesh=False):
                 continue
         tri_a = tuple(a["vertices"][index] for index in a["polygons"][face_a])
         tri_b = tuple(b["vertices"][index] for index in b["polygons"][face_b])
-        # BVH overlap is a conservative candidate; report it for visual review.
-        # Blender's bundled mathutils has no stable 3D triangle intersection API.
-        pairs.append((face_a, face_b))
+        if triangles_intersect(tri_a, tri_b):
+            pairs.append((face_a, face_b))
     return pairs
+
 
 def inventory_actions(scene, armatures):
     names = set()
@@ -263,12 +360,13 @@ def main():
         "continuous_collision_detection": False,
         "collision_free_certified": False,
         "self_intersection_certified": False,
+        "triangle_intersection_method": "BVH broad phase plus segment-triangle and coplanar 2D narrow phase",
         "artist_review_required": True,
         "engine_certified": False,
         "limitations": [
             "Frame sampling cannot prove collision-free motion between sampled frames",
             "Ray parity assumes closed, consistently oriented body collision meshes",
-            "Triangle overlap is a geometric candidate detector; inspect flagged frames visually",
+            "Triangle intersections use BVH broad-phase candidates plus a floating-point triangle narrow-phase test; inspect flagged frames visually",
             "Named action coverage does not prove pose quality or that all actions were simulated",
             "Physical cloth tearing requires authored tear topology/solver not provided by Blender cloth"
         ]
