@@ -98,6 +98,10 @@ jobs:
           PYTHONPATH: /usr/lib/python3/dist-packages
         run: |
           blender --background --python pipeline/tests/blender_triangle_intersection_tests.py
+          mkdir -p artifacts/phase4-pose
+          blender --background --python pipeline/tests/blender_pose_suite_fixture.py -- artifacts/phase4-pose/pose-suite.blend
+          blender --background artifacts/phase4-pose/pose-suite.blend --python pipeline/blender/pose_cloth_qa.py -- artifacts/phase4-pose/pose-cloth-qa.json --require-clean
+          python -m json.tool artifacts/phase4-pose/pose-cloth-qa.json >/dev/null
           blender --background --python pipeline/blender/prepare_cloth_scene.py -- artifacts/phase2-tests/fitted.glb artifacts/phase2-tests/cloth-sim.blend artifacts/phase2-tests/cloth-scene-report.json 60
           python -m json.tool artifacts/phase2-tests/cloth-scene-report.json >/dev/null
           blender --background artifacts/phase2-tests/cloth-sim.blend --python pipeline/blender/bake_cloth_cache.py -- artifacts/phase2-tests/cloth-bake-report.json 1
