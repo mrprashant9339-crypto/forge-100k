@@ -172,6 +172,16 @@ def triangles_intersect(triangle_a, triangle_b, epsilon=1e-7):
             return True
     return False
 
+def shares_geometric_vertex(triangle_a, triangle_b, epsilon=1e-6):
+    """Detect seam-split duplicates that share a position but not an index."""
+    epsilon_squared = epsilon * epsilon
+    for point_a in triangle_a:
+        for point_b in triangle_b:
+            delta = _vsub(point_a, point_b)
+            if _dot(delta, delta) <= epsilon_squared:
+                return True
+    return False
+
 def overlap_pairs(a, b, same_mesh=False):
     """Use BVH for broad phase and triangle tests for geometric confirmation."""
     if a["bvh"] is None or b["bvh"] is None:
@@ -185,6 +195,10 @@ def overlap_pairs(a, b, same_mesh=False):
                 continue
         tri_a = tuple(a["vertices"][index] for index in a["polygons"][face_a])
         tri_b = tuple(b["vertices"][index] for index in b["polygons"][face_b])
+        # glTF/UV seam splitting can duplicate a vertex with a new index.
+        # Treat those geometrically shared vertices as mesh adjacency, not self-hit.
+        if same_mesh and shares_geometric_vertex(tri_a, tri_b):
+            continue
         if triangles_intersect(tri_a, tri_b):
             pairs.append((face_a, face_b))
     return pairs
