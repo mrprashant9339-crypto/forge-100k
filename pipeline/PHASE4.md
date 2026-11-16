@@ -4,6 +4,37 @@
 
 Phase 4 is an implementation and verification phase, not a promise that generated blockout assets are AAA. Existing Blender workers already provide starter garment fitting/collision preflight, IK target controls, finger/facial bones, six full-body clip categories, facial morph/viseme curves, Quadriflow retopology candidates, topology metrics and Cycles high-to-low texture baking. This phase hardens the pipeline and adds a real cloth-physics scene-preparation stage.
 
+## Phase 4.1 — garment simulation status
+
+The CI pipeline now includes a separate rigged pose-suite fixture and a skeletal
+pose QA worker. It assigns and evaluates named walk, run, jump and combat Actions,
+samples every integer frame in each clip, and checks garment vertices inside body
+colliders, garment/body triangle intersections, and non-adjacent garment
+self-intersections. The worker is available as:
+
+```bash
+blender --background pose-suite.blend --python pipeline/blender/pose_cloth_qa.py -- pose-cloth-qa.json --require-clean
+```
+
+This is distinct from the synthetic rigid-rotation diagnostic in
+`garment_collision_qa.py`. A passing pose-suite fixture proves the worker runs
+against skeletal animation; it does not prove a customer garment fits every
+character or that the production garment has been tested.
+
+Current verified CI fixture evidence (60-frame cache): point cache baked,
+1,024 pin-group vertex weights within [0,1], 60 evaluated frames, zero sampled
+body-inside vertices, zero garment/body triangle pairs, and zero garment
+self-intersection pairs. The fixture is synthetic and uses a graded pin field;
+it is not an authored production garment.
+
+**P4.1 is not eligible for production-complete status yet.** The fitting worker
+still uses nearest-surface proxy shrinkwrap; the production input scene must
+supply a real skinned body, authored garment weights, and real walk/run/jump/
+combat clips. Blender's stock Cloth modifier does not physically tear fabric.
+A tear-capable solver or an authored tear system must be integrated and tested
+before the tearing requirement can pass. Full-resolution production cache,
+visual artist review and target-engine validation also remain required.
+
 ## Pipeline commands
 
 ### 1. Garment fit and collision
