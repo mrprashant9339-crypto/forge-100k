@@ -161,6 +161,10 @@ def main():
         pin.add([vertex.index], 1.0 if boundary_distance <= tolerance else 0.9, "REPLACE")
     cloth.settings.vertex_group_mass = pin.name
 
+    # Mark one continuous vertical seam for the authored tear workflow.
+    tear_seam = garment.vertex_groups.new(name="Forge_Tear_Seam")
+    tear_seam.add([ring * segments for ring in range(len(levels))], 1.0, "REPLACE")
+
     scene = bpy.context.scene
     scene.frame_start, scene.frame_end = 1, 16
     create_actions(rig)
