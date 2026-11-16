@@ -16,7 +16,7 @@ def main():
         "schema", "status", "frame_range", "sampled_frames", "cache_checks",
         "pose_action_inventory", "named_pose_coverage", "pose_coverage_complete",
         "garment_aggregate", "frame_checks", "pin_weight_checks", "issues",
-        "warnings", "tearing_detection", "continuous_collision_detection",
+        "warnings", "authored_tear_checks", "tearing_detection", "continuous_collision_detection",
         "collision_free_certified", "self_intersection_certified",
         "artist_review_required", "engine_certified"
     }
@@ -50,8 +50,14 @@ def main():
     if args.require_clean:
         if not report["pose_coverage_complete"]:
             raise SystemExit("Promotion blocked: walk/run/jump/combat action coverage is incomplete")
-        if report.get("tearing_detection", {}).get("physical_fabric_tear_solver_available") is not True:
-            raise SystemExit("Promotion blocked: no tear-capable cloth workflow is configured")
+        tear = report.get("tearing_detection", {})
+        if not (tear.get("physical_fabric_tear_solver_available") is True or
+                tear.get("authored_tear_workflow_available") is True):
+            raise SystemExit("Promotion blocked: no validated physical or authored tear workflow is configured")
+        if tear.get("authored_tear_workflow_available") is True:
+            checks = report.get("authored_tear_checks", [])
+            if not checks or any(row.get("status") != "authored_tear_ready" for row in checks):
+                raise SystemExit("Promotion blocked: authored tear checks are incomplete")
     print("CLOTH_INTEGRITY_REPORT_VALID status=%s frames=%d issues=%d pose_coverage=%s" % (
         report["status"], len(report["frame_checks"]), len(report["issues"]),
         report["pose_coverage_complete"]))
