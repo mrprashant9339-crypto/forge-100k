@@ -5,8 +5,10 @@ import json
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("report")
+    parser.add_argument("--require-geometric-clean", action="store_true",
+                        help="fail on geometry issues, unbaked caches or invalid pin groups")
     parser.add_argument("--require-clean", action="store_true",
-                        help="fail if geometric issues or required pose coverage is incomplete")
+                        help="also require named pose coverage and a tear-capable workflow")
     args = parser.parse_args()
     with open(args.report, encoding="utf-8") as handle:
         report = json.load(handle)
@@ -38,15 +40,16 @@ def main():
     coverage = report["named_pose_coverage"]
     if set(coverage) != {"walking", "running", "jumping", "combat"}:
         raise SystemExit("Named pose coverage must report walk/run/jump/combat")
-    if args.require_clean:
+    if args.require_geometric_clean or args.require_clean:
         if report["status"] != "cloth_integrity_preflight_passed" or report["issues"]:
-            raise SystemExit("Promotion blocked: cloth integrity findings remain")
-        if not report["pose_coverage_complete"]:
-            raise SystemExit("Promotion blocked: walk/run/jump/combat action coverage is incomplete")
+            raise SystemExit("Promotion blocked: cloth geometry findings remain")
         if any(not row.get("is_baked") for row in report["cache_checks"]):
             raise SystemExit("Promotion blocked: one or more cloth caches are not baked")
         if any(row.get("status") != "range_validated" for row in report["pin_weight_checks"]):
             raise SystemExit("Promotion blocked: every garment needs a configured, range-validated pin group")
+    if args.require_clean:
+        if not report["pose_coverage_complete"]:
+            raise SystemExit("Promotion blocked: walk/run/jump/combat action coverage is incomplete")
         if report.get("tearing_detection", {}).get("physical_fabric_tear_solver_available") is not True:
             raise SystemExit("Promotion blocked: no tear-capable cloth workflow is configured")
     print("CLOTH_INTEGRITY_REPORT_VALID status=%s frames=%d issues=%d pose_coverage=%s" % (
