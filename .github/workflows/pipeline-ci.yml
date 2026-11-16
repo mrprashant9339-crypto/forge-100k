@@ -113,7 +113,7 @@ jobs:
         env:
           PYTHONPATH: /usr/lib/python3/dist-packages
         run: |
-blender --background --python pipeline/blender/merge_meshes.py -- artifacts/phase2-tests/merge-input.glb artifacts/phase2-tests/merged.glb artifacts/phase2-tests/merge-report.json
+          blender --background --python pipeline/blender/merge_meshes.py -- artifacts/phase2-tests/merge-input.glb artifacts/phase2-tests/merged.glb artifacts/phase2-tests/merge-report.json
           python pipeline/scripts/validate_glb.py artifacts/phase2-tests/merged.glb
           python -m json.tool artifacts/phase2-tests/merge-report.json >/dev/null
           for profile in humanoid_v1 mechanical_v1 quadruped_v1 avian_v1; do
