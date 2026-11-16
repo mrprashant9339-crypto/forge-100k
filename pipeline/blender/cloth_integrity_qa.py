@@ -216,6 +216,10 @@ def inventory_actions(scene, armatures):
                     names.add(strip.name)
                     if strip.action:
                         names.add(strip.action.name)
+    # Blender actions can be stored as datablocks even when not active/NLA-linked.
+    # Include them so per-action cache validation can see the complete clip library.
+    for action in bpy.data.actions:
+        names.add(action.name)
     return sorted(names)
 
 def main():
@@ -349,6 +353,32 @@ def main():
                 "status": "range_validated" if weights else "not_configured"
             })
 
+    authored_tear_checks = []
+    for garment in garments:
+        shape_keys = garment.data.shape_keys
+        tear_key_name = garment.get("forge_tear_shape_key")
+        tear_key = shape_keys.key_blocks.get(tear_key_name) if shape_keys and tear_key_name else None
+        seam_group_name = garment.get("forge_tear_seam_group")
+        seam_group = garment.vertex_groups.get(seam_group_name) if seam_group_name else None
+        pair_count = int(garment.get("forge_tear_pair_count", 0))
+        animated = bool(shape_keys and shape_keys.animation_data and shape_keys.animation_data.action)
+        ready = bool(
+            garment.get("forge_authored_tear_system") == "seam_split_shape_key_v1"
+            and seam_group and tear_key and pair_count > 0 and animated
+        )
+        authored_tear_checks.append({
+            "garment": garment.name,
+            "status": "authored_tear_ready" if ready else "not_configured",
+            "system": garment.get("forge_authored_tear_system"),
+            "seam_group": seam_group_name,
+            "tear_shape_key": tear_key_name,
+            "duplicated_seam_vertex_pairs": pair_count,
+            "tear_progress_animated": animated
+        })
+
+    authored_tear_available = bool(authored_tear_checks) and all(
+        row["status"] == "authored_tear_ready" for row in authored_tear_checks
+    )
     status = "cloth_integrity_preflight_passed" if not issues else "cloth_integrity_issues_found"
     report = {
         "schema": "forge.cloth-integrity-report.v1",
@@ -363,13 +393,16 @@ def main():
         "garment_aggregate": aggregate,
         "frame_checks": frame_rows,
         "pin_weight_checks": pin_checks,
+        "authored_tear_checks": authored_tear_checks,
         "issues": issues,
         "warnings": warnings,
         "tearing_detection": {
             "topology_stability_checked": True,
             "topology_change_detected": any("topology changed" in issue for issue in issues),
             "physical_fabric_tear_solver_available": False,
-            "note": "Topology stability catches mesh changes; Blender cloth does not physically tear fabric without a dedicated tear system."
+            "authored_tear_workflow_available": authored_tear_available,
+            "authored_tear_workflow": "seam_split_shape_key_v1" if authored_tear_available else None,
+            "note": "The authored seam-split shape-key workflow is validated separately from Blender cloth; it is not a stress-driven physical tear solver."
         },
         "continuous_collision_detection": False,
         "collision_free_certified": False,
@@ -382,7 +415,7 @@ def main():
             "Ray parity assumes closed, consistently oriented body collision meshes",
             "Triangle intersections use BVH broad-phase candidates plus a floating-point triangle narrow-phase test; inspect flagged frames visually",
             "Named action coverage does not prove pose quality or that all actions were simulated",
-            "Physical cloth tearing requires authored tear topology/solver not provided by Blender cloth"
+            "Authored seam splitting is a deterministic tear animation, not stress-driven physical tearing"
         ]
     }
     os.makedirs(os.path.dirname(report_path) or ".", exist_ok=True)
