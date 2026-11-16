@@ -38,11 +38,11 @@ def group_weights(obj, group_name):
     if group is None:
         return {}
     result = {}
+    group_index = group.index
     for vertex in obj.data.vertices:
-        try:
-            result[vertex.index] = group.weight(vertex.index)
-        except RuntimeError:
-            pass
+        membership = next((item for item in vertex.groups if item.group == group_index), None)
+        if membership is not None:
+            result[vertex.index] = float(membership.weight)
     return result
 
 
