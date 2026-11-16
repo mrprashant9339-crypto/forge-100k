@@ -77,6 +77,29 @@ def main():
     reset_scene()
     body_scene, body_meshes = import_into_scene(body_path, "ForgeBodyImport")
     garment_scene, garment_meshes = import_into_scene(garment_path, "ForgeGarmentImport")
+    body_armatures = [obj for obj in body_scene.objects if obj.type == "ARMATURE"]
+    garment_armatures = [obj for obj in garment_scene.objects if obj.type == "ARMATURE"]
+    rig_warnings = []
+    if len(body_armatures) > 1:
+        raise RuntimeError("Body GLB must contain one unambiguous deformation armature")
+    target_armature = body_armatures[0] if body_armatures else None
+    if target_armature and garment_armatures:
+        target_bones = {bone.name for bone in target_armature.data.bones}
+        for garment_rig in garment_armatures:
+            missing = sorted({bone.name for bone in garment_rig.data.bones} - target_bones)
+            if missing:
+                raise RuntimeError("Garment rig has bones absent from body rig: " + ", ".join(missing))
+        for garment in garment_meshes:
+            for modifier in garment.modifiers:
+                if modifier.type == "ARMATURE":
+                    modifier.object = target_armature
+        rig_warnings.append("Garment armature modifiers remapped to the body deformation rig by bone name")
+    elif target_armature and not garment_armatures:
+        rig_warnings.append("Body rig preserved, but garment has no source armature; pose deformation is not available")
+    elif garment_armatures and not target_armature:
+        rig_warnings.append("Garment rig preserved without a body rig; shared full-body pose evaluation is not available")
+    else:
+        rig_warnings.append("No source armature found; output is a static rest-pose fit")
 
     # Keep both imports in separate scenes because Blender's glTF importer may
     # replace objects in its active scene. Build a combined world-space proxy.
@@ -100,7 +123,8 @@ def main():
 
     # Move imported objects into the output scene (unlink from source scenes
     # first). Linking them into multiple scenes makes glTF export duplicate nodes.
-    for obj in body_meshes + garment_meshes:
+    rig_objects = body_armatures + [obj for obj in garment_armatures if obj not in body_armatures]
+    for obj in body_meshes + garment_meshes + rig_objects:
         for collection in list(obj.users_collection):
             collection.objects.unlink(obj)
         fit_scene.collection.objects.link(obj)
@@ -139,7 +163,8 @@ def main():
                         "status": "proxy_fit_applied"})
 
     bpy.ops.object.select_all(action="DESELECT")
-    for obj in body_meshes + garment_meshes:
+    export_objects = body_meshes + garment_meshes + rig_objects
+    for obj in export_objects:
         obj.select_set(True)
     bpy.context.view_layer.objects.active = garment_meshes[0]
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
@@ -154,8 +179,17 @@ def main():
         "garment": garment_path, "output": output_path,
         "body_meshes": [obj.name for obj in body_meshes],
         "garments": records, "game_ready": False,
+        "rigging": {
+            "body_armatures": [obj.name for obj in body_armatures],
+            "garment_armatures": [obj.name for obj in garment_armatures],
+            "preserved_armatures": [obj.name for obj in rig_objects],
+            "shared_deformation_rig": bool(target_armature and garment_armatures),
+            "pose_compatible": bool(target_armature and garment_armatures),
+            "warnings": rig_warnings
+        },
         "limitations": [
             "No cloth simulation or fabric solver is performed",
+            "Pose-space deformation requires a shared body/garment armature and authored garment weights",
             "No certified self-intersection or body-clipping test is performed",
             "Body-zone groups are semantic metadata, not runtime occlusion masks",
             "Requires pose-space fit tests and artist approval"
