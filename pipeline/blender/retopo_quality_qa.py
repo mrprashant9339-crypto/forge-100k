@@ -17,7 +17,14 @@ def main():
     if not meshes: raise RuntimeError("Retopo GLB contains no meshes")
     records=[]; failures=[]
     for obj in meshes:
-        bm=bmesh.new(); bm.from_mesh(obj.data); bm.verts.ensure_lookup_table(); bm.edges.ensure_lookup_table(); bm.faces.ensure_lookup_table()
+        bm=bmesh.new(); bm.from_mesh(obj.data)
+        # glTF splits vertices at UV/material seams. Weld coincident positions in
+        # this temporary analysis mesh so seam duplicates are not misreported as
+        # open boundaries; the source GLB is never modified.
+        if bm.verts:
+            bmesh.ops.remove_doubles(bm, verts=list(bm.verts), dist=1e-5)
+            bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
+        bm.verts.ensure_lookup_table(); bm.edges.ensure_lookup_table(); bm.faces.ensure_lookup_table()
         edge_lengths=[e.calc_length() for e in bm.edges]
         valence=[len(v.link_edges) for v in bm.verts]
         boundary=sum(1 for e in bm.edges if e.is_boundary)
