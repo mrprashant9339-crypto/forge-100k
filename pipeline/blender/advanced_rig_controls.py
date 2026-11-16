@@ -100,6 +100,23 @@ def main():
             p = mesh.matrix_world @ v.co
             d = ((p.x) ** 2 + (p.y + 0.16) ** 2 + (p.z - 1.98) ** 2) ** 0.5
             if d < 0.15: jaw.add([v.index], max(0.05, 1.0 - d / 0.15), "REPLACE"); assigned += 1
+    # Re-normalize all skin weights and enforce the glTF four-influence limit
+    # after adding facial groups. This avoids invalid >4 influence vertices.
+    for mesh in [o for o in bpy.context.scene.objects if o.type == "MESH"]:
+        group_by_index = {g.index: g for g in mesh.vertex_groups}
+        for vertex in mesh.data.vertices:
+            memberships = sorted(
+                [(float(item.weight), item.group) for item in vertex.groups if item.weight > 1e-8],
+                reverse=True
+            )
+            keep = memberships[:4]
+            keep_ids = {group_id for _, group_id in keep}
+            for _, group_id in memberships[4:]:
+                group_by_index[group_id].remove([vertex.index])
+            total = sum(weight for weight, _ in keep)
+            if total > 1e-8:
+                for weight, group_id in keep:
+                    group_by_index[group_id].add([vertex.index], weight / total, "REPLACE")
     # Preserve existing armature modifiers; new facial groups are supplemental.
     bpy.ops.object.select_all(action="DESELECT")
     arm.select_set(True)
