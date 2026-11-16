@@ -116,7 +116,14 @@ def main():
             nearest = body_bvh.find_nearest(world_position)
             if nearest is None or nearest[0] is None or nearest[1] is None:
                 raise RuntimeError("No nearest body surface found for garment vertex")
-            fitted_world = nearest[0] + nearest[1].normalized() * 0.012
+            # Imported fixtures can contain overlapping body parts with
+            # inconsistent face winding. Orient the offset away from the source
+            # garment point rather than trusting the BVH triangle normal alone.
+            outward = world_position - nearest[0]
+            normal = nearest[1].normalized()
+            if outward.length > 1e-8 and normal.dot(outward) < 0.0:
+                normal.negate()
+            fitted_world = nearest[0] + normal * 0.012
             vertex.co = inverse_world @ fitted_world
         garment.data.update()
         garment["forge_fit_stage"] = "shrinkwrap_proxy_v1"
