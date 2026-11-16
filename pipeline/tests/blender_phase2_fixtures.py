@@ -44,10 +44,44 @@ def main():
     head.data.materials.append(body.data.materials[0])
     export(os.path.join(out,"body.glb"),[body,head])
     reset()
-    bpy.ops.mesh.primitive_cube_add(size=1,location=(0,0,1))
-    garment=bpy.context.object;garment.name="GarmentFixture";garment.dimensions=(.8,.5,.7)
-    bpy.ops.object.transform_apply(location=False,rotation=False,scale=True)
+    # A manifold, quad-dominant torso garment shell. The previous 8-vertex
+    # cube collapsed onto the body during shrinkwrap and was not a meaningful
+    # cloth simulation mesh.
+    segments = 32
+    levels = [
+        (0.50, 0.33, 0.48),
+        (0.51, 0.34, 0.62),
+        (0.52, 0.35, 0.78),
+        (0.52, 0.35, 0.94),
+        (0.51, 0.34, 1.10),
+        (0.50, 0.33, 1.26),
+        (0.49, 0.32, 1.42),
+        (0.48, 0.31, 1.58),
+        (0.47, 0.30, 1.72),
+    ]
+    vertices = []
+    faces = []
+    for rx, ry, z in levels:
+        for index in range(segments):
+            angle = 2.0 * 3.141592653589793 * index / segments
+            vertices.append((rx * __import__("math").cos(angle),
+                             ry * __import__("math").sin(angle), z))
+    for ring in range(len(levels) - 1):
+        for index in range(segments):
+            a = ring * segments + index
+            b = ring * segments + (index + 1) % segments
+            c = (ring + 1) * segments + (index + 1) % segments
+            d = (ring + 1) * segments + index
+            faces.append((a, b, c, d))
+    mesh = bpy.data.meshes.new("GarmentFixtureMesh")
+    mesh.from_pydata(vertices, [], faces)
+    mesh.update()
+    garment = bpy.data.objects.new("GarmentFixture", mesh)
+    bpy.context.scene.collection.objects.link(garment)
     garment.data.materials.append(material("GarmentMat",(.6,.2,.1)))
+    garment.data.uv_layers.new(name="UVMap")
+    for polygon in garment.data.polygons:
+        polygon.use_smooth = True
     export(os.path.join(out,"garment.glb"),[garment])
     reset()
     shared=material("SharedMaterial",(.2,.5,.3))
