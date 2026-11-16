@@ -129,6 +129,37 @@ def main():
     bpy.context.scene.collection.objects.link(garment)
     garment.data.uv_layers.new(name="UVMap")
     add_weights(garment, rig, "spine")
+    garment["forge_body_collider"] = body.name
+
+    # Add real Blender body collision and garment cloth/self-collision physics.
+    body_collision = body.modifiers.new("Forge_Body_Collision", "COLLISION")
+    body.collision.damping = 0.1
+    body.collision.thickness_outer = 0.008
+    body.collision.thickness_inner = 0.003
+
+    cloth = garment.modifiers.new("Forge_Cloth_Simulation", "CLOTH")
+    cloth.settings.quality = 8
+    cloth.settings.mass = 0.3
+    cloth.settings.tension_stiffness = 15.0
+    cloth.settings.compression_stiffness = 15.0
+    cloth.settings.shear_stiffness = 5.0
+    cloth.settings.bending_stiffness = 0.5
+    cloth.collision_settings.use_collision = True
+    cloth.collision_settings.use_self_collision = True
+    cloth.collision_settings.collision_quality = 10
+    cloth.collision_settings.distance_min = 0.008
+    cloth.collision_settings.self_distance_min = 0.02
+    cloth.collision_settings.friction = 2.0
+    cloth.collision_settings.self_friction = 2.0
+
+    pin = garment.vertex_groups.new(name="Forge_Cloth_Pin")
+    z_values = [vertex.co.z for vertex in garment.data.vertices]
+    low_z, high_z = min(z_values), max(z_values)
+    tolerance = max(0.005, (high_z - low_z) * 0.012)
+    for vertex in garment.data.vertices:
+        boundary_distance = min(vertex.co.z - low_z, high_z - vertex.co.z)
+        pin.add([vertex.index], 1.0 if boundary_distance <= tolerance else 0.9, "REPLACE")
+    cloth.settings.vertex_group_mass = pin.name
 
     scene = bpy.context.scene
     scene.frame_start, scene.frame_end = 1, 16
