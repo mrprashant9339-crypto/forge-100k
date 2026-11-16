@@ -100,6 +100,7 @@ def main():
     # nearest-surface distances, not represented as a certified penetration test.
     frame_rows = []
     min_body_clearance = {}
+    baseline_diagonal = {}
     for frame in range(scene.frame_start, scene.frame_end + 1, step):
         scene.frame_set(frame)
         depsgraph = bpy.context.evaluated_depsgraph_get()
@@ -107,6 +108,17 @@ def main():
             snap = evaluated_snapshot(garment, depsgraph)
             if not snap["finite"] or not snap["vertices"] or not snap["triangles"]:
                 issues.append("%s@%d: invalid evaluated garment geometry" % (garment.name, frame))
+            bounds = snap["bounds"]
+            diagonal = None
+            deformation_ratio = None
+            if bounds:
+                diagonal = math.sqrt(sum((bounds[1][axis] - bounds[0][axis]) ** 2
+                                         for axis in range(3)))
+                baseline = baseline_diagonal.setdefault(garment.name, max(diagonal, 1e-8))
+                deformation_ratio = diagonal / baseline
+                if deformation_ratio > 3.0:
+                    issues.append("%s@%d: cloth bounds expanded %.2fx from its first sampled frame"
+                                  % (garment.name, frame, deformation_ratio))
             clearance = []
             for body in body_objects:
                 body_snap = evaluated_snapshot(body, depsgraph)
@@ -126,6 +138,8 @@ def main():
                 "frame": frame, "garment": garment.name,
                 "vertices": snap["vertices"], "triangles": snap["triangles"],
                 "finite": snap["finite"], "bounds": snap["bounds"],
+                "bounding_diagonal_local_units": diagonal,
+                "deformation_ratio_from_first_sample": deformation_ratio,
                 "minimum_body_surface_distance_local_units": min(clearance) if clearance else None
             })
 
