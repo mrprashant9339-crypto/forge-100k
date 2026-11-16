@@ -21,8 +21,15 @@ EXPRESSIONS = {
     "cheek_puff": "ForgeExpr_cheek_puff",
     "squint": "ForgeExpr_squint",
     "blink": "ForgeExpr_blink",
+    "anger": "ForgeExpr_anger",
+    "fear": "ForgeExpr_fear",
+    "surprise": "ForgeExpr_surprise",
+    "sadness": "ForgeExpr_sadness",
+    "disgust": "ForgeExpr_disgust",
+    "confusion": "ForgeExpr_confusion",
+    "relaxed": "ForgeExpr_relaxed",
 }
-VISEME = {name: "ForgeViseme_" + name for name in ("A", "E", "I", "O", "U")}
+VISEME = {name: "ForgeViseme_" + name for name in ("A", "E", "I", "O", "U", "MBP", "FV", "TH", "L", "WQ", "CH", "S")}
 
 def arguments():
     argv=sys.argv
@@ -71,6 +78,37 @@ def delta(name, p):
         return (0.0,-0.075*mouth,-0.035*lower)
     if name=="ForgeViseme_U":
         return (0.0,-0.06*mouth,-0.018*lower)
+    if name=="ForgeExpr_anger":
+        return (0.0,-0.025*brow,-0.035*brow-0.018*corners)
+    if name=="ForgeExpr_fear":
+        return (0.0,-0.04*brow,0.06*brow-0.06*lower)
+    if name=="ForgeExpr_surprise":
+        return (0.0,-0.05*brow,0.08*brow-0.09*lower)
+    if name=="ForgeExpr_sadness":
+        return (0.0,-0.02*mouth,-0.06*corners)
+    if name=="ForgeExpr_disgust":
+        asym=1.0 if p.x>0 else 0.45
+        return (0.0,-0.04*cheeks*asym,0.035*cheeks*asym)
+    if name=="ForgeExpr_confusion":
+        asym=1.0 if p.x>0 else 0.25
+        return (0.0,-0.035*brow*asym,0.05*brow*asym)
+    if name=="ForgeExpr_relaxed":
+        return (0.0,-0.012*mouth,0.012*corners)
+    if name=="ForgeViseme_MBP":
+        return (0.0,0.025*mouth,0.0)
+    if name=="ForgeViseme_FV":
+        upper=gaussian(p.z,-0.055,0.045)*gaussian(p.x,0.0,0.15)*front
+        return (0.0,-0.035*upper,-0.012*upper)
+    if name=="ForgeViseme_TH":
+        return (0.0,-0.045*mouth,-0.025*lower)
+    if name=="ForgeViseme_L":
+        return (0.0,-0.025*mouth,0.025*lower)
+    if name=="ForgeViseme_WQ":
+        return (0.0,-0.065*mouth,0.0)
+    if name=="ForgeViseme_CH":
+        return (0.0,-0.04*mouth,0.012*corners)
+    if name=="ForgeViseme_S":
+        return (0.0,-0.02*mouth,0.008*corners)
     raise ValueError("Unknown facial target: "+name)
 
 def main():
