@@ -32,13 +32,31 @@ body-inside vertices, zero garment/body triangle intersections and zero
 garment self-intersections. These are synthetic fixtures, not authored
 production garments or motion-capture clips.
 
-**P4.1 is not eligible for production-complete status yet.** The fitting worker
-still uses nearest-surface proxy shrinkwrap; the production input scene must
-supply a real skinned body, authored garment weights, and real walk/run/jump/
-combat clips. Blender's stock Cloth modifier does not physically tear fabric.
-A tear-capable solver or an authored tear system must be integrated and tested
-before the tearing requirement can pass. Full-resolution production cache,
-visual artist review and target-engine validation also remain required.
+### Authored tear workflow
+
+The repository now includes `pipeline/blender/authored_cloth_tear.py`. A garment
+author marks a continuous seam path in a `Forge_Tear_Seam` vertex group. The
+worker splits the marked seam edges, creates paired seam vertices, builds an
+animated `Forge_Tear_Progress` shape key and records the pin-weight range. The
+tear can be baked with the garment animation/cache and exported as a pre-authored
+morph animation where the target format supports it.
+
+This is an **authored seam-opening system**, not a stress-driven physical tear
+solver. The integrity report distinguishes `authored_tear_workflow_available`
+from `physical_fabric_tear_solver_available`; release validation accepts the
+authored workflow only when every cloth garment has a split seam, duplicate
+pairs, an animated tear key and valid pin weights. CI independently tests the
+tear worker and then requires the authored tear workflow, all four pose-action
+names, baked point caches and clean sampled geometry on each action cache.
+
+**P4.1 still requires production asset sign-off.** The fitting worker currently
+uses nearest-surface proxy shrinkwrap; pose compatibility depends on a shared
+body/garment armature and authored garment weights. The CI scenes are synthetic,
+not a customer character. Real skinned body and garment assets, authored seam
+placement and pin weights, actual walk/run/jump/combat clips, full-resolution
+cache review, artist approval and target-engine playback are still required.
+The authored tear workflow provides a deterministic tear animation, not
+stress-driven fabric fracture or certification of real-world garment behavior.
 
 ## Pipeline commands
 
@@ -63,7 +81,7 @@ python pipeline/scripts/validate_cloth_integrity_report.py cloth-integrity-repor
 # Release gate: fail if collision findings or required pose clips remain
 python pipeline/scripts/validate_cloth_integrity_report.py cloth-integrity-report.json --require-clean
 ```
-The integrity worker samples every frame when the step is `1`. It builds world-space BVHs, filters broad-phase overlaps with segment/triangle and coplanar 2D narrow-phase tests, tests garment vertices inside closed body colliders, monitors evaluated topology stability and validates pin-weight ranges. A missing pin group is an issue, not a passing validation. It inventories named walk/run/jump/combat actions and reports which are present. A missing action is reported as a warning; a real pose suite must include those actions in the input scene. CI runs the worker at a reduced sample interval and preserves findings as an artifact rather than treating a structurally valid report as proof of clean geometry. The optional `--require-clean` release gate rejects geometry findings, unbaked caches, missing pose clips, unconfigured pin groups, and reports without a tear-capable workflow.
+The integrity worker samples every frame when the step is `1`. It builds world-space BVHs, filters broad-phase overlaps with segment/triangle and coplanar 2D narrow-phase tests, tests garment vertices inside closed body colliders, monitors evaluated topology stability and validates pin-weight ranges. A missing pin group is an issue, not a passing validation. It inventories named walk/run/jump/combat actions and reports which are present. A missing action is reported as a warning; a real pose suite must include those actions in the input scene. CI runs the worker at a reduced sample interval and preserves findings as an artifact rather than treating a structurally valid report as proof of clean geometry. The `--require-clean` release gate rejects geometry findings, unbaked caches, missing pose clips, unconfigured pin groups, and reports without a validated physical or authored tear workflow.
 
 ### 2. Rigging and animation
 ```bash
