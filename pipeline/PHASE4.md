@@ -6,11 +6,13 @@ Phase 4 is an implementation and verification phase, not a promise that generate
 
 ## Phase 4.1 — garment simulation status
 
-The CI pipeline now includes a separate rigged pose-suite fixture and a skeletal
-pose QA worker. It assigns and evaluates named walk, run, jump and combat Actions,
-samples every integer frame in each clip, and checks garment vertices inside body
-colliders, garment/body triangle intersections, and non-adjacent garment
-self-intersections. The worker is available as:
+The CI pipeline now includes a rigged pose-suite fixture with Blender Cloth,
+body Collision, self-collision and a graded pin group. It assigns and evaluates
+named walk, run, jump and combat Actions, samples every integer frame in each
+clip, and checks garment vertices inside body colliders, garment/body triangle
+intersections, and non-adjacent garment self-intersections. It then performs a
+separate real point-cache bake for each of the four clips and runs full-frame
+integrity QA on each saved cache. The skeletal preflight worker is available as:
 
 ```bash
 blender --background pose-suite.blend --python pipeline/blender/pose_cloth_qa.py -- pose-cloth-qa.json --require-clean
@@ -21,11 +23,14 @@ This is distinct from the synthetic rigid-rotation diagnostic in
 against skeletal animation; it does not prove a customer garment fits every
 character or that the production garment has been tested.
 
-Current verified CI fixture evidence (60-frame cache): point cache baked,
-1,024 pin-group vertex weights within [0,1], 60 evaluated frames, zero sampled
-body-inside vertices, zero garment/body triangle pairs, and zero garment
-self-intersection pairs. The fixture is synthetic and uses a graded pin field;
-it is not an authored production garment.
+Current verified CI fixture evidence: the general cloth fixture bakes a
+60-frame point cache and validates 1,024 pin weights in [0,1]. The rigged pose
+fixture separately samples 16 frames for each of four clips (64 skeletal pose
+frames total), then bakes four action-specific cloth caches and runs integrity
+QA across each clip. The pose fixture's sampled geometry currently reports zero
+body-inside vertices, zero garment/body triangle intersections and zero
+garment self-intersections. These are synthetic fixtures, not authored
+production garments or motion-capture clips.
 
 **P4.1 is not eligible for production-complete status yet.** The fitting worker
 still uses nearest-surface proxy shrinkwrap; the production input scene must
@@ -43,7 +48,7 @@ blender -b --python pipeline/blender/fit_garment.py -- body.glb garment.glb fitt
 blender -b --python pipeline/blender/garment_collision_qa.py -- fitted.glb fit-report.json collision-report.json
 blender -b --python pipeline/blender/prepare_cloth_scene.py -- fitted.glb cloth-sim.blend cloth-report.json 120
 ```
-The fit worker remains a proxy shrinkwrap. Collision QA is a sampled geometric preflight. The new cloth worker adds Blender Collision modifiers to body parts and Cloth modifiers with self-collision to garment meshes, saves a reusable .blend scene, and reports the cache range. The scene-preparation report is deliberately marked unbaked. The separate cache worker bakes and saves the Blender point cache before integrity QA.
+The fit worker remains a proxy shrinkwrap, but now preserves a source body armature and remaps a compatible garment armature to it when matching bone names are present. Collision QA is a sampled geometric preflight. The new cloth worker adds Blender Collision modifiers to body parts and Cloth modifiers with self-collision to garment meshes, saves a reusable .blend scene, and reports the cache range. The scene-preparation report is deliberately marked unbaked. The separate cache worker bakes and saves the Blender point cache before integrity QA.
 
 After scene preparation, bake the actual Blender point cache and run sampled evaluated-mesh/pin-weight preflight:
 ```bash
