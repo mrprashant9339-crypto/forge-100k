@@ -98,10 +98,15 @@ def main():
     if not proxy_mesh.polygons:
         raise RuntimeError("Combined body fit proxy contains no polygons")
 
-    # Link imported objects into the output scene without invalidating their
-    # source-scene datablocks.
+    # Move imported objects into the output scene (unlink from source scenes
+    # first). Linking them into multiple scenes makes glTF export duplicate nodes.
     for obj in body_meshes + garment_meshes:
+        for collection in list(obj.users_collection):
+            collection.objects.unlink(obj)
         fit_scene.collection.objects.link(obj)
+    for source_scene in (body_scene, garment_scene):
+        if source_scene.name in bpy.data.scenes and source_scene != fit_scene:
+            bpy.data.scenes.remove(source_scene)
 
     records = []
     depsgraph = bpy.context.evaluated_depsgraph_get()
@@ -147,6 +152,7 @@ def main():
     report = {
         "status": "proxy_fit_complete", "body": body_path,
         "garment": garment_path, "output": output_path,
+        "body_meshes": [obj.name for obj in body_meshes],
         "garments": records, "game_ready": False,
         "limitations": [
             "No cloth simulation or fabric solver is performed",
