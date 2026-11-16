@@ -65,6 +65,8 @@ jobs:
           blender --background --python pipeline/blender/retopologize.py -- artifacts/phase3-mesh/high.glb artifacts/phase3-mesh/retopo.glb 300
           python pipeline/scripts/validate_glb.py artifacts/phase3-mesh/retopo.glb
           python pipeline/scripts/validate_phase3_mesh_reports.py --retopo artifacts/phase3-mesh/retopo.glb.retopo.json
+          blender --background --python pipeline/blender/retopo_quality_qa.py -- artifacts/phase3-mesh/retopo.glb artifacts/phase3-mesh/retopo-quality.json
+          python -m json.tool artifacts/phase3-mesh/retopo-quality.json >/dev/null
           blender --background --python pipeline/blender/bake_pbr_textures.py -- artifacts/phase3-mesh/high.glb artifacts/phase3-mesh/low.glb artifacts/phase3-mesh/baked 256
           python pipeline/scripts/validate_phase3_mesh_reports.py --bake artifacts/phase3-mesh/baked/bake-report.json --min-resolution 256
           python -m json.tool artifacts/phase3-mesh/retopo.glb.retopo.json >/dev/null
@@ -89,6 +91,8 @@ jobs:
           blender --background --python pipeline/blender/qa_garment_fit.py -- artifacts/phase2-tests/fitted.glb artifacts/phase2-tests/fit-report.json artifacts/phase2-tests/garment-qa.json
           python pipeline/tests/validate_garment_qa.py artifacts/phase2-tests/garment-qa.json
           python -m json.tool artifacts/phase2-tests/garment-qa.json >/dev/null
+          blender --background --python pipeline/blender/garment_collision_qa.py -- artifacts/phase2-tests/fitted.glb artifacts/phase2-tests/fit-report.json artifacts/phase2-tests/garment-collision-qa.json
+          python -m json.tool artifacts/phase2-tests/garment-collision-qa.json >/dev/null
           blender --background --python pipeline/blender/merge_meshes.py -- artifacts/phase2-tests/merge-input.glb artifacts/phase2-tests/merged.glb artifacts/phase2-tests/merge-report.json
           python pipeline/scripts/validate_glb.py artifacts/phase2-tests/merged.glb
           python -m json.tool artifacts/phase2-tests/merge-report.json >/dev/null
@@ -119,6 +123,12 @@ jobs:
           python pipeline/scripts/validate_glb.py --require-rig artifacts/rigged/FG-ROB-000001-avian.glb
           blender --background --python pipeline/blender/rig_character.py -- artifacts/FG-HUM-000001-phase2.glb artifacts/rigged/FG-HUM-000001-rigged.glb
           python pipeline/scripts/validate_glb.py --require-rig --require-morphs artifacts/rigged/FG-HUM-000001-rigged.glb
+          blender --background --python pipeline/blender/advanced_rig_controls.py -- artifacts/rigged/FG-HUM-000001-rigged.glb artifacts/rigged/FG-HUM-000001-advanced.glb artifacts/rigged/FG-HUM-000001-advanced-rig.json
+          python pipeline/scripts/validate_glb.py --require-rig artifacts/rigged/FG-HUM-000001-advanced.glb
+          python -m json.tool artifacts/rigged/FG-HUM-000001-advanced-rig.json >/dev/null
+          blender --background --python pipeline/blender/animation_library.py -- artifacts/rigged/FG-HUM-000001-advanced.glb artifacts/rigged/FG-HUM-000001-animation-library.glb artifacts/rigged/FG-HUM-000001-animation-library.json
+          python pipeline/scripts/validate_glb.py --require-rig artifacts/rigged/FG-HUM-000001-animation-library.glb
+          python -m json.tool artifacts/rigged/FG-HUM-000001-animation-library.json >/dev/null
           blender --background --python pipeline/blender/qa_character.py -- artifacts/rigged/FG-HUM-000001-rigged.glb artifacts/rigged/FG-HUM-000001-qa.json
           python -m json.tool artifacts/rigged/FG-HUM-000001-qa.json >/dev/null
           blender --background --python pipeline/blender/build_lods.py -- artifacts/rigged/FG-HUM-000001-rigged.glb artifacts/lods
