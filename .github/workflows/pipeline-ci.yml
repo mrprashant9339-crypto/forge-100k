@@ -97,6 +97,14 @@ jobs:
           python -m json.tool artifacts/phase2-tests/cloth-scene-report.json >/dev/null
           blender --background artifacts/phase2-tests/cloth-sim.blend --python pipeline/blender/bake_cloth_cache.py -- artifacts/phase2-tests/cloth-bake-report.json 10
           python -m json.tool artifacts/phase2-tests/cloth-bake-report.json >/dev/null
+          set +e
+          blender --background artifacts/phase2-tests/cloth-sim.blend --python pipeline/blender/cloth_integrity_qa.py -- artifacts/phase2-tests/cloth-integrity-report.json 10
+          CLOTH_QA_EXIT=$?
+          set -e
+          test -s artifacts/phase2-tests/cloth-integrity-report.json
+          python -m json.tool artifacts/phase2-tests/cloth-integrity-report.json >/dev/null
+          python pipeline/scripts/validate_cloth_integrity_report.py artifacts/phase2-tests/cloth-integrity-report.json
+          echo "Cloth QA exit code: $CLOTH_QA_EXIT (candidate findings are retained as an artifact; inspect before promotion)"
           blender --background --python pipeline/blender/merge_meshes.py -- artifacts/phase2-tests/merge-input.glb artifacts/phase2-tests/merged.glb artifacts/phase2-tests/merge-report.json
           python pipeline/scripts/validate_glb.py artifacts/phase2-tests/merged.glb
           python -m json.tool artifacts/phase2-tests/merge-report.json >/dev/null
