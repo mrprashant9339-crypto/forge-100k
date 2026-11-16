@@ -12,6 +12,10 @@ import math
 import os
 import sys
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+if SCRIPT_DIR not in sys.path:
+    sys.path.insert(0, SCRIPT_DIR)
+
 from cloth_integrity_qa import world_mesh, inside_closed_mesh, overlap_pairs
 
 REQUIRED = {
