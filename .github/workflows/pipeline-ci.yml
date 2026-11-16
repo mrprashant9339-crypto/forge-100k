@@ -95,6 +95,8 @@ jobs:
           python -m json.tool artifacts/phase2-tests/garment-collision-qa.json >/dev/null
           blender --background --python pipeline/blender/prepare_cloth_scene.py -- artifacts/phase2-tests/fitted.glb artifacts/phase2-tests/cloth-sim.blend artifacts/phase2-tests/cloth-scene-report.json 60
           python -m json.tool artifacts/phase2-tests/cloth-scene-report.json >/dev/null
+          blender --background artifacts/phase2-tests/cloth-sim.blend --python pipeline/blender/bake_cloth_cache.py -- artifacts/phase2-tests/cloth-bake-report.json 10
+          python -m json.tool artifacts/phase2-tests/cloth-bake-report.json >/dev/null
           blender --background --python pipeline/blender/merge_meshes.py -- artifacts/phase2-tests/merge-input.glb artifacts/phase2-tests/merged.glb artifacts/phase2-tests/merge-report.json
           python pipeline/scripts/validate_glb.py artifacts/phase2-tests/merged.glb
           python -m json.tool artifacts/phase2-tests/merge-report.json >/dev/null
