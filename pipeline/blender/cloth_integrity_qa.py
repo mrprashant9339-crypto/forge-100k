@@ -13,7 +13,7 @@ import json
 import math
 import os
 import sys
-from mathutils import Vector
+from mathutils import Vector, geometry
 from mathutils.bvhtree import BVHTree
 
 REQUIRED_POSE_TERMS = {
@@ -39,11 +39,16 @@ def world_mesh(obj, depsgraph):
     try:
         matrix = evaluated.matrix_world.copy()
         vertices = [matrix @ vertex.co for vertex in mesh.vertices]
-        polygons = [tuple(poly.vertices) for poly in mesh.polygons if len(poly.vertices) >= 3]
-        bvh = BVHTree.FromPolygons(vertices, polygons, all_triangles=False) if polygons else None
+        # Explicit triangulation keeps BVH face indices aligned with exact tests.
+        triangles = []
+        for poly in mesh.polygons:
+            indices = tuple(poly.vertices)
+            for index in range(1, len(indices) - 1):
+                triangles.append((indices[0], indices[index], indices[index + 1]))
+        bvh = BVHTree.FromPolygons(vertices, triangles, all_triangles=True) if triangles else None
         return {
             "vertices": vertices,
-            "polygons": polygons,
+            "polygons": triangles,
             "bvh": bvh,
             "vertex_count": len(vertices),
             "edge_count": len(mesh.edges),
@@ -81,7 +86,11 @@ def overlap_pairs(a, b, same_mesh=False):
                 continue
             if set(a["polygons"][face_a]).intersection(a["polygons"][face_b]):
                 continue
-        pairs.append((face_a, face_b))
+        tri_a = tuple(a["vertices"][index] for index in a["polygons"][face_a])
+        tri_b = tuple(b["vertices"][index] for index in b["polygons"][face_b])
+        # BVH overlap is broad phase only; reject AABB-only candidate pairs.
+        if geometry.intersect_tri_tri_3d(tri_a, tri_b, epsilon=1.0e-6):
+            pairs.append((face_a, face_b))
     return pairs
 
 def inventory_actions(scene, armatures):
