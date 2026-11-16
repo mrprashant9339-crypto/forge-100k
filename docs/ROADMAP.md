@@ -39,7 +39,8 @@
 - [x] Existing procedural walk, run, jump, combat-ready, idle/interaction and reach animation clips; CI generation and GLB validation
 - [x] Existing facial expression/viseme morph pack, timed curves and audio-timeline lip-sync worker; CI morph/GLB validation
 - [x] Existing garment proxy fitting and sampled body/self-intersection preflight
-- [x] New Blender cloth-scene preparation worker adds body collision modifiers, garment cloth/self-collision settings and a reusable simulation scene; CI validates its report
+- [x] Blender cloth-scene preparation worker adds body collision modifiers, garment cloth/self-collision settings and a reusable simulation scene; CI validates its report
+- [x] Real Blender point-cache bake worker with evaluated frame sampling, geometry integrity and pin-weight preflight; CI fixture invokes the bake (not a continuous collision/tear certification)
 - [x] Existing Quadriflow retopology candidate, topology metrics, UV-based Cycles diffuse/normal/AO baking and strict report validation
 - [ ] Full animation-range cloth cache bake, evaluated skeletal-pose collision sweep and artist-approved garment fit
 - [ ] Production IK/FK snapping and control-rig export/retarget validation in Unity, Unreal and Godot
