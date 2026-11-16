@@ -34,7 +34,21 @@
 - [x] Automated GLB container preflight added (explicitly not certification); [ ] signed artist review and Unity/Unreal/Godot import/performance certification
 - [x] Production asset package schema, runtime Draft 2020-12 validation, provenance hash verification, safe package-path checks, referenced evidence-file checks and release-gate validator; [x] CI tests prevent game-ready promotion without review and declared-engine evidence
 
-## Phase 4 — Scale and platform
+## Phase 4 — Character quality and animation (in progress)
+- [x] Existing procedural IK targets/poles, IK influence switch, finger chains, facial joints and eye aim controls; CI GLB structural validation
+- [x] Existing procedural walk, run, jump, combat-ready, idle/interaction and reach animation clips; CI generation and GLB validation
+- [x] Existing facial expression/viseme morph pack, timed curves and audio-timeline lip-sync worker; CI morph/GLB validation
+- [x] Existing garment proxy fitting and sampled body/self-intersection preflight
+- [x] New Blender cloth-scene preparation worker adds body collision modifiers, garment cloth/self-collision settings and a reusable simulation scene; CI validates its report
+- [x] Existing Quadriflow retopology candidate, topology metrics, UV-based Cycles diffuse/normal/AO baking and strict report validation
+- [ ] Full animation-range cloth cache bake, evaluated skeletal-pose collision sweep and artist-approved garment fit
+- [ ] Production IK/FK snapping and control-rig export/retarget validation in Unity, Unreal and Godot
+- [ ] Full ARKit 52 sculpted facial target set, audio-derived phoneme timing and reviewed eye/eyelid performance
+- [ ] Motion-capture quality clips, foot locking, root-motion extraction and target-engine loop/contact review
+- [ ] Artist-approved deformation topology, production UV packing, cage/seam/mipmap review and target-engine PBR validation
+- [ ] Signed artist review and target-engine import/performance certification
+
+## Phase 5 — Scale and platform
 - [ ] Queue-backed batch workers and storage/CDN
 - [ ] Authenticated creator uploads, versioning and moderation
 - [ ] Search indexing, asset analytics and usage telemetry
