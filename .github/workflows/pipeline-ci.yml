@@ -99,14 +99,21 @@ jobs:
         run: |
           blender --background --python pipeline/tests/blender_triangle_intersection_tests.py
           mkdir -p artifacts/phase4-pose
+          # Independently test the authored seam-split tear workflow on a compact mesh.
+          blender --background --python pipeline/tests/blender_authored_tear_fixture.py -- artifacts/phase4-pose/tear-fixture.blend
+          blender --background artifacts/phase4-pose/tear-fixture.blend --python pipeline/blender/authored_cloth_tear.py -- artifacts/phase4-pose/tear-fixture-torn.blend artifacts/phase4-pose/tear-fixture-report.json
+          python pipeline/scripts/validate_authored_tear_report.py artifacts/phase4-pose/tear-fixture-report.json
+          # Build the four-action garment fixture, author its seam tear, then validate poses and baked caches.
           blender --background --python pipeline/tests/blender_pose_suite_fixture.py -- artifacts/phase4-pose/pose-suite.blend
-          blender --background artifacts/phase4-pose/pose-suite.blend --python pipeline/blender/pose_cloth_qa.py -- artifacts/phase4-pose/pose-cloth-qa.json --require-clean
+          blender --background artifacts/phase4-pose/pose-suite.blend --python pipeline/blender/authored_cloth_tear.py -- artifacts/phase4-pose/pose-suite-torn.blend artifacts/phase4-pose/pose-tear-report.json
+          python pipeline/scripts/validate_authored_tear_report.py artifacts/phase4-pose/pose-tear-report.json
+          blender --background artifacts/phase4-pose/pose-suite-torn.blend --python pipeline/blender/pose_cloth_qa.py -- artifacts/phase4-pose/pose-cloth-qa.json --require-clean
           python -m json.tool artifacts/phase4-pose/pose-cloth-qa.json >/dev/null
           for clip in Forge_Walk Forge_Run Forge_Jump Forge_Combat; do
-            blender --background artifacts/phase4-pose/pose-suite.blend --python pipeline/blender/bake_cloth_cache.py -- "artifacts/phase4-pose/cloth-bake-$clip.json" 1 "$clip" "artifacts/phase4-pose/cloth-$clip.blend"
+            blender --background artifacts/phase4-pose/pose-suite-torn.blend --python pipeline/blender/bake_cloth_cache.py -- "artifacts/phase4-pose/cloth-bake-$clip.json" 1 "$clip" "artifacts/phase4-pose/cloth-$clip.blend"
             python -m json.tool "artifacts/phase4-pose/cloth-bake-$clip.json" >/dev/null
             blender --background "artifacts/phase4-pose/cloth-$clip.blend" --python pipeline/blender/cloth_integrity_qa.py -- "artifacts/phase4-pose/cloth-integrity-$clip.json" 1
-            python pipeline/scripts/validate_cloth_integrity_report.py "artifacts/phase4-pose/cloth-integrity-$clip.json" --require-geometric-clean
+            python pipeline/scripts/validate_cloth_integrity_report.py "artifacts/phase4-pose/cloth-integrity-$clip.json" --require-clean
           done
           blender --background --python pipeline/blender/prepare_cloth_scene.py -- artifacts/phase2-tests/fitted.glb artifacts/phase2-tests/cloth-sim.blend artifacts/phase2-tests/cloth-scene-report.json 60
           python -m json.tool artifacts/phase2-tests/cloth-scene-report.json >/dev/null
