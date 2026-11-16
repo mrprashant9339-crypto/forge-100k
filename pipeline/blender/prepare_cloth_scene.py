@@ -88,9 +88,9 @@ def main():
         cloth.settings.use_sewing_springs = False
         cloth.collision_settings.use_collision = True
         cloth.collision_settings.use_self_collision = True
-        cloth.collision_settings.collision_quality = 6
+        cloth.collision_settings.collision_quality = 8
         cloth.collision_settings.distance_min = 0.004
-        cloth.collision_settings.self_distance_min = 0.004
+        cloth.collision_settings.self_distance_min = 0.01
         cloth.collision_settings.friction = 2.0
         cloth.collision_settings.self_friction = 2.0
         cloth.collision_settings.impulse_clamp = 0.5
@@ -110,8 +110,8 @@ def main():
             "fixture_pinned_boundary_vertices": fixture_pin_count or None,
             "fixture_weighted_vertices": fixture_pin_report["weighted_vertices"] if garment.name == "GarmentFixture" and pin == "Forge_Cloth_Pin" else None,
             "uv_layer": garment.data.uv_layers.active.name,
-            "settings": {"quality": 8, "collision_quality": 6, "distance_min": 0.004,
-                         "self_distance_min": 0.004, "mass": 0.3}
+            "settings": {"quality": 8, "collision_quality": 8, "distance_min": 0.004,
+                         "self_distance_min": 0.01, "mass": 0.3}
         })
     scene.frame_set(1)
     for obj in garments:
