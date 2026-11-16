@@ -180,7 +180,8 @@ def main():
         "bone_count":len(arm.data.bones),"finger_bones":sum(1 for b in arm.data.bones if b.name.startswith("finger_")),
         "facial_bones":[n for n in arm.data.bones.keys() if n.startswith("FAC_")],
         "ik_constraints":ik_count,"ik_pole_targets":ik_pole_targets,"eye_tracking_constraints":eye_tracking_constraints,"ik_fk_switch_property":"forge_ik_fk_switch",
-        "facial_group_vertex_assignments":assigned,"finger_weight_assignments":finger_weight_assignments,\n        "finger_weighted_vertices":len(finger_weighted_vertices),"artist_review_required":True,
+        "facial_group_vertex_assignments":assigned,"finger_weight_assignments":finger_weight_assignments,
+        "finger_weighted_vertices":len(finger_weighted_vertices),"artist_review_required":True,
         "engine_certified":False,"limitations":["IK/FK switching and pole placement require animator calibration",
         "Facial bone weights are proximity-seeded and require sculpt/weight-paint review",
         "glTF does not preserve Blender custom control widgets or constraint UI; bake constraints for runtime export"]}
