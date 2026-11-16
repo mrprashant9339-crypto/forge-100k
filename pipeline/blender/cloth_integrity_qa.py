@@ -226,7 +226,7 @@ def main():
                 elif any(not math.isfinite(w) or w < 0.0 or w > 1.0 for w in weights):
                     issues.append("%s: pin weights outside finite [0,1] range" % garment.name)
             else:
-                warnings.append("%s: no pin group configured; garment is fully unpinned" % garment.name)
+                issues.append("%s: no pin group configured; pin-weight validation is required" % garment.name)
             pin_checks.append({
                 "garment": garment.name, "group": group_name or None,
                 "weighted_vertices": len(weights),
