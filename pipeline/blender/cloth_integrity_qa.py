@@ -13,7 +13,7 @@ import json
 import math
 import os
 import sys
-from mathutils import Vector, geometry
+from mathutils import Vector
 from mathutils.bvhtree import BVHTree
 
 REQUIRED_POSE_TERMS = {
@@ -88,9 +88,9 @@ def overlap_pairs(a, b, same_mesh=False):
                 continue
         tri_a = tuple(a["vertices"][index] for index in a["polygons"][face_a])
         tri_b = tuple(b["vertices"][index] for index in b["polygons"][face_b])
-        # BVH overlap is broad phase only; reject AABB-only candidate pairs.
-        if geometry.intersect_tri_tri_3d(tri_a, tri_b, epsilon=1.0e-6):
-            pairs.append((face_a, face_b))
+        # BVH overlap is a conservative candidate; report it for visual review.
+        # Blender's bundled mathutils has no stable 3D triangle intersection API.
+        pairs.append((face_a, face_b))
     return pairs
 
 def inventory_actions(scene, armatures):
