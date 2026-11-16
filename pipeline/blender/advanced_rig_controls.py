@@ -69,15 +69,19 @@ def main():
     arm["forge_ik_fk_switch"] = 1.0
     arm["forge_ik_fk_switch_description"] = "0=FK, 1=IK; animate this property in Blender"
     ik_count = 0
+    ik_pole_targets = 0
     for side in ("L", "R"):
         for lower_name, target_name, pole_name, chain in (
             ("lower_arm_" + side, "CTRL_hand_IK_" + side, "CTRL_elbow_pole_" + side, 2),
             ("lower_leg_" + side, "CTRL_foot_IK_" + side, "CTRL_knee_pole_" + side, 2)):
             pose = arm.pose.bones.get(lower_name)
-            if pose and arm.pose.bones.get(target_name):
-                con = pose.constraints.new("IK"); con.name = "Forge_IK_" + side
+            if pose and arm.pose.bones.get(target_name) and arm.pose.bones.get(pole_name):
+                con = pose.constraints.new("IK"); con.name = "Forge_IK_" + side + "_" + lower_name
                 con.target = arm; con.subtarget = target_name; con.chain_count = chain
+                con.pole_target = arm; con.pole_subtarget = pole_name
+                con.pole_angle = 0.0
                 con.use_stretch = False
+                ik_pole_targets += 1
                 driver = con.driver_add("influence").driver
                 var = driver.variables.new(); var.name = "ik"
                 var.type = "SINGLE_PROP"
@@ -142,7 +146,7 @@ def main():
     report = {"status":"advanced_rig_controls_added","input":src,"output":out,
         "bone_count":len(arm.data.bones),"finger_bones":sum(1 for b in arm.data.bones if b.name.startswith("finger_")),
         "facial_bones":[n for n in arm.data.bones.keys() if n.startswith("FAC_")],
-        "ik_constraints":ik_count,"eye_tracking_constraints":eye_tracking_constraints,"ik_fk_switch_property":"forge_ik_fk_switch",
+        "ik_constraints":ik_count,"ik_pole_targets":ik_pole_targets,"eye_tracking_constraints":eye_tracking_constraints,"ik_fk_switch_property":"forge_ik_fk_switch",
         "facial_group_vertex_assignments":assigned,"artist_review_required":True,
         "engine_certified":False,"limitations":["IK/FK switching and pole placement require animator calibration",
         "Facial bone weights are proximity-seeded and require sculpt/weight-paint review",
