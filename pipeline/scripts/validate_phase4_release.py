@@ -5,6 +5,7 @@ The manifest is evidence supplied by the production pipeline and reviewers.
 This validator never treats synthetic CI fixtures as production assets.
 """
 import argparse
+import hashlib
 import json
 import os
 import sys
@@ -17,7 +18,7 @@ def _is_nonempty_string(value):
     return isinstance(value, str) and bool(value.strip())
 
 
-def validate_manifest(data, require_physical_tear=False):
+def validate_manifest(data, require_physical_tear=False, evidence_root=None):
     errors = []
     warnings = []
 
@@ -39,10 +40,24 @@ def validate_manifest(data, require_physical_tear=False):
         for key in ("body_glb", "garment_glb"):
             if not _is_nonempty_string(source.get(key)):
                 errors.append("source_" + key + "_missing")
-        if source.get("body_sha256") and len(source["body_sha256"]) != 64:
-            errors.append("source_body_sha256_invalid")
-        if source.get("garment_sha256") and len(source["garment_sha256"]) != 64:
-            errors.append("source_garment_sha256_invalid")
+        for asset_key, hash_key in (("body_glb", "body_sha256"), ("garment_glb", "garment_sha256")):
+            expected = source.get(hash_key)
+            if not _is_nonempty_string(expected) or len(expected) != 64:
+                errors.append("source_" + hash_key + "_missing_or_invalid")
+            elif evidence_root is not None:
+                asset_path = os.path.realpath(os.path.join(evidence_root, source.get(asset_key, "")))
+                root_path = os.path.realpath(evidence_root)
+                if os.path.commonpath((root_path, asset_path)) != root_path:
+                    errors.append("source_" + asset_key + "_path_outside_evidence_root")
+                elif not os.path.isfile(asset_path):
+                    errors.append("source_" + asset_key + "_file_missing")
+                else:
+                    digest = hashlib.sha256()
+                    with open(asset_path, "rb") as asset_handle:
+                        for chunk in iter(lambda: asset_handle.read(1024 * 1024), b""):
+                            digest.update(chunk)
+                    if digest.hexdigest() != expected:
+                        errors.append("source_" + asset_key + "_sha256_mismatch")
 
     pose = data.get("pose_validation")
     if not isinstance(pose, dict):
@@ -91,6 +106,8 @@ def validate_manifest(data, require_physical_tear=False):
             errors.append("tear_not_validated")
         if not _is_nonempty_string(tear.get("report")):
             errors.append("tear_report_missing")
+        elif evidence_root is not None and not os.path.isfile(os.path.join(evidence_root, tear["report"])):
+            errors.append("tear_report_file_missing")
         if require_physical_tear and mode != "physical_solver":
             errors.append("physical_tear_solver_required")
         if mode == "authored_seam_animation":
@@ -108,6 +125,10 @@ def validate_manifest(data, require_physical_tear=False):
             date.fromisoformat(review.get("date", ""))
         except (TypeError, ValueError):
             errors.append("artist_review_date_invalid")
+        if not _is_nonempty_string(review.get("evidence")):
+            errors.append("artist_review_evidence_missing")
+        elif evidence_root is not None and not os.path.isfile(os.path.join(evidence_root, review["evidence"])):
+            errors.append("artist_review_evidence_file_missing")
 
     engine = data.get("target_engine")
     if not isinstance(engine, dict):
@@ -120,6 +141,10 @@ def validate_manifest(data, require_physical_tear=False):
             errors.append("target_engine_import_not_validated")
         if engine.get("playback_validated") is not True:
             errors.append("target_engine_playback_not_validated")
+        if not _is_nonempty_string(engine.get("evidence")):
+            errors.append("target_engine_evidence_file_missing")
+        elif evidence_root is not None and not os.path.isfile(os.path.join(evidence_root, engine["evidence"])):
+            errors.append("target_engine_evidence_file_missing")
 
     provenance = data.get("provenance")
     if not isinstance(provenance, dict):
@@ -141,7 +166,7 @@ def main():
     args = parser.parse_args()
     with open(args.manifest, encoding="utf-8") as handle:
         data = json.load(handle)
-    errors, warnings = validate_manifest(data, args.require_physical_tear)
+    errors, warnings = validate_manifest(data, args.require_physical_tear, os.path.dirname(os.path.abspath(args.manifest)))
     report = {
         "schema_version": "1.0",
         "status": "release_gate_passed" if not errors else "release_gate_blocked",
