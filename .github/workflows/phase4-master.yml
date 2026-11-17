@@ -48,7 +48,7 @@ jobs:
   deploy_site:
     name: Deploy project site after successful quality suite
     needs: quality
-    if: ${{ inputs.deploy_site }}
+    if: ${{ github.event_name == 'push' || inputs.deploy_site }}
     uses: ./.github/workflows/deploy-pages.yml
 
   summary:
@@ -62,7 +62,7 @@ jobs:
           PLAN_RESULT: ${{ needs.plan.result }}
           QUALITY_RESULT: ${{ needs.quality.result }}
           DEPLOY_RESULT: ${{ needs.deploy_site.result }}
-          DEPLOY_REQUESTED: ${{ inputs.deploy_site }}
+          DEPLOY_REQUESTED: ${{ github.event_name == 'push' || inputs.deploy_site }}
         run: |
           echo "Phase 4 plan: $PLAN_RESULT"
           echo "Full quality suite: $QUALITY_RESULT"
