@@ -254,7 +254,8 @@ def main():
             "shared_root_bone": True,
             "garment_pin_group": True,
             "garment_tear_seam_group": True,
-            "actions": ["Walk", "Run", "Jump", "Combat"]
+            "animation_test_action": "Forge_Reference_Deformation_Test",
+            "production_animation_clips": []
         }
     }
     report_path = os.path.join(output, "reference-asset-report.json")
