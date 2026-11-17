@@ -86,7 +86,8 @@ jobs:
           assert report["is_synthetic_fixture"] is True
           assert report["production_release_approved"] is False
           assert report["certification_status"] == "synthetic_reference_only"
-          assert report["mesh_validation"]["actions"] == ["Walk", "Run", "Jump", "Combat"]
+          assert report["mesh_validation"]["animation_test_action"] == "Forge_Reference_Deformation_Test"
+          assert report["mesh_validation"]["production_animation_clips"] == []
           assert report["mesh_validation"]["garment_pin_group"] is True
           assert report["mesh_validation"]["garment_tear_seam_group"] is True
           print("Synthetic reference asset generation verified; production certification remains blocked.")
