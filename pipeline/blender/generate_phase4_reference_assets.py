@@ -147,19 +147,25 @@ def bind_mesh(obj, rig, garment=False):
 
 def add_reference_actions(rig):
     scene = bpy.context.scene
-    for action_name, amplitude in (("Walk", 0.12), ("Run", 0.22), ("Jump", 0.30), ("Combat", 0.18)):
-        action = bpy.data.actions.new("ForgeReference_" + action_name)
-        rig.animation_data_create()
-        rig.animation_data.action = action
-        bone = rig.pose.bones["Root"]
+    action = bpy.data.actions.new("Forge_Reference_Deformation_Test")
+    rig.animation_data_create()
+    rig.animation_data.action = action
+    for bone_name, amplitude in (("root", 0.04), ("spine", 0.08), ("chest", 0.12), ("head", 0.035)):
+        bone = rig.pose.bones.get(bone_name)
+        if not bone:
+            continue
         bone.rotation_mode = "XYZ"
         for frame, angle in ((1, -amplitude), (8, amplitude), (16, -amplitude)):
-            bone.rotation_euler = Euler((0.0, angle, 0.0), "XYZ")
-            bone.keyframe_insert(data_path="rotation_euler", frame=frame, group="Root")
-        action["forge_action_kind"] = action_name.lower()
-    rig.animation_data.action = None
+            bone.rotation_euler[1] = angle
+            bone.keyframe_insert(data_path="rotation_euler", frame=frame, group=bone_name)
+    for curve in action.fcurves:
+        for key in curve.keyframe_points:
+            key.interpolation = "BEZIER"
+        curve.modifiers.new("CYCLES")
     scene.frame_start = 1
     scene.frame_end = 16
+    scene.frame_set(1)
+    rig["forge_animation_class"] = "synthetic_deformation_test_not_production_motion"
 
 def export_selection(path, objects):
     bpy.ops.object.select_all(action="DESELECT")
