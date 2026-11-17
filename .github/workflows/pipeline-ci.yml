@@ -55,6 +55,27 @@ jobs:
         run: |
           sudo apt-get install -y blender python3-numpy
           blender --version
+      - name: Generate and validate Phase 4 synthetic reference assets
+        env:
+          PYTHONPATH: /usr/lib/python3/dist-packages
+        run: |
+          mkdir -p artifacts/phase4-reference
+          blender --background --python pipeline/blender/generate_phase4_reference_assets.py -- artifacts/phase4-reference
+          python pipeline/scripts/validate_glb.py --require-rig artifacts/phase4-reference/body.glb
+          python pipeline/scripts/validate_glb.py --require-rig artifacts/phase4-reference/garment.glb
+          python - <<'PY'
+          import json
+          p = "artifacts/phase4-reference/reference-asset-report.json"
+          with open(p, encoding="utf-8") as f:
+              report = json.load(f)
+          assert report["is_synthetic_fixture"] is True
+          assert report["production_release_approved"] is False
+          assert report["certification_status"] == "synthetic_reference_only"
+          assert report["mesh_validation"]["actions"] == ["Walk", "Run", "Jump", "Combat"]
+          assert report["mesh_validation"]["garment_pin_group"] is True
+          assert report["mesh_validation"]["garment_tear_seam_group"] is True
+          print("Synthetic reference asset generation verified; production certification remains blocked.")
+          PY
       - name: Verify Phase 3 retopology and high-to-low baking
         env:
           PYTHONPATH: /usr/lib/python3/dist-packages
