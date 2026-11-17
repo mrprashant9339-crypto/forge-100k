@@ -38,19 +38,80 @@ def material(name, color, roughness=0.7, metallic=0.0):
     return mat
 
 def make_armature():
-    data = bpy.data.armatures.new("ForgeReferenceRig")
-    rig = bpy.data.objects.new("ForgeReferenceRig", data)
+    data = bpy.data.armatures.new("ForgeReferenceHumanoidRig")
+    rig = bpy.data.objects.new("ForgeReferenceHumanoidRig", data)
     bpy.context.collection.objects.link(rig)
     bpy.context.view_layer.objects.active = rig
     rig.select_set(True)
     bpy.ops.object.mode_set(mode="EDIT")
-    root = data.edit_bones.new("Root")
-    root.head = (0, 0, 0)
-    root.tail = (0, 0, 1)
+    def bone(name, head, tail, parent=None):
+        item = data.edit_bones.new(name)
+        item.head = head
+        item.tail = tail
+        if parent:
+            item.parent = data.edit_bones[parent]
+        return item
+    bone("root", (0, 0, 0), (0, 0, .25))
+    bone("pelvis", (0, 0, .82), (0, 0, 1.08), "root")
+    bone("spine", (0, 0, 1.08), (0, 0, 1.48), "pelvis")
+    bone("chest", (0, 0, 1.48), (0, 0, 1.82), "spine")
+    bone("neck", (0, 0, 1.82), (0, 0, 2.02), "chest")
+    bone("head", (0, 0, 2.02), (0, 0, 2.40), "neck")
+    for side, label in ((-1, "L"), (1, "R")):
+        x = side
+        bone("upper_arm_" + label, (x*.34, 0, 1.76), (x*.62, 0, 1.48), "chest")
+        bone("lower_arm_" + label, (x*.62, 0, 1.48), (x*.66, 0, 1.12), "upper_arm_" + label)
+        bone("hand_" + label, (x*.66, 0, 1.12), (x*.68, -.10, 1.02), "lower_arm_" + label)
+        for finger, spread in (("thumb", -.07), ("index", -.035), ("middle", 0), ("ring", .035), ("pinky", .07)):
+            start = (x*.68, -.10, 1.02)
+            end = (x*(.68+spread), -.23, 1.00)
+            bone(f"{finger}_01_{label}", start, end, "hand_" + label)
+        bone("upper_leg_" + label, (x*.18, 0, .92), (x*.20, 0, .52), "pelvis")
+        bone("lower_leg_" + label, (x*.20, 0, .52), (x*.20, 0, .16), "upper_leg_" + label)
+        bone("foot_" + label, (x*.20, 0, .16), (x*.20, -.28, .08), "lower_leg_" + label)
     bpy.ops.object.mode_set(mode="OBJECT")
-    rig.select_set(False)
+    rig.show_in_front = True
     rig["forge_asset_class"] = "synthetic_reference_fixture"
+    rig["forge_rig_profile"] = "humanoid_reference_v2"
     return rig
+
+def bind_mesh(obj, rig, garment=False):
+    bones = []
+    for bone in rig.data.bones:
+        a = rig.matrix_world @ bone.head_local
+        b = rig.matrix_world @ bone.tail_local
+        if (b - a).length > 1e-6:
+            bones.append((bone.name, a, b))
+    groups = {name: obj.vertex_groups.new(name=name) for name, _, _ in bones}
+    for vertex in obj.data.vertices:
+        point = obj.matrix_world @ vertex.co
+        influences = []
+        for name, start, end in bones:
+            axis = end - start
+            t = max(0.0, min(1.0, (point - start).dot(axis) / max(axis.length_squared, 1e-9)))
+            distance = (point - (start + t * axis)).length
+            influences.append((distance, name))
+        influences.sort(key=lambda item: item[0])
+        nearest = influences[:4]
+        raw = [(1.0 / max(distance, 0.035) ** 2, name) for distance, name in nearest]
+        total = sum(weight for weight, _ in raw)
+        for weight, name in raw:
+            groups[name].add([vertex.index], weight / total, "REPLACE")
+    modifier = obj.modifiers.new("ForgeReferenceArmature", "ARMATURE")
+    modifier.object = rig
+    obj.parent = rig
+    if garment:
+        pin = obj.vertex_groups.new(name="Forge_Cloth_Pin")
+        seam = obj.vertex_groups.new(name="Forge_Tear_Seam")
+        pin_indices = [v.index for v in obj.data.vertices if v.co.z > 0.15]
+        seam_indices = [v.index for v in obj.data.vertices if abs(v.co.x) < 0.025]
+        if pin_indices:
+            pin.add(pin_indices, 1.0, "REPLACE")
+        if len(seam_indices) < 2:
+            seam_indices = [0, 1]
+        seam.add(seam_indices, 1.0, "REPLACE")
+        obj["forge_fixture_pin_vertices"] = len(pin_indices)
+        obj["forge_fixture_seam_vertices"] = len(seam_indices)
 
 def make_mesh(name, location, scale, mat, segments=32, rings=16):
     bpy.ops.mesh.primitive_uv_sphere_add(segments=segments, ring_count=rings, location=location)
