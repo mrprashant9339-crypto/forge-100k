@@ -93,6 +93,10 @@ jobs:
           python -m json.tool artifacts/phase2-tests/garment-qa.json >/dev/null
           blender --background --python pipeline/blender/garment_collision_qa.py -- artifacts/phase2-tests/fitted.glb artifacts/phase2-tests/fit-report.json artifacts/phase2-tests/garment-collision-qa.json
           python -m json.tool artifacts/phase2-tests/garment-collision-qa.json >/dev/null
+      - name: Test Phase 4 real-asset intake gate
+        run: |
+          python -m py_compile pipeline/blender/inspect_phase4_assets.py pipeline/scripts/validate_phase4_intake_report.py
+          python pipeline/tests/test_phase4_intake.py
       - name: Test Phase 4 production release gate
         run: |
           python -m py_compile pipeline/scripts/validate_phase4_release.py
