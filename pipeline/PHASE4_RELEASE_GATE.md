@@ -21,8 +21,8 @@ Use `--require-physical-tear` when a project explicitly requires stress-driven p
   "source_assets": {
     "body_glb": "body.glb",
     "garment_glb": "garment.glb",
-    "body_sha256": "64-character SHA-256",
-    "garment_sha256": "64-character SHA-256"
+    "body_sha256": "actual 64-character SHA-256",
+    "garment_sha256": "actual 64-character SHA-256"
   },
   "pose_validation": {
     "actions": {
@@ -45,7 +45,7 @@ Use `--require-physical-tear` when a project explicitly requires stress-driven p
     "validated": true,
     "report": "tear-report.json"
   },
-  "artist_review": {"approved": true, "reviewer": "Reviewer", "date": "2026-11-17"},
+  "artist_review": {"approved": true, "reviewer": "Reviewer", "date": "2026-11-17", "evidence": "artist-review.pdf"},
   "target_engine": {
     "name": "Unity",
     "version": "6.x",
@@ -66,4 +66,4 @@ Use `--require-physical-tear` when a project explicitly requires stress-driven p
 - Asset source and license must be recorded.
 - Physical tearing is optional by default, but can be made mandatory with `--require-physical-tear`.
 
-The gate validates supplied evidence and its shape; it does not independently inspect a GLB, authenticate reviewer identity, verify file hashes, or replace Blender collision QA. Only generate this manifest from completed pipeline reports and signed review records. Never hand-edit counters to force a pass.
+The CLI resolves evidence paths relative to the manifest directory, verifies that body/garment files exist and that their SHA-256 values match, and requires tear, artist-review and target-engine evidence files. It still cannot authenticate reviewer identity or independently prove that a video shows the claimed target-engine build; those require a trusted review process. It does not replace Blender collision QA. Only generate this manifest from completed pipeline reports and signed review records. Never hand-edit counters to force a pass.
