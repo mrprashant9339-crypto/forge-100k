@@ -63,6 +63,21 @@ jobs:
           blender --background --python pipeline/blender/generate_phase4_reference_assets.py -- artifacts/phase4-reference
           python pipeline/scripts/validate_glb.py --require-rig artifacts/phase4-reference/body.glb
           python pipeline/scripts/validate_glb.py --require-rig artifacts/phase4-reference/garment.glb
+          blender --background --python pipeline/blender/rig_deformation_qa.py -- artifacts/phase4-reference/body.glb artifacts/phase4-reference/body-deformation-qa.json
+          blender --background --python pipeline/blender/rig_deformation_qa.py -- artifacts/phase4-reference/garment.glb artifacts/phase4-reference/garment-deformation-qa.json
+          python -m json.tool artifacts/phase4-reference/body-deformation-qa.json >/dev/null
+          python -m json.tool artifacts/phase4-reference/garment-deformation-qa.json >/dev/null
+          python - <<'PY'
+          import json
+          for name in ("body", "garment"):
+              with open(f"artifacts/phase4-reference/{name}-deformation-qa.json", encoding="utf-8") as f:
+                  qa = json.load(f)
+              assert qa["status"] == "pass", (name, qa.get("issues"))
+              assert qa["bone_count"] >= 20, (name, qa["bone_count"])
+              assert qa["artist_review_required"] is True
+              assert qa["engine_certified"] is False
+          print("Reference rig skinning and sampled deformation QA passed; production approval remains blocked.")
+          PY
           python - <<'PY'
           import json
           p = "artifacts/phase4-reference/reference-asset-report.json"
