@@ -1,7 +1,9 @@
 """Unit tests for the fail-closed Phase 4 production release gate."""
-import copy
+import os
+import sys
 import unittest
 
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
 from validate_phase4_release import validate_manifest
 
 def valid_manifest():
