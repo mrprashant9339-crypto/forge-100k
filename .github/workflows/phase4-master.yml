@@ -1,0 +1,76 @@
+name: Phase 4 Master Orchestrator
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_site:
+        description: Deploy the Forge 100K project site after all quality checks pass
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: forge-phase4-master
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    name: Phase 4 plan and release preflight
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Validate Phase 4 plan and required gates
+        run: |
+          test -s pipeline/PHASE4_MASTER_PLAN.md
+          test -s pipeline/PHASE4.md
+          test -s pipeline/PHASE4_RELEASE_GATE.md
+          test -s pipeline/PHASE4_ASSET_INTAKE.md
+          test -s pipeline/blender/inspect_phase4_assets.py
+          test -s pipeline/scripts/validate_phase4_intake_report.py
+          test -s pipeline/scripts/validate_phase4_release.py
+          python -m py_compile pipeline/blender/inspect_phase4_assets.py pipeline/scripts/validate_phase4_intake_report.py pipeline/scripts/validate_phase4_release.py
+          python pipeline/tests/test_phase4_intake.py
+          python pipeline/tests/test_phase4_release.py
+          echo "Phase 4 planning and release-gate preflight passed."
+
+  quality:
+    name: Full pipeline and Phase 4 quality suite
+    needs: plan
+    uses: ./.github/workflows/pipeline-ci.yml
+
+  deploy_site:
+    name: Deploy project site after successful quality suite
+    needs: quality
+    if: ${{ inputs.deploy_site }}
+    uses: ./.github/workflows/deploy-pages.yml
+
+  summary:
+    name: Master pipeline summary
+    runs-on: ubuntu-24.04
+    needs: [plan, quality, deploy_site]
+    if: always()
+    steps:
+      - name: Report orchestration result
+        env:
+          PLAN_RESULT: ${{ needs.plan.result }}
+          QUALITY_RESULT: ${{ needs.quality.result }}
+          DEPLOY_RESULT: ${{ needs.deploy_site.result }}
+          DEPLOY_REQUESTED: ${{ inputs.deploy_site }}
+        run: |
+          echo "Phase 4 plan: $PLAN_RESULT"
+          echo "Full quality suite: $QUALITY_RESULT"
+          echo "Site deployment: $DEPLOY_RESULT"
+          if [ "$PLAN_RESULT" != "success" ] || [ "$QUALITY_RESULT" != "success" ]; then
+            echo "::error::Phase 4 master pipeline failed. Deployment is blocked."
+            exit 1
+          fi
+          if [ "$DEPLOY_REQUESTED" = "true" ] && [ "$DEPLOY_RESULT" != "success" ]; then
+            echo "::error::Site deployment did not succeed."
+            exit 1
+          fi
+          echo "Master pipeline completed successfully."
