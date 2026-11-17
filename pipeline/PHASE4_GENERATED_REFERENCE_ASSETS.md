@@ -3,10 +3,11 @@
 The Phase 4 CI pipeline now generates a deterministic Blender reference asset pack
 under `artifacts/phase4-reference/`:
 
-- `body.glb` — simple UV-mapped proxy mannequin with a single-bone reference rig
-- `garment.glb` — simple upper-body shell proxy, shared reference rig, pin and seam groups
+- `body.glb` — UV-mapped proxy mannequin with a multi-bone humanoid reference skeleton and top-4 normalized skin weights
+- `garment.glb` — simple upper-body shell proxy, same reference skeleton, top-4 skin weights, pin and seam groups
 - `forge-phase4-reference.blend` — editable source scene retaining Blender vertex groups
 - `reference-asset-report.json` — SHA-256 hashes, generation facts and explicit limitations
+- `body-deformation-qa.json` and `garment-deformation-qa.json` — sampled deformation, finite geometry and skin-weight QA reports
 
 Run locally:
 
@@ -22,10 +23,10 @@ These are **synthetic reference fixtures**, generated to test the asset-generati
 and validation workflow. They are not production anatomy, production garment
 patterns, a production multi-bone rig, approved motion capture, or artist-reviewed
 assets. The generator hard-codes `is_synthetic_fixture: true` and
-`production_release_approved: false`; CI asserts both facts. They must never be
+`production_release_approved: false`; CI asserts both facts. Its single deformation-test action is not a Walk/Run/Jump/Combat production animation library. They must never be
 copied into a production release manifest or used to bypass the Phase 4 release gate.
 
-Full production certification still requires original/licensed production assets,
+The release validator additionally verifies body/garment SHA-256 values against the actual files and requires tear, artist-review and target-engine evidence files. Full production certification still requires original/licensed production assets,
 real garment fitting and corrective deformation, action-specific baked cloth
 caches, geometric collision QA, provenance, artist approval, and target-engine
 import plus playback evidence. Physical cloth tearing must be separately proven
