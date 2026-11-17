@@ -32,10 +32,10 @@ def valid_manifest():
             "mode": "authored_seam_animation", "validated": True,
             "report": "tear-report.json"
         },
-        "artist_review": {"approved": True, "reviewer": "QA Artist", "date": "2026-11-17"},
+        "artist_review": {"approved": True, "reviewer": "QA Artist", "date": "2026-11-17", "evidence": "artist-review.pdf"},
         "target_engine": {
             "name": "Unity", "version": "6.x",
-            "import_validated": True, "playback_validated": True
+            "import_validated": True, "playback_validated": True, "evidence": "unity-playback.mp4"
         },
         "provenance": {"source": "Original studio asset", "license": "Owned"}
     }
