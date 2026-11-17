@@ -1,6 +1,8 @@
 """Unit tests for the fail-closed Phase 4 production release gate."""
+import hashlib
 import os
 import sys
+import tempfile
 import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
@@ -83,6 +85,36 @@ class ReleaseGateTests(unittest.TestCase):
     def test_invalid_root_is_rejected(self):
         errors, _ = validate_manifest([])
         self.assertIn("manifest_root_must_be_object", errors)
+
+
+    def test_evidence_root_verifies_real_asset_hashes_and_review_files(self):
+        with tempfile.TemporaryDirectory() as root:
+            payloads = {
+                "body.glb": b"body-asset",
+                "garment.glb": b"garment-asset",
+                "tear-report.json": b'{"status":"pass"}',
+                "artist-review.pdf": b"review-evidence",
+                "unity-playback.mp4": b"engine-evidence"
+            }
+            for name, payload in payloads.items():
+                with open(os.path.join(root, name), "wb") as handle:
+                    handle.write(payload)
+            data = valid_manifest()
+            data["source_assets"]["body_sha256"] = hashlib.sha256(payloads["body.glb"]).hexdigest()
+            data["source_assets"]["garment_sha256"] = hashlib.sha256(payloads["garment.glb"]).hexdigest()
+            errors, _ = validate_manifest(data, evidence_root=root)
+            self.assertEqual(errors, [])
+            data["source_assets"]["body_sha256"] = "0" * 64
+            errors, _ = validate_manifest(data, evidence_root=root)
+            self.assertIn("source_body_glb_sha256_mismatch", errors)
+
+    def test_missing_review_and_engine_evidence_blocks_release(self):
+        data = valid_manifest()
+        data["artist_review"].pop("evidence")
+        data["target_engine"].pop("evidence")
+        errors, _ = validate_manifest(data)
+        self.assertIn("artist_review_evidence_missing", errors)
+        self.assertIn("target_engine_evidence_file_missing", errors)
 
 if __name__ == "__main__":
     unittest.main()
