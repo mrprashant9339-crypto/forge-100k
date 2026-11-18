@@ -125,26 +125,6 @@ def make_mesh(name, location, scale, mat, segments=32, rings=16):
         raise RuntimeError(name + " has no UV map")
     return obj
 
-def bind_mesh(obj, rig, garment=False):
-    group = obj.vertex_groups.new(name="Root")
-    if obj.data.vertices:
-        group.add([v.index for v in obj.data.vertices], 1.0, "REPLACE")
-    modifier = obj.modifiers.new("ForgeReferenceArmature", "ARMATURE")
-    modifier.object = rig
-    obj.parent = rig
-    if garment:
-        pin = obj.vertex_groups.new(name="Forge_Cloth_Pin")
-        seam = obj.vertex_groups.new(name="Forge_Tear_Seam")
-        pin_indices = [v.index for v in obj.data.vertices if v.co.z > 0.15]
-        seam_indices = [v.index for v in obj.data.vertices if abs(v.co.x) < 0.025]
-        if pin_indices:
-            pin.add(pin_indices, 1.0, "REPLACE")
-        if len(seam_indices) < 2:
-            seam_indices = [0, 1]
-        seam.add(seam_indices, 1.0, "REPLACE")
-        obj["forge_fixture_pin_vertices"] = len(pin_indices)
-        obj["forge_fixture_seam_vertices"] = len(seam_indices)
-
 def add_reference_actions(rig):
     scene = bpy.context.scene
     action = bpy.data.actions.new("Forge_Reference_Deformation_Test")
@@ -241,9 +221,9 @@ def main():
         "production_release_approved": False,
         "limitations": [
             "Proxy mannequin geometry; not production anatomy or topology",
-            "Single-bone deformation rig; not production IK/FK or finger rig",
+            "Synthetic multi-bone reference rig; not production IK/FK or animator-approved skinning",
             "Garment is a geometric shell proxy, not a tailored cloth pattern",
-            "Reference actions are simple root rotations, not production motion clips",
+            "Reference deformation action is a QA fixture, not production motion clips",
             "No artist review or target-engine visual acceptance has occurred"
         ],
         "assets": records,
