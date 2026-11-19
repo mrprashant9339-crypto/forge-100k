@@ -19,6 +19,7 @@ class AuthContractTests(unittest.TestCase):
         for marker in (
             "signUp(", "signInWithPassword(", "resetPasswordForEmail(",
             "onAuthStateChange(", 'event === "PASSWORD_RECOVERY"', "updateUser({ password })",
+            "forge100k:user:", "forge100k:guest", "storageKey: presetStorageKey",
             "persistSession: true", "autoRefreshToken: true",
             'from("saved_presets")', "forge:preset-saved",
         ):
