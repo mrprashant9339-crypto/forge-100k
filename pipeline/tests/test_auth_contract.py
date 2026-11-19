@@ -18,7 +18,8 @@ class AuthContractTests(unittest.TestCase):
         auth = (ROOT / "auth.js").read_text(encoding="utf-8")
         for marker in (
             "signUp(", "signInWithPassword(", "resetPasswordForEmail(",
-            "onAuthStateChange(", "persistSession: true", "autoRefreshToken: true",
+            "onAuthStateChange(", 'event === "PASSWORD_RECOVERY"', "updateUser({ password })",
+            "persistSession: true", "autoRefreshToken: true",
             'from("saved_presets")', "forge:preset-saved",
         ):
             self.assertIn(marker, auth)
