@@ -52,6 +52,9 @@ class AuthContractTests(unittest.TestCase):
         self.assertIn("grant execute on function public.claim_next_generation_job(text, text) to service_role", sql)
         self.assertIn("revoke all on function public.complete_generation_job", sql)
         self.assertIn("attempt_count < max_attempts", sql)
+        self.assertIn("and attempt_count = 0", sql)
+        self.assertIn("and locked_by is null", sql)
+        self.assertIn("generation_jobs_request_size_check", sql)
 
     def test_public_config_is_explicitly_unconfigured(self):
         config = (ROOT / "supabase-config.js").read_text(encoding="utf-8")
