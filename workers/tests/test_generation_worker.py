@@ -38,7 +38,9 @@ class WorkerContractTests(unittest.TestCase):
 
     def test_worker_never_runs_client_shell_commands(self):
         source = (ROOT / "generation_worker.py").read_text(encoding="utf-8")
-        self.assertIn("subprocess.run([BLENDER", source)
+        self.assertIn("run_blender_with_heartbeat(", source)
+        self.assertIn("process.terminate()", source)
+        self.assertIn("subprocess.Popen(", source)
         self.assertNotIn("shell=True", source)
         self.assertIn("SUPABASE_SERVICE_ROLE_KEY", source)
         self.assertIn("forge-private-uploads", source)
