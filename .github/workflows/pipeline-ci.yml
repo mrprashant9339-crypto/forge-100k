@@ -59,7 +59,7 @@ jobs:
           # Refresh runner package indexes before installing: ubuntu archive mirrors can
           # otherwise return 404 for package versions that have already been rotated.
           sudo apt-get update -o Acquire::Retries=3
-          sudo apt-get install -y -o Acquire::Retries=3 blender python3-numpy
+          sudo apt-get install -y --no-install-recommends -o Acquire::Retries=3 blender python3-numpy
           blender --version
       - name: Generate and validate Phase 4 synthetic reference assets
         env:
