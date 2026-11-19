@@ -31,6 +31,10 @@ jobs:
       - name: Test authentication and user-data security contracts
         run: |
           python pipeline/tests/test_auth_contract.py
+      - name: Test Supabase generation worker contracts
+        run: |
+          python -m py_compile workers/generation_worker.py
+          python workers/tests/test_generation_worker.py
       - name: Compile Python workers
         run: |
           python -m compileall -q pipeline
