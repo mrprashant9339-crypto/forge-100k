@@ -9,7 +9,7 @@ class AuthContractTests(unittest.TestCase):
         html = (ROOT / "index.html").read_text(encoding="utf-8")
         for marker in (
             'id="authButton"', 'id="authModal"', 'role="dialog"',
-            'id="authEmail"', 'id="authPassword"', 'id="authConfirm"',
+            'id="authEmail"', 'id="authEmailField"', 'id="authPassword"', 'id="authConfirm"',
             'id="authSignupLink"', 'id="authResetLink"', 'src="./auth.js"',
         ):
             self.assertIn(marker, html)
