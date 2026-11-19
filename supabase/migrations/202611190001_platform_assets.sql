@@ -67,6 +67,10 @@ alter table public.asset_catalog enable row level security;
 alter table public.asset_versions enable row level security;
 alter table public.generation_jobs enable row level security;
 
+drop trigger if exists asset_catalog_set_updated_at on public.asset_catalog;
+create trigger asset_catalog_set_updated_at before update on public.asset_catalog
+for each row execute function public.set_updated_at();
+
 drop policy if exists "Published assets are readable by everyone" on public.asset_catalog;
 create policy "Published assets are readable by everyone" on public.asset_catalog
 for select to anon, authenticated using (visibility = 'published');
@@ -104,6 +108,7 @@ drop policy if exists "Owners can add pending versions" on public.asset_versions
 create policy "Owners can add pending versions" on public.asset_versions
 for insert to authenticated with check (
   (select auth.uid()) = owner_id and validation_status = 'pending'
+  and split_part(storage_path, '/', 1) = (select auth.uid())::text
   and exists (select 1 from public.asset_catalog a
     where a.id = asset_id and a.owner_id = (select auth.uid())
       and a.visibility in ('draft','pending_review'))
@@ -120,14 +125,29 @@ for insert to authenticated with check (
   and result_asset_id is null and started_at is null and completed_at is null
 );
 
+revoke update on public.generation_jobs from anon, authenticated;
 drop policy if exists "Users can cancel queued own jobs" on public.generation_jobs;
-create policy "Users can cancel queued own jobs" on public.generation_jobs
-for update to authenticated using (
-  (select auth.uid()) = user_id and status = 'queued'
-) with check (
-  (select auth.uid()) = user_id and status = 'cancelled'
-  and result_asset_id is null
-);
+
+create or replace function public.cancel_own_generation_job(p_job_id uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $
+declare
+  changed integer;
+begin
+  update public.generation_jobs
+     set status = 'cancelled', completed_at = now()
+   where id = p_job_id
+     and user_id = (select auth.uid())
+     and status = 'queued';
+  get diagnostics changed = row_count;
+  return changed = 1;
+end;
+$;
+revoke all on function public.cancel_own_generation_job(uuid) from public, anon;
+grant execute on function public.cancel_own_generation_job(uuid) to authenticated;
 
 -- Private source uploads. A trusted server worker validates GLB files and copies
 -- approved immutable versions to a separate public delivery bucket.
