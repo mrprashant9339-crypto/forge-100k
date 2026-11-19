@@ -234,6 +234,14 @@ jobs:
           python pipeline/scripts/validate_engine_budget.py artifacts/lods/LOD0.glb pipeline/budgets/stylized-character-prototype.json
           python pipeline/scripts/validate_engine_budget.py artifacts/lods/LOD1.glb pipeline/budgets/stylized-character-prototype.json
           python pipeline/scripts/validate_engine_budget.py artifacts/lods/LOD2.glb pipeline/budgets/stylized-character-prototype.json
+      - name: Generate and validate original stylized humanoid candidate
+        env:
+          PYTHONPATH: /usr/lib/python3/dist-packages
+        run: |
+          mkdir -p artifacts/stylized
+          blender --background --python pipeline/blender/generate_stylized_character.py -- artifacts/stylized FG-HUM-STYLIZED-000001 100001
+          python pipeline/scripts/validate_glb.py --require-rig artifacts/stylized/FG-HUM-STYLIZED-000001.glb
+          python pipeline/scripts/validate_stylized_character.py artifacts/stylized/FG-HUM-STYLIZED-000001-report.json
       - name: Upload verified GLB and QA reports
         if: always()
         uses: actions/upload-artifact@v7
