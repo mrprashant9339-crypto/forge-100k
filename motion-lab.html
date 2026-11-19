@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#080d12">
+<title>Forge 100K — Motion & Simulation Lab</title>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
+<style>
+:root{color-scheme:dark;font-family:Inter,ui-sans-serif,system-ui,sans-serif;background:#080d12;color:#edf4f7;--panel:#101a21;--line:#263942;--muted:#8da2a8;--lime:#c5f36b;--mint:#75e0bb}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#1d3940 0,transparent 45%),#080d12;min-height:100vh}
+header{height:70px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(14px,3vw,38px);border-bottom:1px solid var(--line);background:#081016ed;position:sticky;top:0;z-index:5;backdrop-filter:blur(16px)}
+.brand{font-size:14px;font-weight:900;letter-spacing:.18em}.brand b{background:linear-gradient(135deg,#d7ff8a,#89d7a0);color:#10150b;padding:9px 12px;border-radius:10px;margin-right:10px}.brand small{display:block;color:var(--muted);font-size:8px;margin:5px 0 0 44px;letter-spacing:.2em}
+a,button,input,select{font:inherit}a{color:var(--mint);text-decoration:none}button{background:#17262e;border:1px solid #30464d;color:#dce8e8;border-radius:10px;padding:10px 13px;font-size:11px;font-weight:750;cursor:pointer;transition:.18s}button:hover{border-color:#8fcf9e;transform:translateY(-1px)}button.primary{background:var(--lime);color:#10150b;border-color:var(--lime)}button[aria-pressed=true]{border-color:var(--lime);color:var(--lime)}button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--lime);outline-offset:3px}
+main{max-width:1600px;margin:auto;padding:24px clamp(14px,2.5vw,34px)}.heading{display:flex;align-items:end;justify-content:space-between;gap:20px;margin-bottom:18px}.eyebrow{font-size:9px;letter-spacing:.2em;color:var(--mint);font-weight:800}.heading h1{font-size:clamp(28px,4vw,46px);letter-spacing:-.055em;margin:8px 0}.muted{color:var(--muted);font-size:12px}.badge{border:1px solid #365047;background:#14251f;color:var(--lime);padding:8px 11px;border-radius:20px;font-size:9px;letter-spacing:.12em;white-space:nowrap}
+.workspace{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px}.viewport{position:relative;min-height:570px;border:1px solid #2b4148;border-radius:16px;overflow:hidden;background:radial-gradient(ellipse at 50% 38%,#263c43,#0b131a 70%)}#stage{position:absolute;inset:0}.hud{position:absolute;z-index:2;pointer-events:none}.hud.top-left{top:15px;left:17px}.hud.top-right{top:15px;right:17px;text-align:right}.hud strong{display:block;font-size:11px;letter-spacing:.12em}.hud small{display:block;color:#91a9aa;font-size:9px;margin-top:5px}.side{display:grid;align-content:start;gap:12px}.panel{background:linear-gradient(145deg,#14232a,#0e181e);border:1px solid #2a4148;border-radius:14px;padding:15px}.panel h2{font-size:11px;letter-spacing:.14em;margin:0 0 13px;text-transform:uppercase}.clip-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.clip{padding:12px 8px;text-align:left}.clip b{display:block;font-size:11px}.clip small{font-size:9px;color:var(--muted)}.field{display:grid;gap:7px;margin:12px 0}.field label{font-size:10px;color:#9db1b3;display:flex;justify-content:space-between}.field input[type=range]{width:100%;accent-color:var(--lime)}.field select{width:100%;background:#101d24;color:#e9f2f2;border:1px solid #2a4048;border-radius:9px;padding:10px;font-size:11px}.btn-row{display:flex;gap:7px;flex-wrap:wrap}.btn-row button{flex:1}.timeline{margin-top:14px}.timeline-head{display:flex;justify-content:space-between;font-size:10px;color:#a9bdbe;margin-bottom:8px}.timeline input{width:100%;accent-color:var(--lime)}.timeline-marks{display:flex;justify-content:space-between;color:#72888c;font-size:8px;margin-top:4px}.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.metric{background:#0b151a;border:1px solid #263b42;border-radius:9px;padding:9px}.metric b{display:block;font-size:15px}.metric small{color:var(--muted);font-size:8px;letter-spacing:.1em}.note{font-size:9px;line-height:1.6;color:#8da2a8}.status{color:var(--lime)}footer{margin:18px 0;color:#6f8589;font-size:9px;line-height:1.6}
+@media(max-width:900px){.workspace{grid-template-columns:1fr}.viewport{min-height:500px}.side{grid-template-columns:repeat(2,minmax(0,1fr))}.side .panel:last-child{grid-column:1/-1}}
+@media(max-width:560px){main{padding:15px 11px}.heading{display:block}.badge{display:inline-block;margin-top:8px}.viewport{min-height:420px}.side{grid-template-columns:1fr}.side .panel:last-child{grid-column:auto}.clip-grid{grid-template-columns:repeat(3,1fr)}.clip{padding:10px 6px}}
+</style></head><body>
+<header><div class="brand"><b>F</b>FORGE 100K<small>MOTION & SIMULATION LAB</small></div><div class="btn-row" style="align-items:center"><a href="./index.html">← Character library</a><button id="exportMotion">Export motion JSON</button></div></header>
+<main><section class="heading"><div><div class="eyebrow">FORGE STUDIO / ANIMATION SYSTEM</div><h1>Motion & Simulation Lab</h1><p class="muted">Procedural rig preview, deterministic motion clips and real-time kinematic simulation.</p></div><span class="badge">PHYSICS PREVIEW · BETA</span></section>
+<section class="workspace"><div><div class="viewport"><div id="stage"></div><div class="hud top-left"><strong id="clipName">IDLE / LOOP</strong><small id="characterMeta">PROCEDURAL HUMANOID · RIG V1</small></div><div class="hud top-right"><strong id="playState">PLAYING</strong><small id="frameMeta">30 FPS TARGET · 0.00 S</small></div></div>
+<div class="panel timeline"><div class="timeline-head"><span>ANIMATION TIMELINE</span><span id="timeLabel">0.00 / 4.00 s</span></div><input id="scrub" type="range" min="0" max="4" step=".01" value="0" aria-label="Animation timeline"><div class="timeline-marks"><span>0s</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div></div></div>
+<aside class="side">
+<div class="panel"><h2>Motion library</h2><div class="clip-grid">
+<button class="clip" data-clip="idle" aria-pressed="true"><b>Idle</b><small>Breathing · 4s</small></button>
+<button class="clip" data-clip="walk"><b>Walk</b><small>Locomotion · 1.2s</small></button>
+<button class="clip" data-clip="run"><b>Run</b><small>Sprint · 0.8s</small></button>
+<button class="clip" data-clip="jump"><b>Jump</b><small>Airborne · 1.4s</small></button>
+<button class="clip" data-clip="combat"><b>Combat</b><small>Guard · 1.6s</small></button>
+<button class="clip" data-clip="wave"><b>Wave</b><small>Interaction · 2s</small></button>
+</div><div class="btn-row" style="margin-top:12px"><button id="play" class="primary">Pause</button><button id="restart">Restart</button></div></div>
+<div class="panel"><h2>Rig & playback</h2>
+<div class="field"><label for="speed">Playback speed <b id="speedValue">1.00×</b></label><input id="speed" type="range" min=".25" max="2" step=".05" value="1"></div>
+<div class="field"><label for="rigMode">Rig visualization</label><select id="rigMode"><option value="solid">Solid character</option><option value="bones">Skeleton overlay</option><option value="wire">Wireframe</option></select></div>
+<div class="field"><label for="gravity">Gravity <b id="gravityValue">9.8 m/s²</b></label><input id="gravity" type="range" min="0" max="20" step=".1" value="9.8"></div>
+<div class="field"><label for="loop">Playback mode</label><select id="loop"><option value="loop">Loop clip</option><option value="once">Play once</option><option value="pingpong">Ping-pong</option></select></div>
+<div class="btn-row"><button id="resetSim">Reset simulation</button><button id="toggleGrid" aria-pressed="true">Grid on</button></div></div>
+<div class="panel"><h2>Live simulation telemetry</h2><div class="metric-grid"><div class="metric"><b id="fps">60</b><small>FPS</small></div><div class="metric"><b id="frame">000</b><small>FRAME</small></div><div class="metric"><b id="height">0.00 m</b><small>ROOT HEIGHT</small></div><div class="metric"><b id="state">GROUNDED</b><small>PHYSICS STATE</small></div></div><p class="note" style="margin:12px 0 0">This is a procedural preview rig. Motion curves and root physics are generated at runtime; this page does not claim production motion-capture data or cloth simulation.</p></div>
+</aside></section><footer>FORGE 100K · Motion Lab v0.1 · Three.js runtime · Character library remains the source of procedural preset identities. Use the export action to save the selected clip timing and simulation parameters as JSON.</footer></main>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+const host=document.querySelector('#stage');
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x0b151b);scene.fog=new THREE.Fog(0x0b151b,12,28);
+const camera=new THREE.PerspectiveCamera(38,1,.1,100);camera.position.set(4.3,3.1,7.5);
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;host.append(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,1.1,0);controls.enableDamping=true;controls.minDistance=3;controls.maxDistance=13;
+scene.add(new THREE.HemisphereLight(0xbfe8e5,0x26313b,2));
+const key=new THREE.DirectionalLight(0xffe6c4,3.2);key.position.set(4,7,5);key.castShadow=true;key.shadow.mapSize.set(1024,1024);scene.add(key);
+const rim=new THREE.DirectionalLight(0x72cfe0,2);rim.position.set(-4,4,-4);scene.add(rim);
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(80,80),new THREE.MeshStandardMaterial({color:0x111d22,roughness:.9}));floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
+const grid=new THREE.GridHelper(30,60,0x52736c,0x263b40);grid.position.y=.006;scene.add(grid);
+const mat=(color,metalness=.05,roughness=.65)=>new THREE.MeshStandardMaterial({color,metalness,roughness});
+const skin=mat(0xc98f6b),cloth=mat(0x476b5d),accent=mat(0xc5f36b,.35,.3),dark=mat(0x1b2830,.15,.5),white=mat(0xe9eee8);
+const root=new THREE.Group();scene.add(root);
+function joint(parent,name,x,y,z){const g=new THREE.Group();g.name=name;g.position.set(x,y,z);parent.add(g);return g}
+function capsule(parent,material,radius,length,y=0){const m=new THREE.Mesh(new THREE.CapsuleGeometry(radius,length,5,10),material);m.position.y=y;m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
+function ball(parent,material,x,y,z,sx,sy,sz){const m=new THREE.Mesh(new THREE.SphereGeometry(1,18,14),material);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
+function limb(parent,material,a,b,r1,r2){const A=new THREE.Vector3(...a),B=new THREE.Vector3(...b),d=B.clone().sub(A);const m=new THREE.Mesh(new THREE.CylinderGeometry(r2,r1,d.length(),12),material);m.position.copy(A).add(B).multiplyScalar(.5);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());m.castShadow=true;parent.add(m);return m}
+const pelvis=joint(root,'pelvis',0,1.02,0);ball(pelvis,cloth,0,0,0,.25,.18,.16);
+const torso=joint(pelvis,'spine',0,.13,0);capsule(torso,cloth,.22,.38,.20);ball(torso,accent,0,.23,.19,.07,.10,.035);
+const chest=joint(torso,'chest',0,.39,0);ball(chest,cloth,0,.04,0,.28,.18,.18);
+const neck=joint(chest,'neck',0,.19,0);capsule(neck,skin,.075,.08,.04);
+const head=joint(neck,'head',0,.13,0);ball(head,skin,0,.08,0,.17,.22,.15);ball(head,dark,0,.23,-.015,.18,.09,.16);
+for(const s of [-1,1]){ball(head,white,s*.065,.10,.132,.035,.025,.018);ball(head,dark,s*.065,.10,.15,.014,.017,.009)}
+const armL=joint(chest,'upperArm.L',-.29,.10,0),armR=joint(chest,'upperArm.R',.29,.10,0);
+for(const [g,s] of [[armL,-1],[armR,1]]){limb(g,cloth,[0,0,0],[s*.04,-.34,0],.085,.07);const elbow=joint(g,'elbow',s*.04,-.34,0);limb(elbow,skin,[0,0,0],[s*.02,-.29,.015],.065,.05);ball(elbow,skin,s*.02,-.30,.02,.06,.06,.06);ball(elbow,dark,s*.02,-.60,.08,.07,.045,.10)}
+const legL=joint(pelvis,'thigh.L',-.12,-.10,0),legR=joint(pelvis,'thigh.R',.12,-.10,0);
+for(const [g,s] of [[legL,-1],[legR,1]]){limb(g,cloth,[0,0,0],[0,-.43,0],.105,.075);const knee=joint(g,'knee',0,-.43,0);ball(knee,dark,0,0,0,.08,.075,.08);limb(knee,cloth,[0,0,0],[0,-.39,.025],.07,.055);ball(knee,dark,0,-.40,.10,.09,.055,.16)}
+const bones=new THREE.Group();root.add(bones);
+const bonePairs=[[0,1.1,0,0,1.45,0],[0,1.45,0,-.29,1.55,0],[0,1.45,0,.29,1.55,0],[-.29,1.55,0,-.34,1.20,0],[.29,1.55,0,.34,1.20,0],[0,1.05,0,-.12,.92,0],[0,1.05,0,.12,.92,0],[-.12,.92,0,-.12,.49,0],[.12,.92,0,.12,.49,0]];
+for(const p of bonePairs){const a=new THREE.Vector3(p[0],p[1],p[2]),b=new THREE.Vector3(p[3],p[4],p[5]),d=b.clone().sub(a);const line=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,d.length(),6),new THREE.MeshBasicMaterial({color:0xc5f36b}));line.position.copy(a).add(b).multiplyScalar(.5);line.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());bones.add(line);const dot=new THREE.Mesh(new THREE.SphereGeometry(.026,8,8),new THREE.MeshBasicMaterial({color:0x75e0bb}));dot.position.copy(a);bones.add(dot)}
+bones.visible=false;
+const parts=[...root.children];let wire=false;const clips={idle:4,walk:1.2,run:.8,jump:1.4,combat:1.6,wave:2};let clip='idle',time=0,playing=true,speed=1,mode='loop',direction=1,simY=0,velocity=0,gravity=9.8,last=performance.now(),frames=0,fps=60,fpsClock=0,frameCount=0;
+const $=id=>document.getElementById(id);function setClip(name){clip=name;time=0;direction=1;document.querySelectorAll('[data-clip]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.clip===clip)));$('clipName').textContent=clip.toUpperCase()+' / '+(mode==='loop'?'LOOP':'PLAYBACK');$('scrub').max=clips[clip];$('scrub').value=0;renderPose(0)}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}function smooth(a,b,x){const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)}
+function renderPose(t){const d=clips[clip],p=t/d,w=2*Math.PI*t/(clip==='walk'?d:clip==='run'?d:1);
+ [pelvis,torso,chest,head,armL,armR,legL,legR].forEach(g=>{g.rotation.set(0,0,0)});
+ let bob=0, stride=0, arm=0;
+ if(clip==='idle'){bob=Math.sin(w*2)*.018;torso.rotation.x=Math.sin(w)*.025;head.rotation.y=Math.sin(w*.5)*.08;arm=.035}
+ if(clip==='walk'){stride=Math.sin(w);bob=Math.abs(Math.sin(w*2))*.045;arm=.45;pelvis.rotation.y=Math.sin(w)*.035}
+ if(clip==='run'){stride=Math.sin(w);bob=Math.abs(Math.sin(w*2))*.075;arm=.8;torso.rotation.x=-.12}
+ if(clip==='jump'){const jump=Math.sin(Math.PI*p);simY=jump*1.05;stride=jump*.25;torso.rotation.x=-.12*jump;arm=.65*jump}
+ if(clip==='combat'){const pulse=Math.sin(w);torso.rotation.x=-.10;arm=.6+Math.max(0,pulse)*.25;head.rotation.y=.12*Math.sin(w)}
+ if(clip==='wave'){const wave=Math.sin(Math.PI*2*p);arm=.2;armR.rotation.z=-1.55;armR.rotation.x=.15*wave;head.rotation.y=.08*Math.sin(w)}
+ if(clip!=='jump')simY=0;
+ pelvis.position.y=1.02+bob;legL.rotation.x=stride*(clip==='run'?.95:.62);legR.rotation.x=-stride*(clip==='run'?.95:.62);armL.rotation.x=-stride*.45;armR.rotation.x=stride*.45;
+ armL.rotation.z=arm+(clip==='combat'?.35:0);if(clip!=='wave')armR.rotation.z=-arm-(clip==='combat'?.35:0);
+ torso.rotation.x+=clip==='walk'?.025:0;root.position.y=simY;
+}
+function advance(dt){const d=clips[clip];if(playing){time+=dt*speed*direction;if(mode==='loop'){time=((time%d)+d)%d}else if(mode==='pingpong'){if(time>d){time=d;direction=-1}else if(time<0){time=0;direction=1}}else if(time>=d){time=d;playing=false;$('play').textContent='Play';$('playState').textContent='PAUSED'}}
+ renderPose(time);$('scrub').value=time;$('timeLabel').textContent=time.toFixed(2)+' / '+d.toFixed(2)+' s';$('frame').textContent=String(Math.round(time*30)).padStart(3,'0');$('height').textContent=simY.toFixed(2)+' m';$('state').textContent=simY>.02?'AIRBORNE':'GROUNDED';$('playState').textContent=playing?'PLAYING':'PAUSED';$('frameMeta').textContent='30 FPS TARGET · '+time.toFixed(2)+' S'}
+function resize(){const w=host.clientWidth,h=host.clientHeight;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h)}new ResizeObserver(resize).observe(host);resize();
+document.querySelectorAll('[data-clip]').forEach(b=>b.addEventListener('click',()=>setClip(b.dataset.clip)));
+$('play').onclick=()=>{playing=!playing;$('play').textContent=playing?'Pause':'Play';$('playState').textContent=playing?'PLAYING':'PAUSED'};
+$('restart').onclick=()=>{time=0;playing=true;direction=1;$('play').textContent='Pause';advance(0)};
+$('scrub').oninput=e=>{time=Number(e.target.value);playing=false;$('play').textContent='Play';advance(0)};
+$('speed').oninput=e=>{speed=Number(e.target.value);$('speedValue').textContent=speed.toFixed(2)+'×'};
+$('gravity').oninput=e=>{gravity=Number(e.target.value);$('gravityValue').textContent=gravity.toFixed(1)+' m/s²'};
+$('loop').onchange=e=>{mode=e.target.value;setClip(clip)};
+$('rigMode').onchange=e=>{const v=e.target.value;bones.visible=v==='bones';root.traverse(o=>{if(o.isMesh)o.material.wireframe=v==='wire'&&!bones.visible})};
+$('resetSim').onclick=()=>{simY=0;velocity=0;time=0;direction=1;playing=true;setClip('idle');$('play').textContent='Pause'};
+$('toggleGrid').onclick=()=>{grid.visible=!grid.visible;$('toggleGrid').textContent=grid.visible?'Grid on':'Grid off';$('toggleGrid').setAttribute('aria-pressed',String(grid.visible))};
+$('exportMotion').onclick=()=>{const data={schema:'forge.motion.v1',clip,durationSeconds:clips[clip],playback:{speed,mode},simulation:{gravityMps2:gravity,rootHeightMeters:simY},rig:'forge-humanoid-procedural-v1',generatedAt:new Date().toISOString(),note:'Procedural preview curves; not motion-capture or production animation data.'};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='forge-'+clip+'-motion.json';a.click();URL.revokeObjectURL(url)};
+function loop(now){requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/1000);last=now;advance(dt);controls.update();renderer.render(scene,camera);frames++;fpsClock+=dt;if(fpsClock>=.5){fps=Math.round(frames/fpsClock);$('fps').textContent=String(fps);frames=0;fpsClock=0}}
+setClip('idle');requestAnimationFrame(loop);
+</script></body></html>
