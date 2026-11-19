@@ -61,7 +61,7 @@ try {
   if (!(await page.locator("#characterMeta").textContent()).includes("FG-000042")) throw new Error("Motion Lab did not receive the selected catalogue preset identity");
   await page.locator('[data-clip="walk"]').click();
   if (!(await page.locator("#clipName").textContent()).includes("WALK")) throw new Error("Motion clip selection did not update");
-  await page.locator("#gravity").fill("12");
+  await page.locator("#gravity").evaluate(el=>{el.value="12";el.dispatchEvent(new Event("input",{bubbles:true}))});
   if (!(await page.locator("#gravityValue").textContent()).includes("12.0")) throw new Error("Gravity control did not update");
   await page.locator('[data-clip="jump"]').click();
   await page.locator("#play").click();
