@@ -18,7 +18,7 @@ Serve this folder with `python -m http.server 8000` and open http://localhost:80
 ## Scope and legal note
 The 100,000 entries are procedural presets, not 100,000 separately authored AAA-quality models. Starter meshes are original low-detail prototypes, not production-rigged assets. Do not copy or redistribute proprietary Free Fire, PUBG, GTA or Minecraft assets. Third-party assets must be added only after checking their individual licences.
 
-See [Product Specification](docs/PRODUCT_SPEC.md), [Roadmap](docs/ROADMAP.md), [Authentication setup](docs/AUTH_SETUP.md), and the [Phase 4 advanced character pipeline](pipeline/PHASE4.md).
+See [Product Specification](docs/PRODUCT_SPEC.md), [Roadmap](docs/ROADMAP.md), [Authentication setup](docs/AUTH_SETUP.md), and the [Phase 4 advanced character pipeline](pipeline/PHASE4.md). The [Phase 5 stylized character factory](pipeline/PHASE5.md) generates an original rigged humanoid candidate through Blender and validates its GLB package.
 
 ## Enable accounts and cloud presets
 
