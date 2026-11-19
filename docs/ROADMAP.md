@@ -60,7 +60,10 @@
 - [ ] Verify two-account isolation against the live Supabase project and test password recovery end-to-end
 - [ ] Private upload bucket, object-path RLS, signed upload/download URLs, file-size/type limits and malware scanning
 - [ ] Server-side GLB validation workers; never trust client-side validation for publication
-- [ ] Queue-backed batch workers, job retries, cancellation, idempotency and storage/CDN
+- [x] Supabase atomic job queue with `FOR UPDATE SKIP LOCKED`, per-type claims, renewable worker leases, bounded retries and service-role-only completion RPCs
+- [x] Dockerized Blender blockout worker with manifest validation, private upload, SHA-256 version record and pending-review asset registration
+- [ ] Dedicated workers for garment, retopology, texture bake, rigging and animation job types
+- [ ] Worker deployment, secret-manager configuration, live queue smoke test and production storage/CDN
 - [ ] Asset registry, immutable versions, provenance/licence evidence and moderation review
 - [ ] Search indexing, asset analytics, audit logs and usage telemetry
 - [ ] AI generation backends with human QA and licence checks
