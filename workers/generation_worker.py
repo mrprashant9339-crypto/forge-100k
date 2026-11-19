@@ -67,7 +67,7 @@ def rpc(name: str, payload: dict):
 
 
 def claim_job():
-    rows = rpc("claim_next_generation_job", {"p_worker_id": WORKER_ID})
+    rows = rpc("claim_next_generation_job", {"p_worker_id": WORKER_ID, "p_job_type": "character"})
     if isinstance(rows, dict):
         return rows
     return rows[0] if isinstance(rows, list) and rows else None
