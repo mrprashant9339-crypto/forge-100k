@@ -51,6 +51,8 @@ class AuthContractTests(unittest.TestCase):
         self.assertIn("interval '15 minutes'", sql)
         self.assertIn("p_job_type", sql)
         self.assertIn("grant execute on function public.claim_next_generation_job(text, text) to service_role", sql)
+        self.assertNotIn("security definer", sql)
+        self.assertIn("security invoker", sql)
         self.assertIn("revoke all on function public.complete_generation_job", sql)
         self.assertIn("attempt_count < max_attempts", sql)
         self.assertIn("and attempt_count = 0", sql)
