@@ -82,6 +82,7 @@ async function init() {
     if (error) console.error("Session restore failed:", error.message);
     state.user = session?.user || null;
     if (state.user) await restorePresets();
+    const recoveryLink = new URLSearchParams(location.hash.replace(/^#/, "")).get("type") === "recovery";
     state.client.auth.onAuthStateChange((event, sessionNow) => {
       state.user = sessionNow?.user || null;
       renderSession();
@@ -90,6 +91,10 @@ async function init() {
       }
       if (state.user) setTimeout(() => restorePresets(), 0);
     });
+    if (recoveryLink && state.user) {
+      history.replaceState(null, "", location.pathname + location.search);
+      showModal("recovery");
+    }
   }
   renderSession();
 }
