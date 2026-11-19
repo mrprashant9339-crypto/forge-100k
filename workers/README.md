@@ -57,7 +57,7 @@ The job's `user_id` must be the authenticated user's ID. Asset IDs must be uniqu
 ## Current scope and hard boundaries
 
 - Implemented worker type: `character` blockout generation only.
-- Other job types are rejected with an explicit error and require dedicated workers.
+- This worker claims only `character` jobs. Other job types remain queued until their dedicated workers are deployed.
 - Output remains `pending_review` in a private bucket; this worker never publishes assets.
 - GLB validation is structural/container validation, not artist review, rig/animation certification, collision QA or target-engine certification.
 - The worker uses a temporary isolated job directory, enforces a 50 MiB output cap, and never accepts client-supplied filesystem paths or shell commands.
