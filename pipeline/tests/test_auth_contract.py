@@ -44,6 +44,15 @@ class AuthContractTests(unittest.TestCase):
         self.assertIn("revoke update on public.generation_jobs", sql)
         self.assertNotRegex(sql, r"using\s*\(\s*true\s*\)")
 
+    def test_worker_queue_is_atomic_and_service_role_only(self):
+        sql = (ROOT / "supabase" / "migrations" / "202611190002_worker_queue.sql").read_text(encoding="utf-8").lower()
+        self.assertIn("for update skip locked", sql)
+        self.assertIn("interval '15 minutes'", sql)
+        self.assertIn("p_job_type", sql)
+        self.assertIn("grant execute on function public.claim_next_generation_job(text, text) to service_role", sql)
+        self.assertIn("revoke all on function public.complete_generation_job", sql)
+        self.assertIn("attempt_count < max_attempts", sql)
+
     def test_public_config_is_explicitly_unconfigured(self):
         config = (ROOT / "supabase-config.js").read_text(encoding="utf-8")
         self.assertIn("YOUR_PROJECT_REF", config)
