@@ -28,6 +28,9 @@ jobs:
           python -m json.tool pipeline/manifests/phase2-integration-job.json >/dev/null
           python -m py_compile pipeline/blender/generate_pbr_textures.py
           python pipeline/scripts/validate_manifest.py pipeline/manifests/sample-batch.json
+      - name: Test authentication and user-data security contracts
+        run: |
+          python pipeline/tests/test_auth_contract.py
       - name: Compile Python workers
         run: |
           python -m compileall -q pipeline
