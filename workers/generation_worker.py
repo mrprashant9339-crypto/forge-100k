@@ -15,6 +15,7 @@ import socket
 import subprocess
 import tempfile
 import time
+import threading
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -67,6 +68,8 @@ def rpc(name: str, payload: dict):
 
 def claim_job():
     rows = rpc("claim_next_generation_job", {"p_worker_id": WORKER_ID})
+    if isinstance(rows, dict):
+        return rows
     return rows[0] if isinstance(rows, list) and rows else None
 
 
@@ -177,6 +180,43 @@ def insert_asset(job: dict, asset: dict, glb_path: Path) -> str:
     return asset_uuid
 
 
+def run_blender_with_heartbeat(job_id: str, command: list[str], timeout: int):
+    process = subprocess.Popen(
+        command, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+    )
+    stop = threading.Event()
+    lease_errors = []
+
+    def keep_lease_alive():
+        while not stop.wait(60):
+            try:
+                heartbeat(job_id)
+            except Exception as exc:
+                lease_errors.append(exc)
+                process.terminate()
+                return
+
+    keeper = threading.Thread(target=keep_lease_alive, name=f"lease-{job_id[:8]}", daemon=True)
+    keeper.start()
+    try:
+        try:
+            stdout, stderr = process.communicate(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            stdout, stderr = process.communicate()
+            raise WorkerError("blender_generation_timeout")
+    finally:
+        stop.set()
+        keeper.join(timeout=5)
+
+    if lease_errors:
+        raise WorkerError("worker_lease_lost")
+    if process.returncode:
+        detail = (stderr or stdout or "")[-1200:]
+        raise WorkerError("blender_generation_failed: " + detail)
+    return subprocess.CompletedProcess(command, process.returncode, stdout, stderr)
+
+
 def process_job(job: dict):
     job_id = str(job["id"])
     heartbeat(job_id)
@@ -199,12 +239,11 @@ def process_job(job: dict):
         if validation.returncode:
             raise WorkerError("manifest_validation_failed")
         heartbeat(job_id)
-        result = subprocess.run(
+        result = run_blender_with_heartbeat(
+            job_id,
             [BLENDER, "--background", "--python", str(PIPELINE / "blender" / "generate_batch.py"), "--", str(manifest_path)],
-            cwd=ROOT, capture_output=True, text=True, timeout=int(os.environ.get("BLENDER_JOB_TIMEOUT", "900")),
+            timeout=int(os.environ.get("BLENDER_JOB_TIMEOUT", "900")),
         )
-        if result.returncode:
-            raise WorkerError("blender_generation_failed")
         glb_path = workspace / "artifacts" / f"{asset['asset_id']}.glb"
         if not glb_path.is_file():
             raise WorkerError("generated_glb_missing")
