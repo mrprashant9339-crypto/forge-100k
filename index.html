@@ -111,6 +111,74 @@ button.primary{background:linear-gradient(135deg,#d4ff85,#a8df72);border-color:#
 }
 @media(min-width:701px) and (max-width:1180px){#mobileCategory{display:block;max-width:220px}}
 @media(prefers-reduced-motion:no-preference){.asset,.cat,.stat,.stage{transition:border-color .2s ease,background .2s ease,transform .2s ease}.asset:hover{transform:translateY(-2px)}}
+
+/* Forge 100K — responsive creator workspace v2 */
+:root{--panel:#101b22;--panel2:#15262d;--line:#29414a;--muted:#9ab0b4;--lime:#cfff82;--mint:#7be3c1}
+html{scroll-behavior:smooth}body{overflow-x:hidden}
+.top{z-index:30;box-shadow:0 8px 30px #0003}
+.layout{grid-template-columns:clamp(184px,17vw,250px) minmax(0,1fr) clamp(270px,22vw,330px);gap:0}
+main{max-width:1500px;margin:0 auto;width:100%;padding:clamp(16px,2vw,30px)}
+.hero{align-items:center}.hero h1{max-width:560px;font-size:clamp(30px,3.2vw,48px)}
+.hero .muted{max-width:520px;line-height:1.65}
+.filters{display:grid;grid-template-columns:minmax(180px,1.8fr) repeat(3,minmax(110px,1fr));}
+.stage{height:clamp(390px,48vw,590px);min-height:360px}
+.stage-tools{z-index:4}.stage-footer{z-index:3}
+#view canvas{display:block;width:100%;height:100%;touch-action:pan-y}
+.cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}
+.asset{min-height:94px;display:flex;flex-direction:column;justify-content:center;gap:7px}
+.right{z-index:2}
+.right select,.right button{min-height:42px}
+.actions button{min-height:44px}
+button:active{transform:scale(.98)}
+button:disabled{cursor:not-allowed;transform:none}
+@media(max-width:1180px){
+ .layout{grid-template-columns:190px minmax(0,1fr)}
+ .right{position:relative;top:auto;height:auto;grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 18px;padding:22px}
+ .right>.label:first-child,.right>h3,.right>p.muted,.right .actions,.right .saved-panel,.right .notice:last-child{grid-column:1/-1}
+ .cards{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:900px){
+ .layout{display:block}
+ aside:not(.right){display:none}
+ main{padding:16px}
+ .hero{display:grid;grid-template-columns:1fr;gap:12px}
+ .stats{width:100%}.stat{flex:1}
+ .filters{grid-template-columns:1fr 1fr}
+ .filters input{grid-column:1/-1}
+ .stage{height:clamp(360px,68vw,520px)}
+ .cards{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .right{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding:18px}
+}
+@media(max-width:600px){
+ .top{height:60px;padding:0 10px}.brand{font-size:10px;letter-spacing:.12em}.brand b{padding:7px 8px;margin-right:7px}
+ .top small{font-size:6px;margin-left:32px}
+ .top>div:last-child{gap:6px!important}
+ #motionLabLink{font-size:8px!important;padding:8px 7px!important}
+ #authButton,#random{font-size:8px;padding:8px 9px}
+ main{padding:12px}
+ .hero h1{font-size:clamp(28px,8vw,38px)}
+ .hero .muted{font-size:11px}
+ .stat{padding:10px 8px;min-width:0}.stat b{font-size:17px}.stat span{font-size:7px}
+ .filters{grid-template-columns:1fr 1fr;gap:7px;margin:13px 0}
+ .filters input{grid-column:1/-1}.filters select{font-size:10px;padding:10px 8px;min-width:0}
+ .stage{height:390px;min-height:340px;border-radius:15px}
+ .stageTitle{max-width:48%;font-size:11px}
+ .stage-tools{right:7px;top:7px}.stage-tools button{font-size:8px;padding:7px}
+ .stage-footer{font-size:7px}
+ .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .asset{min-height:78px;padding:10px;border-radius:11px}.asset b{font-size:10px}.asset small{font-size:8px}
+ .gridhead{margin:17px 0 9px}
+ .right{grid-template-columns:1fr 1fr;padding:15px 12px;gap:0 10px}
+ .right h3{font-size:19px}.right>.muted{font-size:10px}
+ .right .label{font-size:8px}
+ .actions{grid-template-columns:1fr 1fr}
+ .actions button{font-size:9px;padding:9px 7px}
+ .saved-panel{margin-top:15px}
+ .detail{font-size:9px}
+ .pager{gap:9px}.pager button{min-width:74px;font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition:none!important;animation:none!important}}
+
 </style></head><body><header class="top"><div><div class="brand"><b>F</b>FORGE 100K</div><small>CHARACTER & ASSET LAB</small></div><div style="display:flex;gap:8px;align-items:center"><a id="motionLabLink" href="./motion-lab.html" style="color:#75e0bb;text-decoration:none;font-size:11px;font-weight:800;padding:10px 12px;border:1px solid #30464d;border-radius:10px">Motion Lab ↗</a><button id="authButton" type="button">Sign in</button><button id="random" class="primary">Generate random</button></div></header><div class="layout"><aside><div class="label">Explore library</div><input id="categorySearch" type="search" placeholder="Filter categories…" aria-label="Filter asset categories"><div id="cats" class="cats"></div><p class="notice">Original procedural presets. Preview, customise and export your own designs.</p></aside><main><section class="hero"><div><div class="label">FORGE STUDIO <span style="color:#c5f36b">/ CHARACTER LAB</span></div><h1>Make something<br>worth playing.</h1><p class="muted">Explore 100,000 procedural character variations. Shape it, preview it, export it.</p></div><div class="stats"><div class="stat"><b>100K</b><span>PRESETS</span></div><div class="stat"><b>20</b><span>GROUPS</span></div><div class="stat"><b>10</b><span>STYLES</span></div></div></section><div class="filters"><select id="mobileCategory" aria-label="Choose asset category"><option>All assets</option></select><input id="search" type="search" aria-label="Search character presets" placeholder="Search 100,000 characters, creatures, roles…"><select id="style"><option>All styles</option><option>Normal</option><option>Armored</option><option>Royal</option><option>Winter</option><option>Summer</option><option>Ninja</option><option>Pirate</option><option>Space</option><option>Underwater</option><option>Glowing</option></select><select id="sort"><option value="featured">Featured</option><option value="az">Name A–Z</option></select></div><section class="stage"><div id="view"></div><div class="stage-tools"><button id="frontView" type="button" title="Front camera">Front</button><button id="resetView" type="button">3/4 view</button><button id="wireToggle" type="button" aria-pressed="false">Wireframe</button></div><div class="stage-footer"><span><i></i> REAL-TIME VIEWPORT</span><span>ORBIT <b>ON</b> · ZOOM <b>ON</b></span></div><div class="stageTitle" id="previewTitle">Loading preview…<small>LIVE 3D · DRAG TO ORBIT · SCROLL TO ZOOM</small></div></section><div class="gridhead"><b id="gridTitle">Explore characters</b><span id="count" class="muted"></span></div><div id="cards" class="cards"></div><div class="pager"><button id="prev">Previous</button><span id="page" class="muted">1 / 4167</span><button id="next">Next</button></div></main><aside class="right"><div class="label">CREATOR CONTROLS</div><h3 id="name">Explorer</h3><p class="muted">Choose a style and palette, then export your procedural model.</p><div class="label">Outfit style</div><select id="outfit"><option>Normal</option><option>Armored</option><option>Royal</option><option>Winter</option><option>Summer</option><option>Ninja</option><option>Pirate</option><option>Space</option><option>Underwater</option><option>Glowing</option></select><div class="label">Body form</div><select id="body"><option>Balanced</option><option>Slim</option><option>Athletic</option><option>Heavy</option><option>Tall</option><option>Compact</option><option>Chibi</option><option>Heroic</option></select><div class="label">Material palette</div><select id="palette"><option value="#b8f36b">Toxic Lime</option><option value="#e65c64">Crimson</option><option value="#52b9d4">Ocean</option><option value="#e8bd61">Royal Gold</option><option value="#a88bff">Violet</option><option value="#d99b61">Desert</option></select><div class="actions"><button id="apply" class="primary">Apply changes</button><button id="save">Save preset</button><button id="download" class="wide">Export character · GLB</button><button id="upload" class="wide">Import GLB preview</button><input id="file" type="file" accept=".glb,model/gltf-binary" hidden></div><section class="saved-panel"><div class="saved-head"><b>My saved presets</b><span id="savedCount">0 / 100</span></div><div id="savedList" class="saved-list"><div class="saved-empty">Your saved character presets will appear here.</div></div></section><div class="label" style="margin-top:22px">Asset details</div><div class="detail"><span>Asset ID</span><span id="assetId">FG-000001</span></div><div class="detail"><span>Category</span><span id="assetCat">Human</span></div><div class="detail"><span>Format</span><span>GLB / glTF 2.0</span></div><div class="detail"><span>Geometry</span><span>Procedural preview</span></div><p class="notice">Starter meshes are low-detail original prototypes, not AAA game-ready rigged characters. Exported files can be refined in Blender or a game engine.</p></aside></div><section id="authModal" hidden role="dialog" aria-modal="true" aria-labelledby="authTitle"><div class="auth-card"><div class="auth-head"><h2 id="authTitle">Welcome back</h2><button id="authClose" class="auth-close" type="button" aria-label="Close">×</button></div><form id="authForm"><div id="authNameField" class="auth-field" hidden><label for="authName">Full name</label><input id="authName" name="name" autocomplete="name" maxlength="80"></div><div id="authEmailField" class="auth-field"><label for="authEmail">Email address</label><input id="authEmail" name="email" type="email" autocomplete="email" required maxlength="254"></div><div id="authPasswordField" class="auth-field"><label for="authPassword">Password</label><input id="authPassword" name="password" type="password" minlength="12" autocomplete="current-password"></div><div id="authConfirmField" class="auth-field" hidden><label for="authConfirm">Confirm password</label><input id="authConfirm" name="confirm" type="password" minlength="12" autocomplete="new-password"></div><button id="authSubmit" class="primary auth-submit" type="submit">Sign in</button></form><div id="authStatus" class="auth-status" role="status" aria-live="polite"></div><div id="authModeLinks" class="auth-links"><a id="authSignupLink" href="#">Create account</a><a id="authResetLink" href="#">Forgot password?</a><a id="authLoginLink" href="#" hidden>Sign in</a></div><p class="auth-hint">Passwords are managed by Supabase Auth. Forge 100K never stores plaintext passwords. Email verification may be required.</p></div></section><div id="toast" class="toast"></div>
 <script type="module">
 import * as THREE from 'three';
@@ -264,6 +332,49 @@ function build(){
  if(style==='Armored'){
   const shield=new THREE.Mesh(new THREE.CylinderGeometry(.22,.27,.07,6),steel);shield.rotation.x=Math.PI/2;shield.position.set(-.66,.02,.08);root.add(shield);
  }
+
+ // Higher-fidelity character pass: facial landmarks, layered garments and readable hands/boots.
+ const faceDetail=m('#8e5849',0,.78), lip=m('#75453e',0,.72), seam=m('#e6d7bd',.12,.7);
+ // Nose bridge and mouth are placed on the front-facing (+Z) plane.
+ sphere(root,skin,0,headY-.025,.224*headScale,.032,.052,.045,14);
+ sphere(root,lip,0,headY-.112*headScale,.216*headScale,.052,.012,.014,14);
+ for(const side of [-1,1]){
+   // Eyebrow, cheek highlight and ear inset give the face readable expression.
+   sphere(root,hair,side*.09*headScale,headY+.105*headScale,.204*headScale,.065,.018,.018,12);
+   sphere(root,faceDetail,side*.255*headScale,headY-.005,.045,.018,.045,.022,10);
+   // Individual fingers and a thumb; glove material follows outfit palette.
+   const handX=side*.57*broad, handY=-.405*tall;
+   sphere(root,skin,handX,handY,.055,.075,.085,.055,14);
+   for(let finger=0;finger<4;finger++){
+     const fx=handX+side*((finger-1.5)*.027);
+     limb(root,skin,[fx,handY-.035,.075],[fx+side*.006,handY-.105,.08],.012,.009);
+   }
+   limb(root,skin,[handX-side*.055,handY+.005,.065],[handX-side*.09,handY-.045,.085],.018,.012);
+   // Boot sole, toe cap and trouser seam.
+   box(root,dark,side*.22*broad,-1.105*tall,.105,.235,.045,.34);
+   sphere(root,steel,side*.22*broad,-1.045*tall,.245,.075,.055,.025,12);
+   limb(root,seam,[side*.19*broad,hipY-.15, .105],[side*.20*broad,-.78*tall,.105],.008,.008);
+ }
+ // Tailored collar, shoulder piping, belt buckle and garment panel stitching.
+ const collar=m(style==='Winter'?'#dce9ed':style==='Royal'?'#f4d78a':'#d4e0d8',.18,.5);
+ const collarLimb=new THREE.Mesh(new THREE.TorusGeometry(.12,.025,8,24),collar);
+ collarLimb.position.set(0,.49*tall,.18);collarLimb.rotation.x=Math.PI/2;root.add(collarLimb);
+ box(root,trim,0,hipY+.13*tall,.205,.105,.105,.035);
+ for(const side of [-1,1]){
+   limb(root,collar,[side*.31*broad,.39*tall,.17],[side*.39*broad,.17*tall,.17],.012,.009);
+   sphere(root,trim,side*.43*broad,.43*tall,.16,.035,.035,.025,12);
+ }
+ // Hair fringe and side locks create a deliberate head silhouette instead of a smooth cap.
+ for(let strand=-2;strand<=2;strand++){
+   const lock=sphere(root,hair,strand*.075*headScale,headY+.155*headScale,.172*headScale,.045,.12,.055,12);
+   lock.rotation.z=-strand*.10;
+ }
+ // Add subtle fabric seams and a layered lower garment.
+ for(const side of [-1,1]){
+   box(root,dark,side*.145*broad,-.28*tall,.205,.055,.20*tall,.025);
+   box(root,accentMat,side*.19*broad,-.16*tall,.218,.018,.12*tall,.018);
+ }
+
  root.position.y=.04;
  root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
  scene.add(root);
