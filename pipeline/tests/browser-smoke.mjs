@@ -28,6 +28,9 @@ try {
   await page.locator("#authResetLink").click();
   if (await page.locator("#authPasswordField").isVisible()) throw new Error("Password reset request should not require a current password");
   await page.locator("#authClose").click();
+  await page.locator("#save").click();
+  const guestPresets = await page.evaluate(() => localStorage.getItem("forge100k:guest"));
+  if (!guestPresets || !JSON.parse(guestPresets).length) throw new Error("Guest preset was not saved to its isolated storage namespace");
 
   await page.locator("#apply").click();
   await page.locator("#outfit").selectOption("Armored");
