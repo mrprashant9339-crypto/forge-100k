@@ -12,8 +12,6 @@ RUN apt-get update \
 WORKDIR /app
 COPY pipeline ./pipeline
 COPY workers ./workers
-COPY core ./core
-COPY catalog ./catalog
 
 RUN python3 -m venv /opt/forge-venv \
     && /opt/forge-venv/bin/pip install --no-cache-dir jsonschema==4.25.1
