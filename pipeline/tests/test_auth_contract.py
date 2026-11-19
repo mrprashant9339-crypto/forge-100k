@@ -41,7 +41,7 @@ class AuthContractTests(unittest.TestCase):
         self.assertIn("(select auth.uid())", sql)
         self.assertIn("cancel_own_generation_job", sql)
         self.assertIn("revoke update on public.generation_jobs", sql)
-        self.assertNotRegex(sql, r"using\\s*\\(\\s*true\\s*\\)")
+        self.assertNotRegex(sql, r"using\s*\(\s*true\s*\)")
 
     def test_public_config_is_explicitly_unconfigured(self):
         config = (ROOT / "supabase-config.js").read_text(encoding="utf-8")
