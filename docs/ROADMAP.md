@@ -51,11 +51,27 @@
 - [ ] Artist-approved deformation topology, production UV packing, cage/seam/mipmap review and target-engine PBR validation
 - [ ] Signed artist review and target-engine import/performance certification
 
-## Phase 5 — Scale and platform
-- [ ] Queue-backed batch workers and storage/CDN
-- [ ] Authenticated creator uploads, versioning and moderation
-- [ ] Search indexing, asset analytics and usage telemetry
+## Phase 5 — Scale, accounts and platform (partially implemented)
+- [x] Supabase email/password sign-up, sign-in, email-verification flow and password-reset UI integrated into the static site (requires owner project configuration)
+- [x] Postgres profiles and saved-presets schema with per-user Row Level Security policies
+- [x] Persistent browser auth session and cloud preset synchronization module
+- [x] CI contract tests for auth flows, public-key boundary and RLS ownership policies
+- [ ] Create/configure the Supabase project, set public URL/key, apply SQL migration, configure email confirmation and production SMTP
+- [ ] Verify two-account isolation against the live Supabase project and test password recovery end-to-end
+- [ ] Private upload bucket, object-path RLS, signed upload/download URLs, file-size/type limits and malware scanning
+- [ ] Server-side GLB validation workers; never trust client-side validation for publication
+- [ ] Queue-backed batch workers, job retries, cancellation, idempotency and storage/CDN
+- [ ] Asset registry, immutable versions, provenance/licence evidence and moderation review
+- [ ] Search indexing, asset analytics, audit logs and usage telemetry
 - [ ] AI generation backends with human QA and licence checks
+
+## Phase 6 — Production operations and release
+- [ ] Separate authenticated API/worker deployment from the static GitHub Pages frontend
+- [ ] Secret management, least-privilege service identities, rate limiting and abuse protection
+- [ ] Backups, restore drills, database migrations and retention/deletion workflows
+- [ ] Monitoring, error reporting, SLOs and incident runbooks
+- [ ] Security review, accessibility audit, browser/device matrix and load testing
+- [ ] Production asset intake, signed artist review and Unity/Unreal/Godot certification
 
 ## Quality policy
 Do not label an asset game-ready until geometry, UVs, PBR maps, LODs, rig, animation, bounds, collisions, licence provenance and target-engine import pass automated checks and artist review.
