@@ -35,6 +35,14 @@ for insert to authenticated with check (
   and last_heartbeat_at is null
 );
 
+do $
+begin
+  if not exists (select 1 from pg_constraint where conname = 'generation_jobs_request_size_check') then
+    alter table public.generation_jobs add constraint generation_jobs_request_size_check
+      check (octet_length(request::text) <= 32768);
+  end if;
+end $;
+
 create index if not exists generation_jobs_lease_idx
   on public.generation_jobs(status, locked_at) where status = 'running';
 
