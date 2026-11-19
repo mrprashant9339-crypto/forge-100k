@@ -38,6 +38,7 @@ main{max-width:1600px;margin:auto;padding:24px clamp(14px,2.5vw,34px)}.heading{d
 <script type="module">
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+const presetParams=new URLSearchParams(location.search);const presetId=presetParams.get('asset')||'FG-000001';const presetName=presetParams.get('name')||'Procedural humanoid';const presetStyle=presetParams.get('style')||'Normal';document.querySelector('#characterMeta').textContent=presetName.toUpperCase()+' · '+presetId+' · '+presetStyle.toUpperCase();
 const host=document.querySelector('#stage');
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x0b151b);scene.fog=new THREE.Fog(0x0b151b,12,28);
 const camera=new THREE.PerspectiveCamera(38,1,.1,100);camera.position.set(4.3,3.1,7.5);
