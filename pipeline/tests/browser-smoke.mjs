@@ -23,6 +23,9 @@ try {
   await page.locator("#authConfirm").fill("test-password-123");
   await page.locator("#authSubmit").click();
   await page.getByText(/Set SUPABASE_URL and SUPABASE_ANON_KEY/).waitFor({timeout:5000});
+  await page.locator("#authLoginLink").click();
+  await page.locator("#authResetLink").click();
+  if (await page.locator("#authPasswordField").isVisible()) throw new Error("Password reset request should not require a current password");
   await page.locator("#authClose").click();
 
   await page.locator("#apply").click();
