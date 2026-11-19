@@ -50,7 +50,7 @@ drop function if exists public.claim_next_generation_job(text);
 create or replace function public.claim_next_generation_job(p_worker_id text, p_job_type text)
 returns setof public.generation_jobs
 language plpgsql
-security definer
+security invoker
 set search_path = ''
 as $$
 declare
@@ -107,7 +107,7 @@ $$;
 create or replace function public.heartbeat_generation_job(p_job_id uuid, p_worker_id text)
 returns boolean
 language plpgsql
-security definer
+security invoker
 set search_path = ''
 as $$
 declare
@@ -126,7 +126,7 @@ create or replace function public.complete_generation_job(
 )
 returns boolean
 language plpgsql
-security definer
+security invoker
 set search_path = ''
 as $$
 declare
@@ -156,7 +156,7 @@ create or replace function public.fail_generation_job(
 )
 returns boolean
 language plpgsql
-security definer
+security invoker
 set search_path = ''
 as $$
 declare
@@ -175,6 +175,7 @@ begin
 end;
 $$;
 
+revoke all on function public.handle_new_user() from public, anon, authenticated;
 revoke all on function public.claim_next_generation_job(text, text) from public, anon, authenticated;
 revoke all on function public.heartbeat_generation_job(uuid, text) from public, anon, authenticated;
 revoke all on function public.complete_generation_job(uuid, text, uuid) from public, anon, authenticated;
