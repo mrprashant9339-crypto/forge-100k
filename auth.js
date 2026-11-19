@@ -19,16 +19,18 @@ function setBusy(value) {
 }
 function showModal(mode = "login") {
   state.mode = mode;
-  $("authTitle").textContent = mode === "signup" ? "Create your Forge account" : mode === "reset" ? "Reset password" : "Welcome back";
+  $("authTitle").textContent = mode === "signup" ? "Create your Forge account" : mode === "reset" ? "Reset password" : mode === "recovery" ? "Choose a new password" : "Welcome back";
   $("authNameField").hidden = mode !== "signup";
-  $("authConfirmField").hidden = mode !== "signup";
-  $("authModeLinks").hidden = mode === "reset";
+  $("authConfirmField").hidden = mode !== "signup" && mode !== "recovery";
+  $("authModeLinks").hidden = mode === "reset" || mode === "recovery";
   $("authSignupLink").hidden = mode === "signup";
   $("authLoginLink").hidden = mode !== "signup";
   $("authResetLink").hidden = mode === "signup";
   $("authPasswordField").hidden = mode === "reset";
-  $("authConfirm").required = mode === "signup";
+  $("authConfirm").required = mode === "signup" || mode === "recovery";
   $("authPassword").required = mode !== "reset";
+  $("authPassword").minLength = mode === "signup" || mode === "recovery" ? 12 : 1;
+  $("authConfirm").minLength = mode === "signup" || mode === "recovery" ? 12 : 1;
   $("authPassword").autocomplete = mode === "signup" ? "new-password" : "current-password";
   setBusy(false);
   message(SUPABASE_CONFIGURED ? "" : "Authentication is not configured yet. Add your Supabase project URL and public key in supabase-config.js, then apply supabase/schema.sql.");
@@ -78,9 +80,12 @@ async function init() {
     if (error) console.error("Session restore failed:", error.message);
     state.user = session?.user || null;
     if (state.user) await restorePresets();
-    state.client.auth.onAuthStateChange((_event, sessionNow) => {
+    state.client.auth.onAuthStateChange((event, sessionNow) => {
       state.user = sessionNow?.user || null;
       renderSession();
+      if (event === "PASSWORD_RECOVERY") {
+        setTimeout(() => showModal("recovery"), 0);
+      }
       if (state.user) setTimeout(() => restorePresets(), 0);
     });
   }
@@ -122,6 +127,13 @@ form.addEventListener("submit", async e => {
       } else {
         message("Account created. Check your email to verify the address before signing in.");
       }
+    } else if (state.mode === "recovery") {
+      if (password.length < 12) throw new Error("Use a password with at least 12 characters.");
+      if (password !== $("authConfirm").value) throw new Error("Passwords do not match.");
+      const { error } = await state.client.auth.updateUser({ password });
+      if (error) throw error;
+      message("Password updated successfully. You can now sign in with the new password.");
+      closeModal();
     } else if (state.mode === "reset") {
       const { error } = await state.client.auth.resetPasswordForEmail(email, {
         redirectTo: location.origin + location.pathname
