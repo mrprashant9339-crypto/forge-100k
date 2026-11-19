@@ -15,12 +15,14 @@ function message(text, error = false) {
 function setBusy(value) {
   state.busy = value;
   submit.disabled = value;
-  submit.textContent = value ? "Please wait…" : (state.mode === "signup" ? "Create account" : state.mode === "reset" ? "Send reset link" : "Sign in");
+  submit.textContent = value ? "Please wait…" : (state.mode === "signup" ? "Create account" : state.mode === "reset" ? "Send reset link" : state.mode === "recovery" ? "Update password" : "Sign in");
 }
 function showModal(mode = "login") {
   state.mode = mode;
   $("authTitle").textContent = mode === "signup" ? "Create your Forge account" : mode === "reset" ? "Reset password" : mode === "recovery" ? "Choose a new password" : "Welcome back";
   $("authNameField").hidden = mode !== "signup";
+  $("authEmailField").hidden = mode === "recovery";
+  $("authEmail").required = mode !== "recovery";
   $("authConfirmField").hidden = mode !== "signup" && mode !== "recovery";
   $("authModeLinks").hidden = mode === "reset" || mode === "recovery";
   $("authSignupLink").hidden = mode === "signup";
@@ -31,7 +33,7 @@ function showModal(mode = "login") {
   $("authPassword").required = mode !== "reset";
   $("authPassword").minLength = mode === "signup" || mode === "recovery" ? 12 : 1;
   $("authConfirm").minLength = mode === "signup" || mode === "recovery" ? 12 : 1;
-  $("authPassword").autocomplete = mode === "signup" ? "new-password" : "current-password";
+  $("authPassword").autocomplete = mode === "signup" || mode === "recovery" ? "new-password" : "current-password";
   setBusy(false);
   message(SUPABASE_CONFIGURED ? "" : "Authentication is not configured yet. Add your Supabase project URL and public key in supabase-config.js, then apply supabase/schema.sql.");
   modal.hidden = false;
