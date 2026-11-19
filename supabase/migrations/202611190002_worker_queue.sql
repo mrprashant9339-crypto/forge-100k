@@ -20,6 +20,21 @@ begin
   end if;
 end $$;
 
+drop policy if exists "Users can enqueue own jobs" on public.generation_jobs;
+create policy "Users can enqueue own jobs" on public.generation_jobs
+for insert to authenticated with check (
+  (select auth.uid()) = user_id
+  and status = 'queued'
+  and result_asset_id is null
+  and started_at is null
+  and completed_at is null
+  and attempt_count = 0
+  and max_attempts = 3
+  and locked_at is null
+  and locked_by is null
+  and last_heartbeat_at is null
+);
+
 create index if not exists generation_jobs_lease_idx
   on public.generation_jobs(status, locked_at) where status = 'running';
 
