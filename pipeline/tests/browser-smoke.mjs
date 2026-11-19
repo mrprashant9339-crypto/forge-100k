@@ -13,6 +13,18 @@ try {
   await page.locator("#view canvas").waitFor({state:"visible",timeout:30000});
   await page.waitForFunction(()=>!document.querySelector("#previewTitle")?.textContent.includes("Loading preview"));
   if (!(await page.locator("#cards .asset").count())) throw new Error("Character catalogue did not render");
+  await page.locator("#authButton").click();
+  await page.locator("#authModal").waitFor({state:"visible"});
+  await page.locator("#authSignupLink").click();
+  if (!(await page.locator("#authNameField").isVisible())) throw new Error("Sign-up form did not reveal the full-name field");
+  await page.locator("#authEmail").fill("test@example.com");
+  await page.locator("#authName").fill("Forge Test");
+  await page.locator("#authPassword").fill("test-password-123");
+  await page.locator("#authConfirm").fill("test-password-123");
+  await page.locator("#authSubmit").click();
+  await page.getByText(/Set SUPABASE_URL and SUPABASE_ANON_KEY/).waitFor({timeout:5000});
+  await page.locator("#authClose").click();
+
   await page.locator("#apply").click();
   await page.locator("#outfit").selectOption("Armored");
   await page.locator("#apply").click();
