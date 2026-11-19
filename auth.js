@@ -8,6 +8,15 @@ const form = $("authForm");
 const status = $("authStatus");
 const submit = $("authSubmit");
 
+function presetStorageKey() {
+  return state.user ? `forge100k:user:${state.user.id}` : "forge100k:guest";
+}
+window.ForgeAuth = { storageKey: presetStorageKey };
+
+if (!localStorage.getItem("forge100k:guest") && localStorage.getItem("forge100k")) {
+  localStorage.setItem("forge100k:guest", localStorage.getItem("forge100k"));
+}
+
 function message(text, error = false) {
   status.textContent = text;
   status.dataset.error = error ? "true" : "false";
@@ -64,13 +73,13 @@ async function restorePresets() {
   const { data, error } = await state.client.from("saved_presets")
     .select("preset_id,name,config,updated_at").order("updated_at", { ascending: false }).limit(100);
   if (error) { console.error("Could not load cloud presets:", error.message); return; }
-  const local = JSON.parse(localStorage.getItem("forge100k") || "[]");
+  const local = JSON.parse(localStorage.getItem(presetStorageKey()) || "[]");
   const byId = new Map(local.map(x => [x.id, x]));
   for (const row of data || []) byId.set(row.preset_id, {
     id: row.preset_id, name: row.name, style: row.config?.style || "Normal",
     body: row.config?.body || "Balanced", palette: row.config?.palette || "#b8f36b"
   });
-  localStorage.setItem("forge100k", JSON.stringify([...byId.values()].slice(0, 100)));
+  localStorage.setItem(presetStorageKey(), JSON.stringify([...byId.values()].slice(0, 100)));
 }
 async function init() {
   if (SUPABASE_CONFIGURED) {
