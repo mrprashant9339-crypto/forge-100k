@@ -57,6 +57,7 @@ function renderSession() {
     button.textContent = "Sign in";
     button.setAttribute("aria-label", "Sign in or create a Forge 100K account");
   }
+  window.dispatchEvent(new CustomEvent("forge:session-changed"));
 }
 async function syncPreset(preset) {
   if (!state.client || !state.user || !preset) return;
@@ -80,6 +81,7 @@ async function restorePresets() {
     body: row.config?.body || "Balanced", palette: row.config?.palette || "#b8f36b"
   });
   localStorage.setItem(presetStorageKey(), JSON.stringify([...byId.values()].slice(0, 100)));
+  window.dispatchEvent(new CustomEvent("forge:session-changed"));
 }
 async function init() {
   if (SUPABASE_CONFIGURED) {
