@@ -33,6 +33,16 @@ class AuthContractTests(unittest.TestCase):
         self.assertIn("on delete cascade", sql)
         self.assertNotRegex(sql, r"using\s*\(\s*true\s*\)")
 
+    def test_asset_platform_migration_is_fail_closed(self):
+        sql = (ROOT / "supabase" / "migrations" / "202611190001_platform_assets.sql").read_text(encoding="utf-8").lower()
+        self.assertGreaterEqual(sql.count("enable row level security"), 3)
+        self.assertIn("published", sql)
+        self.assertIn("forge-private-uploads", sql)
+        self.assertIn("(select auth.uid())", sql)
+        self.assertIn("cancel_own_generation_job", sql)
+        self.assertIn("revoke update on public.generation_jobs", sql)
+        self.assertNotRegex(sql, r"using\\s*\\(\\s*true\\s*\\)")
+
     def test_public_config_is_explicitly_unconfigured(self):
         config = (ROOT / "supabase-config.js").read_text(encoding="utf-8")
         self.assertIn("YOUR_PROJECT_REF", config)
