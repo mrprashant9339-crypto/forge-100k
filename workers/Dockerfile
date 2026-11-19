@@ -19,4 +19,4 @@ RUN python3 -m venv /opt/forge-venv \
     && /opt/forge-venv/bin/pip install --no-cache-dir jsonschema==4.25.1
 
 ENV PYTHON=/opt/forge-venv/bin/python
-CMD ["python", "workers/generation_worker.py"]
+CMD ["python3", "workers/generation_worker.py"]
