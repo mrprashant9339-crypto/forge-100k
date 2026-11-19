@@ -28,9 +28,20 @@ try {
   await page.locator("#authResetLink").click();
   if (await page.locator("#authPasswordField").isVisible()) throw new Error("Password reset request should not require a current password");
   await page.locator("#authClose").click();
+  await page.locator("#categorySearch").fill("Birds");
+  if (!(await page.locator('#cats [data-cat="Birds"]').count())) throw new Error("Category search did not filter the category list");
+  await page.locator("#categorySearch").fill("");
+  await page.locator('#cats [data-cat="All assets"]').click();
   await page.locator("#save").click();
   const guestPresets = await page.evaluate(() => localStorage.getItem("forge100k:guest"));
   if (!guestPresets || !JSON.parse(guestPresets).length) throw new Error("Guest preset was not saved to its isolated storage namespace");
+  if (!(await page.locator("#savedList .saved-load").count())) throw new Error("Saved preset manager did not render the saved item");
+  await page.locator("#savedList .saved-load").first().click();
+  await page.locator("#wireToggle").click();
+  if (await page.locator("#wireToggle").getAttribute("aria-pressed") !== "true") throw new Error("Wireframe toggle did not activate");
+  await page.locator("#resetView").click();
+  await page.locator("#savedList .saved-delete").first().click();
+  if ((await page.locator("#savedList .saved-load").count()) !== 0) throw new Error("Saved preset delete action did not remove the item");
 
   await page.locator("#apply").click();
   await page.locator("#outfit").selectOption("Armored");
