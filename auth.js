@@ -1,4 +1,3 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
 import { SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_CONFIGURED } from "./supabase-config.js";
 
 const $ = (id) => document.getElementById(id);
@@ -24,6 +23,9 @@ function showModal(mode = "login") {
   $("authNameField").hidden = mode !== "signup";
   $("authConfirmField").hidden = mode !== "signup";
   $("authModeLinks").hidden = mode === "reset";
+  $("authSignupLink").hidden = mode === "signup";
+  $("authLoginLink").hidden = mode !== "signup";
+  $("authResetLink").hidden = mode === "signup";
   $("authPasswordField").hidden = mode === "reset";
   $("authConfirm").required = mode === "signup";
   $("authPassword").required = mode !== "reset";
@@ -68,6 +70,7 @@ async function restorePresets() {
 }
 async function init() {
   if (SUPABASE_CONFIGURED) {
+    const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2.57.4");
     state.client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
     });
