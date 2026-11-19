@@ -54,8 +54,8 @@ begin
           and locked_at < now() - interval '15 minutes'
           and attempt_count < max_attempts)
    order by created_at asc
-   for update skip locked
-   limit 1;
+   limit 1
+   for update skip locked;
 
   if v_job_id is null then
     return;
