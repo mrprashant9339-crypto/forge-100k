@@ -114,16 +114,125 @@ function resize(){const w=$('view').clientWidth,h=$('view').clientHeight;camera.
 function mat(color,metal=0,rough=.65){return new THREE.MeshStandardMaterial({color,metalness:metal,roughness:rough,wireframe:wire})}
 function part(g,geo,m,x,y,z,sx=1,sy=1,sz=1){const o=new THREE.Mesh(geo,m);o.position.set(x,y,z);o.scale.set(sx,sy,sz);g.add(o);return o}
 function disposeTree(root){if(!root)return;root.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{for(const v of Object.values(m)){if(v&&v.isTexture)v.dispose()}m.dispose()})}})}
-function build(){if(meshRoot){scene.remove(meshRoot);disposeTree(meshRoot)}const g=new THREE.Group();meshRoot=g;const color=$('palette').value,skin=mat('#c58f70'),cloth=mat(color,.15),dark=mat('#263242'),metal=mat('#aeb9c7',.8,.25),s= $('body').value==='Tall'?1.18:$('body').value==='Compact'?.83:$('body').value==='Chibi'?.72:$('body').value==='Heroic'?1.1:1;
-const torso=part(g,new THREE.CapsuleGeometry(.42,.75,5,10),cloth,0,0,0,.9*s,1*s,.55*s);part(g,new THREE.SphereGeometry(.28,16,12),skin,0,.72*s,0,1,1.12,1);
-part(g,new THREE.BoxGeometry(.13,.55,.15),skin,-.52*s,.05,0);part(g,new THREE.BoxGeometry(.13,.55,.15),skin,.52*s,.05,0);
-part(g,new THREE.CylinderGeometry(.12,.16,.58,12),dark,-.2*s,-.68*s,0);part(g,new THREE.CylinderGeometry(.12,.16,.58,12),dark,.2*s,-.68*s,0);
-part(g,new THREE.SphereGeometry(.055,10,8),dark,-.1,.76*s,.24);part(g,new THREE.SphereGeometry(.055,10,8),dark,.1,.76*s,.24);
-const style=$('outfit').value;if(['Armored','Royal','Space','Glowing'].includes(style)){part(g,new THREE.BoxGeometry(.9,.12,.58),metal,0,.34*s,0);part(g,new THREE.ConeGeometry(.13,.3,8),metal,0,1.08*s,0)}
-if(style==='Ninja'||style==='Pirate'){part(g,new THREE.BoxGeometry(.62,.12,.58),dark,0,.86*s,0)}
-if(style==='Glowing'){const glow=new THREE.PointLight(color,2,3);glow.position.set(0,1,1);g.add(glow)}
-if(style==='Winter'){part(g,new THREE.SphereGeometry(.31,12,10),mat('#e8f1fa'),0,.75*s,0,1,1.1,1)}
-g.position.y=.0;scene.add(g);$('previewTitle').innerHTML=$('name').textContent+'<small>LIVE 3D · DRAG TO ORBIT · SCROLL TO ZOOM</small>'}
+function build(){
+ if(meshRoot){scene.remove(meshRoot);disposeTree(meshRoot)}
+ const root=new THREE.Group();meshRoot=root;
+ const palette=$('palette').value, style=$('outfit').value, form=$('body').value;
+ const m=(c,metal=0,rough=.68)=>mat(c,metal,rough);
+ const skin=m('#bd896d'), cloth=m(palette,.08,.62), dark=m('#202b35'), trim=m('#d4b36e',.72,.28), steel=m('#aebdca',.82,.24), boot=m('#26313a',.12,.48);
+ const accent=style==='Winter'?'#d9edf3':style==='Ninja'?'#171d29':style==='Pirate'?'#8a4d32':style==='Royal'?'#f0cf77':style==='Space'?'#8bd4e8':style==='Underwater'?'#48c9c1':style==='Glowing'?palette:palette;
+ const accentMat=m(accent,style==='Space'?.55:.18,.42);
+ const tall=form==='Tall'?1.17:form==='Compact'?.84:form==='Chibi'?.72:form==='Heroic'?1.08:1;
+ const broad=form==='Heavy'?1.22:form==='Slim'?.82:form==='Athletic'?1.08:form==='Heroic'?1.16:1;
+ const headScale=form==='Chibi'?1.28:form==='Heroic'?.96:1;
+ const sphere=(parent,material,x,y,z,sx,sy,sz,detail=20)=>{const o=new THREE.Mesh(new THREE.SphereGeometry(1,detail,Math.max(8,Math.floor(detail*.7))),material);o.position.set(x,y,z);o.scale.set(sx,sy,sz);parent.add(o);return o};
+ const box=(parent,material,x,y,z,sx,sy,sz,bevel=.04)=>{const geo=new THREE.BoxGeometry(sx,sy,sz,1,1,1);const o=new THREE.Mesh(geo,material);o.position.set(x,y,z);o.scale.set(1,1,1);parent.add(o);return o};
+ const limb=(parent,material,a,b,r1,r2)=>{const A=new THREE.Vector3(...a),B=new THREE.Vector3(...b),d=new THREE.Vector3().subVectors(B,A);const o=new THREE.Mesh(new THREE.CylinderGeometry(r2,r1,d.length(),12,1),material);o.position.copy(A).add(B).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());parent.add(o);return o};
+ const torsoY=.03, shoulderY=.52*tall, hipY=-.48*tall;
+ // Main body and neck
+ sphere(root,cloth,0,torsoY,0,.39*broad,.57*tall,.245,24);
+ sphere(root,accentMat,0,.48*tall,0,.405*broad,.13,.255,20);
+ limb(root,skin,[0,.51*tall,0],[0,.68*tall,0],.105,.105);
+ // Neckline, chest panel and waist layers
+ sphere(root,dark,0,.36*tall,.205,.255*broad,.24,.065,18);
+ box(root,cloth,0,.08*tall,.235,.48*broad,.36*tall,.075);
+ box(root,accentMat,0,.10*tall,.278,.29*broad,.30*tall,.018);
+ box(root,trim,0,hipY+.13*tall,.015,.76*broad,.13,.31,.025);
+ sphere(root,trim,0,hipY+.13*tall,.19,.065,.065,.035,14);
+ // Shoulder caps and articulated arms
+ for(const side of [-1,1]){
+  const sx=side;
+  sphere(root,cloth,sx*.43*broad,.43*tall,0,.19,.19,.19,16);
+  limb(root,skin,[sx*.46*broad,.40*tall,0],[sx*.53*broad,.06*tall,.01],.105,.085);
+  sphere(root,skin,sx*.53*broad,.05*tall,.01,.09,.09,.09,14);
+  limb(root,cloth,[sx*.53*broad,.04*tall,.01],[sx*.57*broad,-.30*tall,.025],.09,.07);
+  sphere(root,skin,sx*.57*broad,-.34*tall,.04,.085,.10,.085,14);
+  sphere(root,cloth,sx*.43*broad,.46*tall,.015,.18,.12,.20,16);
+  // hips, articulated legs and boots
+  sphere(root,cloth,sx*.19*broad,hipY,0,.19,.20,.20,16);
+  limb(root,cloth,[sx*.19*broad,hipY-.06,0],[sx*.21*broad,-.88*tall,.015],.13,.095);
+  sphere(root,dark,sx*.21*broad,-.89*tall,.015,.105,.10,.11,14);
+  limb(root,boot,[sx*.21*broad,-.89*tall,.015],[sx*.22*broad,-1.04*tall,.08],.105,.09);
+  sphere(root,boot,sx*.22*broad,-1.045*tall,.12,.12,.10,.20,14);
+  // gloves / cuffs
+  const cuff=m(style==='Winter'?'#dbe8eb':'#899ba2',.25,.5);
+  limb(root,cuff,[sx*.555*broad,-.22*tall,.02],[sx*.565*broad,-.29*tall,.02],.085,.078);
+ }
+ // Head, ears, facial structure
+ const headY=.82*tall;
+ sphere(root,skin,0,headY,0,.245*headScale,.29*headScale,.225*headScale,24);
+ for(const side of [-1,1])sphere(root,skin,side*.24*headScale,headY,.005,.065,.09,.055,14);
+ sphere(root,m('#d8a083'),0,headY-.045,.208*headScale,.045,.055,.055,12);
+ const eye=m('#17212b',.05,.32), white=m('#f4f0df');
+ for(const side of [-1,1]){
+  sphere(root,white,side*.088*headScale,headY+.035,.195*headScale,.055,.045,.026,12);
+  sphere(root,eye,side*.088*headScale,headY+.035,.218*headScale,.025,.03,.016,12);
+  sphere(root,dark,side*.09*headScale,headY+.105,.192*headScale,.06,.018,.018,12);
+ }
+ // Hair / headwear silhouette
+ const hair=m(style==='Winter'?'#e5edf0':style==='Royal'?'#5b3829':style==='Space'?'#253b55':style==='Ninja'?'#171b25':'#392b29');
+ sphere(root,hair,0,headY+.205*headScale,-.015,.255*headScale,.14*headScale,.23*headScale,18);
+ if(style==='Ninja'||style==='Pirate'||style==='Winter'){
+  const band=style==='Winter'?m('#e6f1f5'):style==='Pirate'?m('#8a3f32'):dark;
+  box(root,band,0,headY+.12*headScale,.02,.50*headScale,.09*headScale,.44*headScale);
+ }
+ // Style-specific readable silhouette details
+ if(style==='Armored'||style==='Space'||style==='Royal'){
+  for(const side of [-1,1]){
+   sphere(root,style==='Royal'?trim:steel,side*.43*broad,.47*tall,.01,.20,.16,.24,16);
+   box(root,style==='Royal'?trim:steel,side*.22,.10*tall,.31,.16,.28,.045);
+  }
+  if(style==='Royal'){
+   const crown=m('#e9c65e',.8,.2);
+   box(root,crown,0,headY+.31*headScale,0,.32,.055,.27);
+   for(const side of [-1,0,1]){const p=new THREE.Mesh(new THREE.ConeGeometry(.045,.15,6),crown);p.position.set(side*.11,headY+.40*headScale,0);root.add(p)}
+   sphere(root,m('#a9d9e7',.8,.18),0,headY+.34*headScale,.14,.045,.045,.035,12);
+  }else if(style==='Space'){
+   const visor=m('#63c9e5',.7,.18);const v=sphere(root,visor,0,headY+.015,.205,.22,.095,.035,20);v.material.transparent=true;v.material.opacity=.78;
+   box(root,steel,0,.49*tall,.02,.86,.055,.48);
+  }else{
+   box(root,steel,0,.14*tall,.34,.32,.22,.06);
+   sphere(root,trim,0,.15*tall,.38,.055,.055,.025,12);
+  }
+ }
+ if(style==='Pirate'){
+  const hat=m('#252a31');box(root,hat,0,headY+.30*headScale,-.01,.52,.07,.35);
+  sphere(root,hat,0,headY+.36*headScale,-.01,.20,.10,.17,16);
+  sphere(root,m('#d9d0bd'),.12,headY-.02,.22,.055,.055,.025,12);
+ }
+ if(style==='Winter'){
+  sphere(root,m('#e6eef1'),0,.50*tall,0,.44,.13,.29,18);
+  sphere(root,m('#e6eef1'),0,headY+.29*headScale,0,.27,.10,.24,16);
+ }
+ if(style==='Underwater'){
+  for(const side of [-1,1]){const fin=new THREE.Mesh(new THREE.ConeGeometry(.12,.30,5),accentMat);fin.rotation.z=side*.9;fin.position.set(side*.53,.28*tall,0);root.add(fin)}
+  sphere(root,m('#67d7cb',.25,.28),0,.04*tall,.31,.17,.10,.05,16);
+ }
+ if(style==='Glowing'){
+  const glow=new THREE.PointLight(palette,2.2,4);glow.position.set(0,.45,1);root.add(glow);
+  for(const side of [-1,1])sphere(root,accentMat,side*.34,.32*tall,.19,.045,.17,.045,12);
+ }
+ if(style==='Ninja'){
+  box(root,dark,0,.02*tall,.30,.48,.20,.07);
+  const scarf=box(root,accentMat,.32,.35*tall,-.04,.48,.07,.07);scarf.rotation.z=-.25;
+ }
+ if(style==='Royal'){
+  const cape=m('#542c48',.12,.7);const c=box(root,cape,0,-.02*tall,-.20,.62,.92,.08);c.rotation.x=-.08;
+  box(root,trim,0,.40*tall,-.255,.65,.045,.025);
+ }
+ if(style==='Normal'||style==='Summer'){
+  const seam=m('#dce5d9',.12,.7);
+  box(root,seam,0,.12*tall,.326,.025,.28,.012);
+  if(style==='Summer')sphere(root,m('#e5bd80'),0,-.16*tall,.29,.18,.09,.035,14);
+ }
+ if(style==='Armored'){
+  const shield=new THREE.Mesh(new THREE.CylinderGeometry(.22,.27,.07,6),steel);shield.rotation.x=Math.PI/2;shield.position.set(-.66,.02,.08);root.add(shield);
+ }
+ root.position.y=.04;
+ root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+ scene.add(root);
+ $('previewTitle').innerHTML=$('name').textContent+'<small>'+style.toUpperCase()+' · PROCEDURAL 3D PREVIEW</small>';
+}
 function itemAt(i){const base=all[i%all.length],style=styles[Math.floor(i/all.length)%styles.length];return {...base,style,id:'FG-'+String(i+1).padStart(6,'0'),index:i}}
 function filtered(){let a=Array.from({length:TOTAL},(_,i)=>itemAt(i));if(category!=='All assets')a=a.filter(x=>x.cat===category);const q=$('search').value.trim().toLowerCase();if(q)a=a.filter(x=>(x.name+' '+x.cat).toLowerCase().includes(q));if($('style').value!=='All styles')a=a.filter(x=>x.style===$('style').value);if($('sort').value==='az')a.sort((x,y)=>x.name.localeCompare(y.name));return a}
 let results=[];function render(){results=filtered();const max=Math.max(1,Math.ceil(results.length/PAGE));page=Math.min(page,max-1);const slice=results.slice(page*PAGE,(page+1)*PAGE);$('cards').innerHTML=slice.length?slice.map(x=>'<button class="asset '+(x.index===selected?'selected':'')+'" data-i="'+x.index+'"><b>'+x.name+'</b><small>'+x.cat+' · '+x.id+'</small></button>').join(''):'<p class="muted">No matching presets.</p>';$('count').textContent=results.length.toLocaleString()+' matching presets';$('page').textContent=(page+1)+' / '+max;$('prev').disabled=page===0;$('next').disabled=page>=max-1;$('gridTitle').textContent=category==='All assets'?'Explore characters':category}
