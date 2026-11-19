@@ -55,6 +55,24 @@ try {
   if (bytes.length<20 || bytes.subarray(0,4).toString("ascii")!=="glTF") throw new Error("GLB export did not produce a valid GLB header");
   await page.locator("#file").setInputFiles(target);
   await page.getByText("GLB loaded",{exact:true}).waitFor({timeout:30000});
+
+  await page.goto(base+"/motion-lab.html?asset=FG-000042&name=Test%20Preset&style=Royal",{waitUntil:"networkidle",timeout:60000});
+  await page.locator("#stage canvas").waitFor({state:"visible",timeout:30000});
+  if (!(await page.locator("#characterMeta").textContent()).includes("FG-000042")) throw new Error("Motion Lab did not receive the selected catalogue preset identity");
+  await page.locator('[data-clip="walk"]').click();
+  if (!(await page.locator("#clipName").textContent()).includes("WALK")) throw new Error("Motion clip selection did not update");
+  await page.locator("#gravity").evaluate(el=>{el.value="12";el.dispatchEvent(new Event("input",{bubbles:true}))});
+  if (!(await page.locator("#gravityValue").textContent()).includes("12.0")) throw new Error("Gravity control did not update");
+  await page.locator('[data-clip="jump"]').click();
+  await page.locator("#play").click();
+  const motionDownloadPromise=page.waitForEvent("download",{timeout:30000});
+  await page.locator("#exportMotion").click();
+  const motionDownload=await motionDownloadPromise;
+  const motionPath=path.join(os.tmpdir(),motionDownload.suggestedFilename());
+  await motionDownload.saveAs(motionPath);
+  const motionData=JSON.parse(await fs.readFile(motionPath,"utf8"));
+  if(motionData.schema!=="forge.motion.v1" || motionData.clip!=="jump" || motionData.simulation.gravityMps2!==12) throw new Error("Motion JSON export failed schema or parameter checks");
+  await fs.rm(motionPath,{force:true});
   if(errors.length) throw new Error("Browser errors: "+errors.join(" | "));
   console.log(JSON.stringify({status:"pass",canvas:true,catalogue:true,glbBytes:bytes.length,glbMagic:bytes.subarray(0,4).toString("ascii"),uploadPreview:true}));
   await fs.rm(target,{force:true});
