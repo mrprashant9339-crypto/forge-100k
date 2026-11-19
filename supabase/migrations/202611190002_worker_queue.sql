@@ -23,7 +23,8 @@ end $$;
 create index if not exists generation_jobs_lease_idx
   on public.generation_jobs(status, locked_at) where status = 'running';
 
-create or replace function public.claim_next_generation_job(p_worker_id text)
+drop function if exists public.claim_next_generation_job(text);
+create or replace function public.claim_next_generation_job(p_worker_id text, p_job_type text)
 returns setof public.generation_jobs
 language plpgsql
 security definer
@@ -35,6 +36,9 @@ begin
   if coalesce(length(trim(p_worker_id)), 0) not between 1 and 120 then
     raise exception 'worker_id must contain 1 to 120 characters';
   end if;
+  if p_job_type not in ('character','garment','retopology','texture_bake','rigging','animation') then
+    raise exception 'unsupported job type';
+  end if;
 
   update public.generation_jobs
      set status = 'failed',
@@ -44,15 +48,17 @@ begin
          locked_by = null,
          last_heartbeat_at = null
    where status = 'running'
+     and job_type = p_job_type
      and locked_at < now() - interval '15 minutes'
      and attempt_count >= max_attempts;
 
   select id into v_job_id
     from public.generation_jobs
-   where status = 'queued'
+   where job_type = p_job_type
+     and (status = 'queued'
       or (status = 'running'
           and locked_at < now() - interval '15 minutes'
-          and attempt_count < max_attempts)
+          and attempt_count < max_attempts))
    order by created_at asc
    limit 1
    for update skip locked;
@@ -146,11 +152,11 @@ begin
 end;
 $$;
 
-revoke all on function public.claim_next_generation_job(text) from public, anon, authenticated;
+revoke all on function public.claim_next_generation_job(text, text) from public, anon, authenticated;
 revoke all on function public.heartbeat_generation_job(uuid, text) from public, anon, authenticated;
 revoke all on function public.complete_generation_job(uuid, text, uuid) from public, anon, authenticated;
 revoke all on function public.fail_generation_job(uuid, text, text) from public, anon, authenticated;
-grant execute on function public.claim_next_generation_job(text) to service_role;
+grant execute on function public.claim_next_generation_job(text, text) to service_role;
 grant execute on function public.heartbeat_generation_job(uuid, text) to service_role;
 grant execute on function public.complete_generation_job(uuid, text, uuid) to service_role;
 grant execute on function public.fail_generation_job(uuid, text, text) to service_role;
