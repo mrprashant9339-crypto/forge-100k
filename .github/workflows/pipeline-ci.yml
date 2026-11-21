@@ -60,7 +60,7 @@ jobs:
         run: |
           npm install --no-save playwright@1.55.0 three@0.180.0
           mkdir -p vendor/three/build vendor/three/examples/jsm
-          cp node_modules/three/build/three.module.js vendor/three/build/
+          cp -R node_modules/three/build/* vendor/three/build/
           cp -R node_modules/three/examples/jsm/* vendor/three/examples/jsm/
           npx playwright install chromium
       - name: Run interactive 3D and GLB browser smoke test
