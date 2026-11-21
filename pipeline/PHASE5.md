@@ -42,7 +42,7 @@ Generate a bounded local catalogue and queue batches:
 python pipeline/scripts/build_character_catalog.py --output artifacts/catalog --batch-size 500
 ```
 
-The builder streams deterministic preset records to `presets.jsonl`, writes bounded queue manifests under `queue/`, and emits `catalog-report.json`. Use `--offset` and `--limit` for resumable ranges. Preset IDs and hashes are deterministic; batch execution policy records concurrency, retries and idempotency keys.
+The builder streams deterministic preset records to `presets.jsonl`, writes bounded queue manifests under `queue/`, and emits `catalog-report.json`. Each queue entry is wrapped in the existing generation worker's `job_type=character` and `request.asset` contract, with original-procedural provenance, a GLB2 target, a supported starter style, and a deterministic seed. The 100K catalogue remains a preset index; queue entries request blockout generation, not 100K prebuilt GLBs. Use `--offset` and `--limit` for resumable ranges. Preset IDs and hashes are deterministic; batch execution policy records concurrency, retries and idempotency keys.
 
 ## Queue, storage and release boundaries
 
