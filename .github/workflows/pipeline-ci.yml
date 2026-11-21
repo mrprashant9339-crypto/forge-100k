@@ -28,6 +28,10 @@ jobs:
           python -m json.tool pipeline/manifests/phase2-integration-job.json >/dev/null
           python -m py_compile pipeline/blender/generate_pbr_textures.py
           python pipeline/scripts/validate_manifest.py pipeline/manifests/sample-batch.json
+      - name: Verify deterministic 100K character catalogue and queue batching
+        run: |
+          python -m py_compile pipeline/scripts/build_character_catalog.py
+          python pipeline/tests/test_character_catalog.py
       - name: Test authentication and user-data security contracts
         run: |
           python pipeline/tests/test_auth_contract.py
