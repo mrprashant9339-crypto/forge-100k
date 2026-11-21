@@ -39,10 +39,9 @@ try:
     assert status==201,raw
     job_id=json.loads(raw)["job_id"]
     worker={"Authorization":"Bearer test-worker-token"}
-    assert call("/api/worker/claim","POST",{"worker_id":"test-worker"},worker)[0]==200
     status,_,raw=call("/api/worker/claim","POST",{"worker_id":"test-worker"},worker)
     job=json.loads(raw)["job"]; assert job and job["id"]==job_id
-    fake_glb=b"glTF"+bytes([2,0,0,0])+bytes([20,0,0,0])+b"TEST"
+    fake_glb=b"glTF"+bytes([2,0,0,0])+bytes([20,0,0,0])+b"TESTDATA"
     status,_,raw=call("/api/worker/upload/"+job_id,"POST",fake_glb,{**worker,"X-Worker-Id":"test-worker","Content-Type":"model/gltf-binary"})
     assert status==200,raw
     uploaded=json.loads(raw)
