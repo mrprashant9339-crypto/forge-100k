@@ -47,11 +47,11 @@ def rig_create():
  for s,L in [(-1,"L"),(1,"R")]:
   bone("clavicle_"+L,(0,0,1.62),(s*.28,0,1.61),"chest")
   bone("upper_arm_"+L,(s*.28,0,1.61),(s*.43,0,1.28),"clavicle_"+L)
-  bone("forearm_"+L,(s*.43,0,1.28),(s*.46,-.01,1.02),"upper_arm_"+L)
+  bone("lower_arm_"+L,(s*.43,0,1.28),(s*.46,-.01,1.02),"upper_arm_"+L)
   bone("hand_"+L,(s*.46,-.01,1.02),(s*.48,-.08,.94),"forearm_"+L)
   for i,n in enumerate(("thumb","index","middle","ring","pinky")):
    x=s*(.48+(i-2)*.025); bone(n+"_01_"+L,(s*.48,-.08,.94),(x,-.17,.91),"hand_"+L); bone(n+"_02_"+L,(x,-.17,.91),(x,-.23,.89),n+"_01_"+L)
-  bone("thigh_"+L,(s*.13,0,.88),(s*.14,0,.49),"pelvis"); bone("shin_"+L,(s*.14,0,.49),(s*.14,0,.13),"thigh_"+L); bone("foot_"+L,(s*.14,0,.13),(s*.14,-.23,.08),"shin_"+L)
+  bone("upper_leg_"+L,(s*.13,0,.88),(s*.14,0,.49),"pelvis"); bone("lower_leg_"+L,(s*.14,0,.49),(s*.14,0,.13),"upper_leg_"+L); bone("foot_"+L,(s*.14,0,.13),(s*.14,-.23,.08),"shin_"+L)
  bpy.ops.object.mode_set(mode="OBJECT"); rig.show_in_front=True; return rig
 def segdist(p,a,b):
  d=b-a; t=max(0,min(1,(p-a).dot(d)/max(d.length_squared,1e-9))); return (p-(a+t*d)).length
