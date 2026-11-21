@@ -52,7 +52,7 @@ The local API accepts authenticated character generation jobs at POST /api/jobs.
 - Compose publishes the API only on loopback (127.0.0.1:8000). Do not expose it to a LAN or internet without TLS, CSRF protection, rate limits and a hardened reverse proxy.
 - Keep .env private. The worker token is service-to-service only.
 - Passwords are PBKDF2-HMAC-SHA256 hashed; session tokens are stored as SHA-256 hashes and expire after 14 days.
-- Local password recovery does not send email.
+- Local password recovery does not send email. Reset an account from the host with `docker compose -f docker-compose.local.yml exec api python local_backend/admin.py reset-password user@example.com`.
 - Back up the Docker volume before upgrading or moving machines.
 - The backend, auth, queue, database and storage are local. The existing browser Three.js CDN dependency must be vendored for a genuinely air-gapped install.
 - This is a single trusted workstation setup, not a hardened public multi-user service.
