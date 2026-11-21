@@ -29,7 +29,7 @@ Use docker volume inspect forge-100k_forge-data to locate the volume. Back up th
 
 ## Password reset
 
-No email server is configured in local mode. Password recovery is deliberately not simulated. An administrator must reset a password through a dedicated local admin command before enabling that UI flow; do not expose unauthenticated password-reset endpoints.
+No email server is configured in local mode. Password recovery is deliberately not simulated. An administrator can reset a password from the host with `docker compose -f docker-compose.local.yml exec api python local_backend/admin.py reset-password user@example.com`. This prompts for the new password and revokes existing sessions; do not expose unauthenticated password-reset endpoints.
 
 ## Scope
 
