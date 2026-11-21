@@ -4,13 +4,15 @@ import path from "node:path";
 import os from "node:os";
 
 const base = process.env.FORGE_BASE_URL || "http://127.0.0.1:4173";
-const browser = await chromium.launch({headless:true,args:["--no-sandbox","--use-gl=angle","--use-angle=swiftshader","--enable-webgl","--ignore-gpu-blocklist"]});
+const browser = await chromium.launch({headless:true,args:["--no-sandbox","--use-gl=angle","--use-angle=swiftshader","--enable-webgl","--ignore-gpu-blocklist","--enable-unsafe-swiftshader"]});
 const page = await browser.newPage({acceptDownloads:true});
-const errors=[];
-page.on("pageerror",e=>errors.push(e.message));
+const errors=[]; const consoleErrors=[]; const failedRequests=[];
+page.on("pageerror",e=>errors.push(e.stack||e.message));
+page.on("console",m=>{if(m.type()==="error")consoleErrors.push(m.text())});
+page.on("requestfailed",r=>failedRequests.push({url:r.url(),error:r.failure()?.errorText}));
 try {
   await page.goto(base,{waitUntil:"networkidle",timeout:60000});
-  await page.locator("#view canvas").waitFor({state:"visible",timeout:30000});
+  try { await page.locator("#view canvas").waitFor({state:"visible",timeout:30000}); } catch (e) { throw new Error("3D canvas failed to initialize. pageErrors="+JSON.stringify(errors)+" consoleErrors="+JSON.stringify(consoleErrors)+" failedRequests="+JSON.stringify(failedRequests)+"; "+e.message); }
   await page.waitForFunction(()=>!document.querySelector("#previewTitle")?.textContent.includes("Loading preview"));
   if (!(await page.locator("#cards .asset").count())) throw new Error("Character catalogue did not render");
   await page.locator("#authButton").click();
