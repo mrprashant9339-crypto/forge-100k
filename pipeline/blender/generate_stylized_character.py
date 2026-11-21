@@ -17,6 +17,7 @@ def mat(n,c,r=.65,m=0):
  if p: p.inputs["Base Color"].default_value=(*c,1); p.inputs["Roughness"].default_value=r; p.inputs["Metallic"].default_value=m
  return x
 def finish(o,bev=0):
+ if hasattr(o.data,"use_auto_smooth"): o.data.use_auto_smooth=True
  for f in o.data.polygons: f.use_smooth=True
  if bev:
   b=o.modifiers.new("Forge_Soft_Edges","BEVEL"); b.width=bev; b.segments=3
