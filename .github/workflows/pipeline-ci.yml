@@ -58,13 +58,21 @@ jobs:
           python -m py_compile pipeline/blender/facial_morph_pack.py pipeline/blender/facial_animation_clips.py pipeline/blender/bake_pbr_textures.py pipeline/blender/prepare_cloth_scene.py
       - name: Install browser test runtime
         run: |
-          npm install --no-save playwright@1.55.0
+          npm install --no-save playwright@1.55.0 three@0.180.0
+          mkdir -p vendor/three/build vendor/three/examples/jsm
+          cp node_modules/three/build/three.module.js vendor/three/build/
+          cp -R node_modules/three/examples/jsm/* vendor/three/examples/jsm/
           npx playwright install chromium
       - name: Run interactive 3D and GLB browser smoke test
         run: |
-          python -m http.server 4173 --bind 127.0.0.1 >/tmp/forge-http.log 2>&1 &
+          FORGE_DATA_DIR="$RUNNER_TEMP/forge-browser-data" FORGE_HOST=127.0.0.1 FORGE_PORT=4173 python local_backend/server.py >/tmp/forge-http.log 2>&1 &
           SERVER_PID=$!
           trap 'kill $SERVER_PID' EXIT
+          for attempt in $(seq 1 50); do
+            if curl --silent --fail http://127.0.0.1:4173/api/health >/dev/null; then break; fi
+            sleep 0.2
+          done
+          curl --silent --fail http://127.0.0.1:4173/api/health >/dev/null
           node pipeline/tests/browser-smoke.mjs
       - name: Install Blender batch runtime
         run: |
