@@ -134,7 +134,11 @@ def main():
  for o in meshes:
   bind(o,rig); o["forge_asset_id"]=aid; o["forge_seed"]=seed; o["forge_quality_tier"]="stylized_candidate_v1"
  rig["forge_asset_id"]=aid; rig["forge_quality_tier"]="stylized_candidate_v1"; animate(rig)
- scene=bpy.context.scene; scene.render.engine="BLENDER_EEVEE_NEXT"; scene.render.resolution_x=1024; scene.render.resolution_y=1024
+ scene=bpy.context.scene; # Rendering is not required for GLB export. Select an engine supported by this Blender build.
+ engine_ids={item.identifier for item in scene.render.bl_rna.properties["engine"].enum_items}
+ preferred=("BLENDER_EEVEE_NEXT","BLENDER_EEVEE","CYCLES")
+ scene.render.engine=next((name for name in preferred if name in engine_ids),engine_ids.pop())
+ scene.render.resolution_x=1024; scene.render.resolution_y=1024
  bpy.ops.object.select_all(action="DESELECT"); rig.select_set(True)
  for o in meshes: o.select_set(True)
  bpy.context.view_layer.objects.active=rig
