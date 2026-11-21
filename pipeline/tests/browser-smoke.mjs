@@ -24,7 +24,7 @@ try {
   await page.locator("#authConfirm").fill("test-password-12345");
   await page.locator("#authSubmit").click();
   await page.locator("#authModal").waitFor({state:"hidden",timeout:10000});
-  await page.getByRole("button",{name:/Account/}).waitFor({timeout:5000});
+  await page.locator("#authButton").filter({hasText:"Account"}).waitFor({timeout:5000});
   await page.locator("#authLoginLink").click();
   await page.locator("#authResetLink").click();
   if (await page.locator("#authPasswordField").isVisible()) throw new Error("Local password help must not expose a password input");
