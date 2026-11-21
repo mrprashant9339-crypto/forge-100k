@@ -28,6 +28,10 @@ jobs:
           python -m json.tool pipeline/manifests/phase2-integration-job.json >/dev/null
           python -m py_compile pipeline/blender/generate_pbr_textures.py
           python pipeline/scripts/validate_manifest.py pipeline/manifests/sample-batch.json
+      - name: Verify deterministic 100K character catalogue and queue batching
+        run: |
+          python -m py_compile pipeline/scripts/build_character_catalog.py
+          python pipeline/tests/test_character_catalog.py
       - name: Test authentication and user-data security contracts
         run: |
           python pipeline/tests/test_auth_contract.py
@@ -234,6 +238,38 @@ jobs:
           python pipeline/scripts/validate_engine_budget.py artifacts/lods/LOD0.glb pipeline/budgets/stylized-character-prototype.json
           python pipeline/scripts/validate_engine_budget.py artifacts/lods/LOD1.glb pipeline/budgets/stylized-character-prototype.json
           python pipeline/scripts/validate_engine_budget.py artifacts/lods/LOD2.glb pipeline/budgets/stylized-character-prototype.json
+      - name: Generate and validate original stylized humanoid candidate
+        env:
+          PYTHONPATH: /usr/lib/python3/dist-packages
+        run: |
+          mkdir -p artifacts/stylized
+          blender --background --python pipeline/blender/generate_stylized_character.py -- artifacts/stylized FG-HUM-STYLIZED-000001 100001
+          python pipeline/scripts/validate_glb.py --require-rig artifacts/stylized/FG-HUM-STYLIZED-000001.glb
+          python pipeline/scripts/validate_stylized_character.py artifacts/stylized/FG-HUM-STYLIZED-000001-report.json
+          blender --background --python pipeline/blender/rig_deformation_qa.py -- artifacts/stylized/FG-HUM-STYLIZED-000001.glb artifacts/stylized/deformation-qa.json
+          python -m json.tool artifacts/stylized/deformation-qa.json >/dev/null
+          python - <<'PY'
+          import json
+          p="artifacts/stylized/deformation-qa.json"
+          d=json.load(open(p,encoding="utf-8"))
+          assert d["status"]=="pass", d.get("issues")
+          assert d["bone_count"]>=40
+          assert d["artist_review_required"] is True and d["engine_certified"] is False
+          print("Stylized candidate skinning and sampled deformation checks passed.")
+          PY
+          blender --background --python pipeline/blender/advanced_rig_controls.py -- artifacts/stylized/FG-HUM-STYLIZED-000001.glb artifacts/stylized/advanced-rig.glb artifacts/stylized/advanced-rig.json
+          python pipeline/scripts/validate_glb.py --require-rig artifacts/stylized/advanced-rig.glb
+          python -m json.tool artifacts/stylized/advanced-rig.json >/dev/null
+          blender --background --python pipeline/blender/facial_morph_pack.py -- artifacts/stylized/advanced-rig.glb artifacts/stylized/facial-morphs.glb artifacts/stylized/facial-morphs.json
+          python pipeline/scripts/validate_glb.py --require-morphs artifacts/stylized/facial-morphs.glb
+          python -m json.tool artifacts/stylized/facial-morphs.json >/dev/null
+          blender --background --python pipeline/blender/facial_lipsync.py -- artifacts/stylized/facial-morphs.glb pipeline/manifests/sample-lipsync-timeline.json artifacts/stylized/lipsync.glb artifacts/stylized/lipsync.json
+          python pipeline/scripts/validate_glb.py --require-morphs artifacts/stylized/lipsync.glb
+          python -m json.tool artifacts/stylized/lipsync.json >/dev/null
+          blender --background --python pipeline/blender/animation_library.py -- artifacts/stylized/advanced-rig.glb artifacts/stylized/animation-library.glb artifacts/stylized/animation-library.json
+          python pipeline/scripts/validate_glb.py --require-rig artifacts/stylized/animation-library.glb
+          python -m json.tool artifacts/stylized/animation-library.json >/dev/null
+
       - name: Upload verified GLB and QA reports
         if: always()
         uses: actions/upload-artifact@v7

@@ -1,0 +1,63 @@
+{
+  "schema": "forge.character-dimensions.v1",
+  "dimensions": {
+    "archetype": [
+      "explorer",
+      "scout",
+      "guardian",
+      "engineer",
+      "medic",
+      "pilot",
+      "ranger",
+      "scholar",
+      "sentinel",
+      "wanderer"
+    ],
+    "body": [
+      "compact",
+      "lean",
+      "athletic",
+      "heavy",
+      "tall"
+    ],
+    "face": [
+      "oval",
+      "square",
+      "round",
+      "angular",
+      "heart",
+      "long",
+      "broad",
+      "soft"
+    ],
+    "hair": [
+      "short",
+      "medium",
+      "long",
+      "curly",
+      "braided"
+    ],
+    "outfit": [
+      "field",
+      "utility",
+      "armored",
+      "formal",
+      "casual",
+      "desert",
+      "arctic",
+      "urban",
+      "tactical",
+      "ceremonial"
+    ],
+    "material": [
+      "teal-brass",
+      "charcoal-lime",
+      "navy-silver",
+      "sand-copper",
+      "forest-gold"
+    ]
+  },
+  "seed_policy": "sha256(asset_id + canonical dimensions)",
+  "catalog_size": 100000,
+  "release_boundary": "preset_catalog_only; generated geometry requires pipeline QA and review"
+}
