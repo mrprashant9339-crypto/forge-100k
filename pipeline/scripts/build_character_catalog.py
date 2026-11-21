@@ -35,7 +35,25 @@ def make_record(index, keys, values):
     dimensions=dict(zip(keys,chosen))
     canonical=json.dumps(dimensions,sort_keys=True,separators=(",",":"))
     digest=hashlib.sha256(canonical.encode()).hexdigest()
-    return {"catalog_index":index,"asset_id":f"FG-HUM-{index+1:06d}","seed":int(digest[:8],16),"dimensions":dimensions,"preset_sha256":digest,"quality_tier":"preset","generation_status":"not_generated"}
+    asset_id=f"FG-HUM-{index+1:06d}"
+    outfit=dimensions["outfit"]
+    style=("armored" if outfit in {"armored","tactical"} else
+           "royal" if outfit in {"formal","ceremonial"} else
+           "space" if outfit=="arctic" else "normal")
+    modules=[f"hair_{dimensions['hair']}",f"outfit_{outfit}",f"body_{dimensions['body']}",
+             f"face_{dimensions['face']}",f"palette_{dimensions['material'].replace('-','_')}"]
+    asset={
+        "asset_id":asset_id,"archetype":dimensions["archetype"],"species":"human",
+        "style":style,"seed":int(digest[:8],16),"quality_tier":"blockout","target":"glTF2",
+        "provenance":{"kind":"original_procedural","creator":"Forge 100K",
+            "source_url":None,"license":"CC0-1.0",
+            "license_evidence":"Generated from original procedural Forge 100K parameters"},
+        "modules":modules,"rig_profile":"humanoid_v1"
+    }
+    worker_job={"job_type":"character","request":{"asset":asset}}
+    return {"catalog_index":index,"asset_id":asset_id,"seed":asset["seed"],
+        "dimensions":dimensions,"preset_sha256":digest,"quality_tier":"preset",
+        "generation_status":"not_generated","worker_job":worker_job}
 
 def main():
     p=argparse.ArgumentParser()
@@ -60,7 +78,7 @@ def main():
             stream.write(json.dumps(record,separators=(",",":"))+"\n")
             batch.append(record); written+=1
             if len(batch)==a.batch_size or index==stop-1:
-                payload={"schema_version":"forge.queue-batch.v1","batch_id":f"forge-{batch_no:06d}","offset":index-len(batch)+1,"count":len(batch),"job_type":"character_preset","jobs":batch,"execution_policy":{"max_concurrency":4,"retry_limit":3,"idempotency":"asset_id+preset_sha256"}}
+                payload={"schema_version":"forge.queue-batch.v1","batch_id":f"forge-{batch_no:06d}","offset":index-len(batch)+1,"count":len(batch),"job_type":"character","jobs":[record["worker_job"] for record in batch],"execution_policy":{"max_concurrency":4,"retry_limit":3,"idempotency":"asset_id+preset_sha256"}}
                 (manifest_dir/f"batch-{batch_no:06d}.json").write_text(json.dumps(payload,indent=2)+"\n",encoding="utf-8")
                 batch=[]; batch_no+=1
     summary={"schema":"forge.catalog-build.v1","catalog_size":total,"offset":a.offset,"written":written,"batch_size":a.batch_size,"batch_count":(written+a.batch_size-1)//a.batch_size,"unique_id_range":[f"FG-HUM-{a.offset+1:06d}",f"FG-HUM-{stop:06d}"] if written else [],"dimensions":{k:len(v) for k,v in zip(keys,values)},"storage_layout":"presets.jsonl + queue/batch-*.json","status":"preset_catalog_created_not_generated_assets"}
