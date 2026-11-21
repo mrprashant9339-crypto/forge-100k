@@ -18,6 +18,11 @@ try {
   await page.locator("#authButton").click();
   await page.locator("#authModal").waitFor({state:"visible"});
   if (await page.locator("#authNameField").isVisible()) throw new Error("Login form should not show the sign-up name field");
+  await page.locator("#authResetLink").click();
+  if (await page.locator("#authPasswordField").isVisible()) throw new Error("Local password help must not expose a password input");
+  await page.getByText(/local-only|local admin reset/i).waitFor({timeout:5000});
+  await page.locator("#authClose").click();
+  await page.locator("#authButton").click();
   await page.locator("#authSignupLink").click();
   if (!(await page.locator("#authNameField").isVisible())) throw new Error("Sign-up form did not reveal the full-name field");
   await page.locator("#authEmail").fill("test@example.com");
@@ -27,11 +32,7 @@ try {
   await page.locator("#authSubmit").click();
   await page.locator("#authModal").waitFor({state:"hidden",timeout:10000});
   await page.locator("#authButton").filter({hasText:"Account"}).waitFor({timeout:5000});
-  await page.locator("#authLoginLink").click();
-  await page.locator("#authResetLink").click();
-  if (await page.locator("#authPasswordField").isVisible()) throw new Error("Local password help must not expose a password input");
-  await page.getByText(/local-only|local admin reset/i).waitFor({timeout:5000});
-  await page.locator("#authClose").click();
+
   await page.locator("#categorySearch").fill("Birds");
   if (!(await page.locator('#cats [data-cat="Birds"]').count())) throw new Error("Category search did not filter the category list");
   await page.locator("#categorySearch").fill("");
