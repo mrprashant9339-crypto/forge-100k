@@ -75,6 +75,7 @@ jobs:
           curl --silent --fail http://127.0.0.1:4173/api/health >/dev/null
           node pipeline/tests/browser-smoke.mjs
       - name: Install Blender batch runtime
+        if: always()
         run: |
           # Refresh runner package indexes before installing: ubuntu archive mirrors can
           # otherwise return 404 for package versions that have already been rotated.
@@ -82,6 +83,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends -o Acquire::Retries=3 blender python3-numpy
           blender --version
       - name: Generate and validate Phase 4 synthetic reference assets
+        if: always()
         env:
           PYTHONPATH: /usr/lib/python3/dist-packages
         run: |
@@ -119,6 +121,7 @@ jobs:
           print("Synthetic reference asset generation verified; production certification remains blocked.")
           PY
       - name: Verify Phase 3 retopology and high-to-low baking
+        if: always()
         env:
           PYTHONPATH: /usr/lib/python3/dist-packages
         run: |
@@ -134,6 +137,7 @@ jobs:
           python -m json.tool artifacts/phase3-mesh/retopo.glb.retopo.json >/dev/null
           python -m json.tool artifacts/phase3-mesh/baked/bake-report.json >/dev/null
       - name: Generate and validate sample production jobs
+        if: always()
         env:
           PYTHONPATH: /usr/lib/python3/dist-packages
         run: |
@@ -156,14 +160,17 @@ jobs:
           blender --background --python pipeline/blender/garment_collision_qa.py -- artifacts/phase2-tests/fitted.glb artifacts/phase2-tests/fit-report.json artifacts/phase2-tests/garment-collision-qa.json
           python -m json.tool artifacts/phase2-tests/garment-collision-qa.json >/dev/null
       - name: Test Phase 4 real-asset intake gate
+        if: always()
         run: |
           python -m py_compile pipeline/blender/inspect_phase4_assets.py pipeline/scripts/validate_phase4_intake_report.py
           python pipeline/tests/test_phase4_intake.py
       - name: Test Phase 4 production release gate
+        if: always()
         run: |
           python -m py_compile pipeline/scripts/validate_phase4_release.py
           python pipeline/tests/test_phase4_release.py
       - name: Bake and validate cloth simulation
+        if: always()
         env:
           PYTHONPATH: /usr/lib/python3/dist-packages
         run: |
@@ -198,6 +205,7 @@ jobs:
           python pipeline/scripts/validate_cloth_integrity_report.py artifacts/phase2-tests/cloth-integrity-report.json --require-geometric-clean
           echo "Cloth QA exit code: $CLOTH_QA_EXIT (candidate findings are retained as an artifact; inspect before promotion)"
       - name: Validate rigging, facial animation and LOD outputs
+        if: always()
         env:
           PYTHONPATH: /usr/lib/python3/dist-packages
         run: |
@@ -251,6 +259,7 @@ jobs:
           python pipeline/scripts/validate_engine_budget.py artifacts/lods/LOD1.glb pipeline/budgets/stylized-character-prototype.json
           python pipeline/scripts/validate_engine_budget.py artifacts/lods/LOD2.glb pipeline/budgets/stylized-character-prototype.json
       - name: Generate and validate original stylized humanoid candidate
+        if: always()
         env:
           PYTHONPATH: /usr/lib/python3/dist-packages
         run: |
