@@ -14,18 +14,24 @@ class AuthContractTests(unittest.TestCase):
         ):
             self.assertIn(marker, html)
 
-    def test_auth_uses_supabase_auth_and_no_service_role(self):
+    def test_auth_uses_local_api_and_no_cloud_auth(self):
         auth = (ROOT / "auth.js").read_text(encoding="utf-8")
         for marker in (
-            "signUp(", "signInWithPassword(", "resetPasswordForEmail(",
-            "onAuthStateChange(", 'event === "PASSWORD_RECOVERY"', "updateUser({ password })",
-            "forge100k:user:", "forge100k:guest", "storageKey: presetStorageKey",
-            "persistSession: true", "autoRefreshToken: true",
-            'from("saved_presets")', "forge:preset-saved",
+            '"/api/auth/signup"', '"/api/auth/login"', '"/api/auth/logout"',
+            '"/api/auth/session"', '"/api/presets"', "forge100k:user:",
+            "forge100k:guest", "storageKey: presetStorageKey", "forge:preset-saved",
+            "credentials: \"same-origin\"",
         ):
             self.assertIn(marker, auth)
+        self.assertNotIn("supabase", auth.lower())
         self.assertNotIn("service_role", auth.lower())
-        self.assertNotIn("SERVICE_ROLE", auth)
+        self.assertNotIn("SUPABASE_URL", auth)
+
+    def test_browser_3d_modules_are_served_locally(self):
+        for name in ("index.html", "motion-lab.html"):
+            html = (ROOT / name).read_text(encoding="utf-8")
+            self.assertIn("/vendor/three/build/three.module.js", html)
+            self.assertNotIn("cdn.jsdelivr.net", html)
 
     def test_supabase_schema_enforces_per_user_isolation(self):
         sql = (ROOT / "supabase" / "schema.sql").read_text(encoding="utf-8").lower()
