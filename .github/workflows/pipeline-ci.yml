@@ -39,6 +39,10 @@ jobs:
         run: |
           python -m py_compile workers/generation_worker.py
           python workers/tests/test_generation_worker.py
+      - name: Test fully local SQLite backend and storage
+        run: |
+          python -m py_compile local_backend/server.py workers/local_generation_worker.py
+          python local_backend/tests/test_local_backend.py
       - name: Compile Python workers
         run: |
           python -m compileall -q pipeline
