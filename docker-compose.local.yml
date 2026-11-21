@@ -1,0 +1,41 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: local_backend/Dockerfile
+    environment:
+      FORGE_HOST: 0.0.0.0
+      FORGE_PORT: 8000
+      FORGE_DATA_DIR: /data
+      FORGE_WORKER_TOKEN: ${FORGE_WORKER_TOKEN:?Set FORGE_WORKER_TOKEN in .env}
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - forge-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  worker:
+    build:
+      context: .
+      dockerfile: workers/Dockerfile
+    command: ["python3", "workers/local_generation_worker.py"]
+    environment:
+      FORGE_API_URL: http://api:8000
+      FORGE_WORKER_TOKEN: ${FORGE_WORKER_TOKEN:?Set FORGE_WORKER_TOKEN in .env}
+      WORKER_POLL_SECONDS: 5
+      BLENDER_BIN: /usr/bin/blender
+      PYTHON: /opt/forge-venv/bin/python
+    volumes:
+      - forge-data:/data
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  forge-data:

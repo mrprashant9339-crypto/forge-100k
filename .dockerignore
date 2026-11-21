@@ -1,0 +1,11 @@
+.git
+.github
+.env
+.env.*
+!.env.local.example
+data
+artifacts
+__pycache__
+*.pyc
+node_modules
+.venv
