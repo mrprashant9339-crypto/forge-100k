@@ -269,6 +269,20 @@ jobs:
           blender --background --python pipeline/blender/animation_library.py -- artifacts/stylized/advanced-rig.glb artifacts/stylized/animation-library.glb artifacts/stylized/animation-library.json
           python pipeline/scripts/validate_glb.py --require-rig artifacts/stylized/animation-library.glb
           python -m json.tool artifacts/stylized/animation-library.json >/dev/null
+          blender --background --python pipeline/blender/animation_deformation_qa.py -- artifacts/stylized/animation-library.glb artifacts/stylized/animation-deformation-qa.json
+          python -m json.tool artifacts/stylized/animation-deformation-qa.json >/dev/null
+          python - <<'PY'
+          import json
+          p="artifacts/stylized/animation-deformation-qa.json"
+          d=json.load(open(p,encoding="utf-8"))
+          assert d["status"]=="pass", d.get("issues")
+          required={"Forge_Walk","Forge_Run","Forge_Jump","Forge_Combat_Ready","Forge_Idle_Interaction","Forge_Interact_Reach"}
+          actual={x["action"].split("_Forge_Stylized_Humanoid_Rig")[0] for x in d["actions"]}
+          assert required.issubset(actual), (required-actual, actual)
+          assert d["artist_review_required"] is True and d["engine_certified"] is False
+          print("All six exported skeletal clips passed per-action evaluated geometry sampling.")
+          PY
+
 
       - name: Upload verified GLB and QA reports
         if: always()

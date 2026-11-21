@@ -22,6 +22,7 @@ The CI pipeline chains the candidate through:
 - Facial morph pack: starter expression and viseme shape keys.
 - Timestamped lip-sync: viseme animation driven by externally supplied phoneme/viseme cues.
 - Animation library: walk, run, jump, combat-ready, idle-interaction and reach-interaction NLA clips.
+- Per-action deformation QA: imports the exported animation GLB, samples every required skeletal clip, evaluates skinned mesh vertices, and rejects non-finite or collapsed geometry or clips with no detected movement.
 
 These are procedural starter controls and clips. They are not motion-captured or artist-certified. The Blender constraints and control UI are DCC authoring features; glTF does not preserve all Blender constraint UI. Runtime IK/FK must be baked or implemented in the target engine. Lip-sync currently consumes authored timestamps and does not perform speech recognition or raw-audio phoneme extraction.
 
@@ -52,4 +53,4 @@ CI validates the generated candidate, its deformation report, the advanced rig, 
 
 ## Release status
 
-All generated character outputs remain `generated_candidate` pending artist review. Automated structural and deformation checks do not certify visual quality, cloth/body collision in every pose, topology, UV layout, material appearance, or Unity/Unreal/Godot runtime behavior. Never label these outputs AAA or game-ready until target-engine import, animation playback, collision review, performance budgets and human approval are recorded.
+All generated character outputs remain `generated_candidate` pending artist review. Automated structural and per-clip deformation checks do not certify visual quality, mesh self-intersection or cloth/body penetration in every pose, foot locking, topology, UV layout, material appearance, or Unity/Unreal/Godot runtime behavior. Those remain separate review and engine-validation gates. Never label these outputs AAA or game-ready until target-engine import, animation playback, collision review, performance budgets and human approval are recorded.
