@@ -38,8 +38,10 @@ try {
   await page.locator("#categorySearch").fill("");
   await page.locator('#cats [data-cat="All assets"]').click();
   await page.locator("#save").click();
-  const guestPresets = await page.evaluate(() => localStorage.getItem("forge100k:guest"));
-  if (!guestPresets || !JSON.parse(guestPresets).length) throw new Error("Guest preset was not saved to its isolated storage namespace");
+  const presetStorageKey = await page.evaluate(() => window.ForgeAuth?.storageKey?.());
+  if (!presetStorageKey || !presetStorageKey.startsWith("forge100k:user:")) throw new Error("Signed-in preset storage did not use the authenticated user namespace");
+  const savedPresets = await page.evaluate(key => localStorage.getItem(key), presetStorageKey);
+  if (!savedPresets || !JSON.parse(savedPresets).length) throw new Error("Preset was not saved to the active isolated storage namespace");
   if (!(await page.locator("#savedList .saved-load").count())) throw new Error("Saved preset manager did not render the saved item");
   await page.locator("#savedList .saved-load").first().click();
   await page.locator("#wireToggle").click();
