@@ -35,6 +35,9 @@ jobs:
       - name: Test authentication and user-data security contracts
         run: |
           python pipeline/tests/test_auth_contract.py
+      - name: Test Cloudflare Worker API security and queue contracts
+        run: |
+          python cloudflare/tests/test_worker_contract.py
       - name: Test Supabase generation worker contracts
         run: |
           python -m py_compile workers/generation_worker.py

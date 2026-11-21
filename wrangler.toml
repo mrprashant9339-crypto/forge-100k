@@ -1,0 +1,9 @@
+name = "forge-100k-api"
+main = "src/index.js"
+compatibility_date = "2026-11-21"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "forge-100k-production"
+database_id = "ad48ab5c-5b5d-47da-8eff-86c38d5d8af4"
+migrations_dir = "migrations"
