@@ -55,6 +55,8 @@ jobs:
           python pipeline/tests/test_pbr_materials.py
           python pipeline/tests/test_production_package.py
           python pipeline/tests/test_phase3_reports.py
+          python pipeline/tests/test_engine_certification.py
+          python -m py_compile pipeline/scripts/validate_engine_certification.py
           python -m py_compile pipeline/blender/facial_morph_pack.py pipeline/blender/facial_animation_clips.py pipeline/blender/bake_pbr_textures.py pipeline/blender/prepare_cloth_scene.py
       - name: Install browser test runtime
         run: |
