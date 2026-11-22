@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Forge 100K fully local API: SQLite, filesystem assets, cookie sessions, and worker queue."""
 from __future__ import annotations
-import hashlib, hmac, json, os, secrets, sqlite3, time, uuid
+import hashlib, hmac, json, os, posixpath, secrets, sqlite3, time, uuid
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 from urllib.parse import urlparse, unquote
@@ -11,7 +11,7 @@ DATA = Path(os.environ.get("FORGE_DATA_DIR", ROOT / "data")).resolve()
 DB_PATH = DATA / "forge.sqlite3"
 ASSET_DIR = DATA / "assets"
 WEB_ROOT = ROOT
-HOST = os.environ.get("FORGE_HOST", "0.0.0.0")
+HOST = os.environ.get("FORGE_HOST", "127.0.0.1")
 PORT = int(os.environ.get("FORGE_PORT", "8000"))
 WORKER_TOKEN = os.environ.get("FORGE_WORKER_TOKEN", "")
 MAX_JSON = 128 * 1024
@@ -102,6 +102,11 @@ class Handler(SimpleHTTPRequestHandler):
             path=(DATA/row["object_path"]).resolve()
             if not path.is_relative_to(ASSET_DIR):return self.send_json({"error":"invalid_path"},400)
             return self.send_file(path)
+        decoded=posixpath.normpath("/"+unquote(p).lstrip("/"))
+        parts=[part for part in decoded.split("/") if part not in ("", ".")]
+        blocked_roots={"data",".git",".github","local_backend","workers","pipeline"}
+        if any(part.startswith(".") for part in parts) or (parts and parts[0] in blocked_roots):
+            return self.send_json({"error":"not_found"},404)
         if p=="/api/jobs":
             u=self.user()
             if not u:return self.send_json({"error":"unauthorized"},401)
@@ -199,7 +204,6 @@ class Handler(SimpleHTTPRequestHandler):
             if not job or job["status"]!="running" or job["locked_by"]!=self.headers.get("X-Worker-Id"):return self.send_json({"error":"lease_lost"},409)
             dest=ASSET_DIR/job["user_id"]/job_id; dest.mkdir(parents=True,exist_ok=True); target=dest/"output.glb"; tmp=dest/"output.glb.tmp"
             tmp.write_bytes(b); os.replace(tmp,target)
-            import hashlib
             return self.send_json({"object_path":str(target.relative_to(DATA)),"sha256":hashlib.sha256(b).hexdigest(),"byte_size":len(b)})
         if p=="/api/worker/complete":
             b=self.json_body(); a=b.get("asset",{}); stamp=now()
@@ -207,8 +211,22 @@ class Handler(SimpleHTTPRequestHandler):
                 c.execute("BEGIN IMMEDIATE")
                 job=c.execute("SELECT user_id FROM jobs WHERE id=? AND status='running' AND locked_by=?",(b.get("job_id"),b.get("worker_id"))).fetchone()
                 if not job:return self.send_json({"error":"lease_lost"},409)
+                # A worker may complete only the exact file written by its active job.
+                # Never trust client-supplied paths, hashes, or byte counts.
+                expected=(ASSET_DIR/job["user_id"]/b["job_id"]/"output.glb").resolve()
+                supplied=(DATA/str(a.get("object_path",""))).resolve()
+                if supplied != expected or not expected.is_relative_to(ASSET_DIR):
+                    return self.send_json({"error":"invalid_asset_path"},400)
+                if not expected.is_file():
+                    return self.send_json({"error":"asset_missing"},400)
+                actual_size=expected.stat().st_size
+                digest=hashlib.sha256(expected.read_bytes()).hexdigest()
+                if a.get("byte_size") != actual_size or not isinstance(a.get("sha256"),str) or not hmac.compare_digest(a["sha256"],digest):
+                    return self.send_json({"error":"asset_integrity_mismatch"},400)
+                if actual_size < 20:
+                    return self.send_json({"error":"invalid_glb"},400)
                 aid=str(uuid.uuid4())
-                c.execute("INSERT INTO assets(id,user_id,job_id,asset_code,title,quality_tier,object_path,sha256,byte_size,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)",(aid,job["user_id"],b["job_id"],a["asset_code"],a.get("title",a["asset_code"]),a.get("quality_tier","blockout"),a["object_path"],a["sha256"],a["byte_size"],json.dumps(a.get("metadata",{})),stamp))
+                c.execute("INSERT INTO assets(id,user_id,job_id,asset_code,title,quality_tier,object_path,sha256,byte_size,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)",(aid,job["user_id"],b["job_id"],a["asset_code"],a.get("title",a["asset_code"]),a.get("quality_tier","blockout"),str(expected.relative_to(DATA)),digest,actual_size,json.dumps(a.get("metadata",{})),stamp))
                 c.execute("UPDATE jobs SET status='succeeded',result_asset_id=?,completed_at=?,locked_by=NULL,locked_at=NULL WHERE id=? AND status='running' AND locked_by=?",(aid,stamp,b["job_id"],b["worker_id"]))
                 c.execute("INSERT INTO job_events(job_id,event_type,details_json,created_at) VALUES(?,?,?,?)",(b["job_id"],"succeeded",json.dumps({"asset_id":aid}),stamp))
             return self.send_json({"ok":True,"asset_id":aid})

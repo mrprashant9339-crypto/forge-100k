@@ -27,6 +27,10 @@ def call(path,method="GET",body=None,headers=None):
 try:
     status,_,raw=call("/api/health")
     assert status==200 and json.loads(raw)["database"]=="sqlite"
+    assert call("/.git/config")[0]==404
+    assert call("/local_backend/server.py")[0]==404
+    assert call("/data/forge.sqlite3")[0]==404
+    assert call("/public/../data/forge.sqlite3")[0]==404
     status,headers,raw=call("/api/auth/signup","POST",{"email":"local@example.test","name":"Local Tester","password":"correct-horse-battery"})
     assert status==201,raw
     cookie=headers.get("Set-Cookie").split(";",1)[0]
@@ -45,12 +49,24 @@ try:
     status,_,raw=call("/api/worker/upload/"+job_id,"POST",fake_glb,{**worker,"X-Worker-Id":"test-worker","Content-Type":"model/gltf-binary"})
     assert status==200,raw
     uploaded=json.loads(raw)
+    forged={"job_id":job_id,"worker_id":"test-worker","asset":{"asset_code":"FG-HUM-000001","object_path":"assets/other-user/other-job/output.glb","sha256":uploaded["sha256"],"byte_size":uploaded["byte_size"]}}
+    status,_,raw=call("/api/worker/complete","POST",forged,worker)
+    assert status==400 and json.loads(raw)["error"]=="invalid_asset_path",raw
+    forged["asset"]={"asset_code":"FG-HUM-000001","object_path":uploaded["object_path"],"sha256":"0"*64,"byte_size":uploaded["byte_size"]}
+    status,_,raw=call("/api/worker/complete","POST",forged,worker)
+    assert status==400 and json.loads(raw)["error"]=="asset_integrity_mismatch",raw
     status,_,raw=call("/api/worker/complete","POST",{"job_id":job_id,"worker_id":"test-worker","asset":{"asset_code":"FG-HUM-000001","object_path":uploaded["object_path"],"sha256":uploaded["sha256"],"byte_size":uploaded["byte_size"]}},worker)
     assert status==200,raw
     asset_id=json.loads(raw)["asset_id"]
     status,headers,raw=call("/api/assets/"+asset_id,headers={"Cookie":cookie})
     assert status==200 and raw==fake_glb
+    status,headers2,raw=call("/api/auth/signup","POST",{"email":"second@example.test","name":"Second User","password":"another-correct-password"})
+    assert status==201,raw
+    second_cookie=headers2.get("Set-Cookie").split(";",1)[0]
+    status,_,raw=call("/api/presets",headers={"Cookie":second_cookie})
+    assert status==200 and json.loads(raw)["presets"]==[]
+    assert call("/api/assets/"+asset_id,headers={"Cookie":second_cookie})[0]==404
     assert call("/api/worker/claim","POST",{"worker_id":"bad"})[0]==401
-    print("Local backend integration tests passed: health, signup, sessions, per-user presets, job queue, worker auth, GLB storage and owner-only download.")
+    print("Local backend integration tests passed: health, signup, sessions, per-user presets, job queue, worker auth, path/hash integrity, GLB storage, and two-account data isolation.")
 finally:
     server.shutdown();server.server_close();TEMP.cleanup()
