@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       target_sha:
-        description: Commit SHA whose pipeline run should be checked
+        description: Commit SHA whose pipeline runs should be checked
         required: true
         type: string
 
@@ -21,38 +21,57 @@ concurrency:
 
 jobs:
   verify:
-    name: Independently verify pipeline result
+    name: Independently verify all quality and security pipelines
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 35
     steps:
-      - name: Find and monitor Pipeline quality checks
+      - name: Find and monitor all required workflows
         uses: actions/github-script@v7
         env:
           TARGET_SHA: ${{ github.event.pull_request.head.sha || inputs.target_sha || github.sha }}
         with:
           script: |
             const sha = process.env.TARGET_SHA;
-            const workflowId = 418069273;
-            const deadline = Date.now() + 20 * 60 * 1000;
-            let run;
-            while (Date.now() < deadline) {
-              const response = await github.rest.actions.listWorkflowRuns({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                workflow_id: workflowId,
-                head_sha: sha,
-                per_page: 20
-              });
-              run = response.data.workflow_runs
-                .filter(item => item.event !== 'workflow_run')
-                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
-              if (run && run.status === 'completed') break;
-              core.info(run
-                ? `Pipeline run ${run.id}: ${run.status}; waiting for final conclusion.`
-                : `No pipeline run found for ${sha}; waiting for workflow creation.`);
-              await new Promise(resolve => setTimeout(resolve, 30000));
+            const required = [
+              { id: 418069273, name: 'Pipeline quality checks' },
+              { id: 426488834, name: 'Local backend security tests' },
+              { id: 426489145, name: 'CodeQL security analysis' }
+            ];
+            const deadline = Date.now() + 30 * 60 * 1000;
+            const results = new Map();
+            while (Date.now() < deadline && results.size < required.length) {
+              for (const workflow of required) {
+                if (results.has(workflow.id)) continue;
+                const response = await github.rest.actions.listWorkflowRuns({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  workflow_id: workflow.id,
+                  head_sha: sha,
+                  per_page: 20
+                });
+                const run = response.data.workflow_runs
+                  .filter(item => item.event !== 'workflow_run')
+                  .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+                if (run?.status === 'completed') {
+                  results.set(workflow.id, run);
+                  core.info(`${workflow.name}: ${run.conclusion} (run ${run.id})`);
+                } else {
+                  core.info(run
+                    ? `${workflow.name}: ${run.status}; waiting.`
+                    : `${workflow.name}: no run found for ${sha}; waiting.`);
+                }
+              }
+              if (results.size < required.length) {
+                await new Promise(resolve => setTimeout(resolve, 30000));
+              }
             }
-            if (!run) core.setFailed(`No Pipeline quality checks run found for ${sha} within timeout.`);
-            else if (run.status !== 'completed') core.setFailed(`Pipeline run ${run.id} did not complete before verifier timeout.`);
-            else if (run.conclusion !== 'success') core.setFailed(`Pipeline run ${run.id} concluded: ${run.conclusion}. See ${run.html_url}`);
-            else core.info(`Verified successful pipeline run ${run.id}: ${run.html_url}`);
+            const missing = required.filter(item => !results.has(item.id));
+            const failed = required.filter(item => results.has(item.id) && results.get(item.id).conclusion !== 'success');
+            if (missing.length || failed.length) {
+              core.setFailed([
+                missing.length ? `Missing or timed-out workflows: ${missing.map(x => x.name).join(', ')}` : '',
+                failed.length ? `Failed workflows: ${failed.map(x => x.name + ' (' + results.get(x.id).conclusion + ')').join(', ')}` : ''
+              ].filter(Boolean).join('; '));
+            } else {
+              core.info(`All ${required.length} required workflows passed for ${sha}.`);
+            }
