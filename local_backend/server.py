@@ -164,7 +164,7 @@ class Handler(SimpleHTTPRequestHandler):
         except ValueError as e:
             return self.send_json({"error":str(e)},413 if str(e)=="request_too_large" else 400)
         except Exception as e:
-            print("request failed:",type(e).__name__,str(e))
+            print("request failed:",type(e).__name__)
             return self.send_json({"error":"internal_error"},500)
     def worker_post(self,p):
         if not self.worker_ok():return self.send_json({"error":"unauthorized_worker"},401)
@@ -199,7 +199,6 @@ class Handler(SimpleHTTPRequestHandler):
             if not job or job["status"]!="running" or job["locked_by"]!=self.headers.get("X-Worker-Id"):return self.send_json({"error":"lease_lost"},409)
             dest=ASSET_DIR/job["user_id"]/job_id; dest.mkdir(parents=True,exist_ok=True); target=dest/"output.glb"; tmp=dest/"output.glb.tmp"
             tmp.write_bytes(b); os.replace(tmp,target)
-            import hashlib
             return self.send_json({"object_path":str(target.relative_to(DATA)),"sha256":hashlib.sha256(b).hexdigest(),"byte_size":len(b)})
         if p=="/api/worker/complete":
             b=self.json_body(); a=b.get("asset",{}); stamp=now()
