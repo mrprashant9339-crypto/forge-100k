@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Forge 100K fully local API: SQLite, filesystem assets, cookie sessions, and worker queue."""
 from __future__ import annotations
-import hashlib, hmac, json, os, secrets, sqlite3, time, uuid
+import hashlib, hmac, json, os, posixpath, secrets, sqlite3, time, uuid
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 from urllib.parse import urlparse, unquote
@@ -102,7 +102,7 @@ class Handler(SimpleHTTPRequestHandler):
             path=(DATA/row["object_path"]).resolve()
             if not path.is_relative_to(ASSET_DIR):return self.send_json({"error":"invalid_path"},400)
             return self.send_file(path)
-        decoded=unquote(p)
+        decoded=posixpath.normpath("/"+unquote(p).lstrip("/"))
         parts=[part for part in decoded.split("/") if part not in ("", ".")]
         blocked_roots={"data",".git",".github","local_backend","workers","pipeline"}
         if any(part.startswith(".") for part in parts) or (parts and parts[0] in blocked_roots):
