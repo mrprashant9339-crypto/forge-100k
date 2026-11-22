@@ -1,0 +1,58 @@
+name: Pipeline run verifier
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      target_sha:
+        description: Commit SHA whose pipeline run should be checked
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: pipeline-verifier-${{ github.event.pull_request.head.sha || inputs.target_sha }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Independently verify pipeline result
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Find and monitor Pipeline quality checks
+        uses: actions/github-script@v7
+        env:
+          TARGET_SHA: ${{ github.event.pull_request.head.sha || inputs.target_sha || github.sha }}
+        with:
+          script: |
+            const sha = process.env.TARGET_SHA;
+            const workflowId = 418069273;
+            const deadline = Date.now() + 20 * 60 * 1000;
+            let run;
+            while (Date.now() < deadline) {
+              const response = await github.rest.actions.listWorkflowRuns({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: workflowId,
+                head_sha: sha,
+                per_page: 20
+              });
+              run = response.data.workflow_runs
+                .filter(item => item.event !== 'workflow_run')
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+              if (run && run.status === 'completed') break;
+              core.info(run
+                ? `Pipeline run ${run.id}: ${run.status}; waiting for final conclusion.`
+                : `No pipeline run found for ${sha}; waiting for workflow creation.`);
+              await new Promise(resolve => setTimeout(resolve, 30000));
+            }
+            if (!run) core.setFailed(`No Pipeline quality checks run found for ${sha} within timeout.`);
+            else if (run.status !== 'completed') core.setFailed(`Pipeline run ${run.id} did not complete before verifier timeout.`);
+            else if (run.conclusion !== 'success') core.setFailed(`Pipeline run ${run.id} concluded: ${run.conclusion}. See ${run.html_url}`);
+            else core.info(`Verified successful pipeline run ${run.id}: ${run.html_url}`);
