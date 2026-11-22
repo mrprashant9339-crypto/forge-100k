@@ -27,6 +27,9 @@ def call(path,method="GET",body=None,headers=None):
 try:
     status,_,raw=call("/api/health")
     assert status==200 and json.loads(raw)["database"]=="sqlite"
+    assert call("/.git/config")[0]==404
+    assert call("/local_backend/server.py")[0]==404
+    assert call("/data/forge.sqlite3")[0]==404
     status,headers,raw=call("/api/auth/signup","POST",{"email":"local@example.test","name":"Local Tester","password":"correct-horse-battery"})
     assert status==201,raw
     cookie=headers.get("Set-Cookie").split(";",1)[0]
