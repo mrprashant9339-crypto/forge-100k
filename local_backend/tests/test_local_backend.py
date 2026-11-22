@@ -30,6 +30,7 @@ try:
     assert call("/.git/config")[0]==404
     assert call("/local_backend/server.py")[0]==404
     assert call("/data/forge.sqlite3")[0]==404
+    assert call("/public/../data/forge.sqlite3")[0]==404
     status,headers,raw=call("/api/auth/signup","POST",{"email":"local@example.test","name":"Local Tester","password":"correct-horse-battery"})
     assert status==201,raw
     cookie=headers.get("Set-Cookie").split(";",1)[0]
