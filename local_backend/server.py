@@ -164,7 +164,7 @@ class Handler(SimpleHTTPRequestHandler):
         except ValueError as e:
             return self.send_json({"error":str(e)},413 if str(e)=="request_too_large" else 400)
         except Exception as e:
-            print("request failed:",type(e).__name__)
+            print("request failed:",type(e).__name__,str(e))
             return self.send_json({"error":"internal_error"},500)
     def worker_post(self,p):
         if not self.worker_ok():return self.send_json({"error":"unauthorized_worker"},401)
