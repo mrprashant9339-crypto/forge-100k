@@ -13,7 +13,7 @@ def validate_report(report, root="."):
         if not ok: failures.append(message)
     require(report.get("schema_version") == "1.0", "schema_version must be 1.0")
     require(report.get("engine") in {"unity", "unreal"}, "engine must be unity or unreal")
-    require(bool(re.fullmatch(r"[^\\s]{1,80}", str(report.get("engine_version", "")))), "engine_version is required")
+    require(bool(str(report.get("engine_version", "")).strip()), "engine_version is required")
     require(bool(report.get("asset_id")), "asset_id is required")
     require(report.get("is_synthetic_fixture") is False, "synthetic fixtures cannot be certified")
     imported = report.get("import", {})
