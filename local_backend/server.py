@@ -11,7 +11,7 @@ DATA = Path(os.environ.get("FORGE_DATA_DIR", ROOT / "data")).resolve()
 DB_PATH = DATA / "forge.sqlite3"
 ASSET_DIR = DATA / "assets"
 WEB_ROOT = ROOT
-HOST = os.environ.get("FORGE_HOST", "0.0.0.0")
+HOST = os.environ.get("FORGE_HOST", "127.0.0.1")
 PORT = int(os.environ.get("FORGE_PORT", "8000"))
 WORKER_TOKEN = os.environ.get("FORGE_WORKER_TOKEN", "")
 MAX_JSON = 128 * 1024
@@ -102,6 +102,11 @@ class Handler(SimpleHTTPRequestHandler):
             path=(DATA/row["object_path"]).resolve()
             if not path.is_relative_to(ASSET_DIR):return self.send_json({"error":"invalid_path"},400)
             return self.send_file(path)
+        decoded=unquote(p)
+        parts=[part for part in decoded.split("/") if part not in ("", ".")]
+        blocked_roots={"data",".git",".github","local_backend","workers","pipeline"}
+        if any(part.startswith(".") for part in parts) or (parts and parts[0] in blocked_roots):
+            return self.send_json({"error":"not_found"},404)
         if p=="/api/jobs":
             u=self.user()
             if not u:return self.send_json({"error":"unauthorized"},401)
