@@ -2,11 +2,7 @@ name: Local backend security tests
 on:
   pull_request:
     branches: [main]
-    paths:
-      - "local_backend/**"
-      - "workers/local_generation_worker.py"
-      - ".github/workflows/local-backend-security.yml"
-  workflow_dispatch:
+    workflow_dispatch:
 permissions:
   contents: read
 concurrency:
