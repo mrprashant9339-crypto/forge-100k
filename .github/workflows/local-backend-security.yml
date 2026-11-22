@@ -1,0 +1,30 @@
+name: Local backend security tests
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "local_backend/**"
+      - "workers/local_generation_worker.py"
+      - ".github/workflows/local-backend-security.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: forge-local-backend-${{ github.event.pull_request.head.sha || github.sha }}
+  cancel-in-progress: true
+jobs:
+  local-backend:
+    name: Local API integration and isolation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Compile backend and worker
+        run: python -m py_compile local_backend/server.py workers/local_generation_worker.py
+      - name: Exercise auth, queue, asset integrity and tenant isolation
+        run: python local_backend/tests/test_local_backend.py
+      - name: Check patch whitespace
+        run: git diff --check
